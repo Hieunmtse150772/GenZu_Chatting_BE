@@ -1,12 +1,12 @@
 const messageSwagger = {
-    '/messages/:id': {
-        post: {
+    '/messages/{id}': {
+        get: {
             tags: ['Message'],
             description: 'Get all message of conversation',
             parameters: [
                 {
-                    name: 'receiverId',
-                    in: 'query',
+                    name: 'id',
+                    in: 'path',
                     description: 'Id of receiver',
                     schema: {
                         type: 'string',
@@ -20,29 +20,21 @@ const messageSwagger = {
                         'application/json': {},
                     },
                 },
-                401: {
-                    description: 'Get all message of conversation successfully',
-                    content: {
-                        'application/json': {},
-                    },
-                },
             },
         },
     },
-    'messages/send/:id': {
+    '/messages/send/{id}': {
         post: {
             tags: ['Message'],
-            description: 'Create comments',
+            description: 'Send message',
             parameters: [
                 {
-                    name: 'token',
-                    in: 'header',
-                    description: 'Token to be passed as a header',
-                    required: true,
+                    name: 'id',
+                    in: 'path',
+                    description: 'Id of receiver',
                     schema: {
                         type: 'string',
                     },
-                    example: 'Bearer ',
                 },
             ],
             requestBody: {
@@ -51,33 +43,19 @@ const messageSwagger = {
                         schema: {
                             type: 'object',
                             properties: {
-                                comment: {
-                                    description: 'Comment of the user',
-                                    type: 'string',
-                                },
-                                userId: {
-                                    description: 'Id of the user',
-                                    type: 'string',
-                                },
-                                movieId: {
-                                    description: 'Id of the movie',
+                                message: {
+                                    description: 'Send message',
                                     type: 'string',
                                 },
                             },
-                            required: ['title', 'type', 'genre', 'idMovies'],
+                            required: ['message'],
                         },
                     },
                 },
             },
             responses: {
                 200: {
-                    description: 'Create comments successfully',
-                    content: {
-                        'application/json': {},
-                    },
-                },
-                401: {
-                    description: 'Get all message of conversation successfully',
+                    description: 'Send message successfully',
                     content: {
                         'application/json': {},
                     },

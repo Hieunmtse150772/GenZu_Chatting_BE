@@ -18,11 +18,12 @@ app.use(cookieParser());
 routes(app);
 
 app.use((err, req, res, next) => {
-    if (err.status !== 500) {
-        res.status(err.status).json(err);
-    } else {
-        res.status(500).json({ error: 'Internal Server Error' + err });
-    }
+    const statusCode = err.status || 500;
+    res.status(statusCode).json({
+        message: err.message || 'Internal Server Error',
+        status: statusCode,
+    });
+    next();
 });
 
 app.listen(port, () => {

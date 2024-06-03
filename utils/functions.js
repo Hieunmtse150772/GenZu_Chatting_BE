@@ -24,7 +24,7 @@ const verifyToken = (token, secretKey) => {
         const decoded = jwt.verify(token, secretKey);
         return decoded;
     } catch (error) {
-        throw createHttpError(403, error);
+        return error;
     }
 };
 

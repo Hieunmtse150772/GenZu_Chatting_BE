@@ -44,7 +44,6 @@ module.exports = {
                     accessToken,
                 });
         } catch (error) {
-            console.log(error);
             next(error);
         }
     },
@@ -90,7 +89,6 @@ module.exports = {
                     accessToken,
                 });
         } catch (error) {
-            console.log(error);
             next(error);
         }
     },
@@ -130,7 +128,6 @@ module.exports = {
                     accessToken,
                 });
         } catch (error) {
-            console.log(error);
             next(error);
         }
     },
@@ -150,7 +147,6 @@ module.exports = {
                     message: 'Logout was successfully',
                 });
         } catch (error) {
-            console.log(error);
             next(error);
         }
     },

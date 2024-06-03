@@ -4,13 +4,18 @@ const bcrypt = require('bcrypt');
 const connection = require('../connections/mongodb');
 const { hashText } = require('../utils/functions');
 
-const UserSchema = new mongoose.Schema({
-    fullName: { type: String, required: true },
-    address: { type: String, required: true },
-    gender: { type: String, enum: ['male', 'female'] },
-    email: { type: String, require: true, unique: true },
-    password: { type: String, require: true },
-});
+const UserSchema = new mongoose.Schema(
+    {
+        fullName: { type: String, required: true },
+        address: { type: String, required: true },
+        gender: { type: String, enum: ['male', 'female'] },
+        email: { type: String, require: true, unique: true },
+        password: { type: String, require: true },
+    },
+    {
+        timestamps: true,
+    },
+);
 
 UserSchema.pre('save', function (next) {
     try {

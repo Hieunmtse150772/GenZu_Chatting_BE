@@ -3,6 +3,7 @@ const swaggerJsdoc = require('swagger-jsdoc');
 const package = require('../package.json');
 const authSwagger = require('../swaggers/auth.swagger');
 const messageSwagger = require('../swaggers/message.swagger');
+const userSwagger = require('../swaggers/user.swagger');
 
 const options = {
     definition: {
@@ -18,10 +19,11 @@ const options = {
                 description: process.env.ENVIRONMENT,
             },
         ],
-        tags: ['Auth', 'Message'],
+        tags: ['Auth', 'Message', 'User'],
         paths: {
             ...authSwagger,
             ...messageSwagger,
+            ...userSwagger,
         },
         components: {
             /* ... */
