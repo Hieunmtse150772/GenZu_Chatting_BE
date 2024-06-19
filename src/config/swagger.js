@@ -1,6 +1,6 @@
 const swaggerJsdoc = require('swagger-jsdoc');
 
-const package = require('../package.json');
+const package = require('../../package.json');
 const authSwagger = require('../swaggers/auth.swagger');
 const messageSwagger = require('../swaggers/message.swagger');
 const userSwagger = require('../swaggers/user.swagger');
