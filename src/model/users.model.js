@@ -7,10 +7,13 @@ const { hashText } = require('../utils/functions');
 const UserSchema = new mongoose.Schema(
     {
         fullName: { type: String, required: true },
-        address: { type: String, required: true },
+        address: { type: String },
         gender: { type: String, enum: ['male', 'female'] },
         email: { type: String, require: true, unique: true },
-        password: { type: String, require: true },
+        email_verified: { type: Boolean },
+        password: { type: String },
+        picture: { type: String },
+        googleId: { type: String },
     },
     {
         timestamps: true,
@@ -19,9 +22,11 @@ const UserSchema = new mongoose.Schema(
 
 UserSchema.pre('save', function (next) {
     try {
-        const hashPassword = hashText(this.password, 10);
+        if (this.password) {
+            const hashPassword = hashText(this.password, 10);
 
-        this.password = hashPassword;
+            this.password = hashPassword;
+        }
         next();
     } catch (error) {
         next(error);
