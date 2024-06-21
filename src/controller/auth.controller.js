@@ -96,18 +96,29 @@ module.exports = {
             next(error);
         }
     },
-    signInWithGoogle: (req, res) => {
-        const oauth2Client = new OAuth2(
-            CONFIG.oauth2Credentials.client_id,
-            CONFIG.oauth2Credentials.client_secret,
-            CONFIG.oauth2Credentials.redirect_uris[0],
-        );
-        // Obtain the google login link to which we'll send our users to give us access
-        const loginLink = oauth2Client.generateAuthUrl({
-            access_type: 'offline', // Indicates that we need to be able to access data continously without the user constantly giving us consent
-            scope: CONFIG.oauth2Credentials.scopes, // Using the access scopes from our config file
-        });
-        res.send(`<a href=${loginLink}>Login</a>`);
+    signInWithGoogle: (req, res, next) => {
+        try{
+            const oauth2Client = new OAuth2(
+                CONFIG.oauth2Credentials.client_id,
+                CONFIG.oauth2Credentials.client_secret,
+                CONFIG.oauth2Credentials.redirect_uris[0],
+            );
+            // Obtain the google login link to which we'll send our users to give us access
+            const loginLink = oauth2Client.generateAuthUrl({
+                access_type: 'offline', // Indicates that we need to be able to access data continously without the user constantly giving us consent
+                scope: CONFIG.oauth2Credentials.scopes, // Using the access scopes from our config file
+            });
+            res.status(200).json({
+                success: true,
+                link: loginLink,
+                status: 200,
+                message: 'Auth logged with google in successful.',
+                messageCode: 'Auth_google_successfully'
+            })
+        }catch(error){
+            return next(error);
+        }
+        
     },
     callBack: (req, res) => {
         // Create an OAuth2 client object from the credentials in our config file
