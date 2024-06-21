@@ -8,30 +8,30 @@ module.exports = {
         try {
             const receiverId = req.params.id;
 
-            if (!mongodb.ObjectId.isValid(receiverId)) {
-                return res.status(400).json({
-                    message: 'The receiverId is invalid',
-                    messageCode: 'invalid_receiverId',
-                });
-            }
-            const senderId = req.user.data;
+            // if (!mongodb.ObjectId.isValid(receiverId)) {
+            //     return res.status(400).json({
+            //         message: 'The receiverId is invalid',
+            //         messageCode: 'invalid_receiverId',
+            //     });
+            // }
+            // const senderId = req.user.data;
 
-            const conversation = await Conversation.findOne({ paticipants: { $all: [senderId, receiverId] } }).populate(
-                'messages',
-            );
+            // const conversation = await Conversation.findOne({ paticipants: { $all: [senderId, receiverId] } }).populate(
+            //     'messages',
+            // );
 
-            if (!conversation) {
-                return res.status(200).json({
-                    message: 'Get message was successfully',
-                    messageCode: 'sent_successfully',
-                    data: [],
-                });
-            }
-            return res.status(200).json({
-                message: 'Get message was successfully',
-                messageCode: 'sent_successfully',
-                data: conversation.messages,
-            });
+            // if (!conversation) {
+            //     return res.status(200).json({
+            //         message: 'Get message was successfully',
+            //         messageCode: 'sent_successfully',
+            //         data: [],
+            //     });
+            // }
+            // return res.status(200).json({
+            //     message: 'Get message was successfully',
+            //     messageCode: 'sent_successfully',
+            //     data: conversation.messages,
+            // });
         } catch (error) {
             next(error);
         }

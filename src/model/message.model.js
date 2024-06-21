@@ -4,20 +4,28 @@ const connection = require('../connections/mongodb');
 
 const MessageSchema = mongoose.Schema(
     {
-        senderId: {
+        sender_id: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'user',
             required: true,
         },
-        receiverId: {
+        conversation_id: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'user',
+            ref: 'conversation',
+            required: true,
+        },
+        message_type: {
+            type: String,
             required: true,
         },
         message: {
             type: String,
-            required: true,
+            required: true
         },
+        status: {
+            type: String,
+            required:true
+        }
     },
     {
         timestamps: true,
