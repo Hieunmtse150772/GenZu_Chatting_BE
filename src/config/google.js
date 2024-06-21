@@ -1,6 +1,6 @@
 module.exports = {
     oauth2Credentials: {
-        client_id: '186870696368-7qljlc1ujt6ve5r69kaej3p253m1n3d3.apps.googleusercontent.com',
+        client_id: '186870696368-4u70944vb665c018etfu02286peu9ts0.apps.googleusercontent.com',
         project_id: 'fptmilkteashop', // The name of your project
         auth_uri: 'https://accounts.google.com/o/oauth2/auth',
         token_uri: 'https://oauth2.googleapis.com/token',
