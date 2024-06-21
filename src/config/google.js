@@ -6,7 +6,7 @@ module.exports = {
         token_uri: 'https://oauth2.googleapis.com/token',
         auth_provider_x509_cert_url: 'https://www.googleapis.com/oauth2/v1/certs',
         client_secret: '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',
-        redirect_uris: [`${process.env.URL}:${process.env.PORT}/auth/callback`],
+        redirect_uris: [`${process.env.URL_PRODUCTION}/auth/callback`],
         scopes: ['https://www.googleapis.com/auth/userinfo.email', 'https://www.googleapis.com/auth/userinfo.profile'],
     },
 };
