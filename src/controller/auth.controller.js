@@ -129,13 +129,17 @@ module.exports = {
         );
         if (req.query.error) {
             // The user did not give us permission.
+            console.log('error: ', req.query.error);
+            console.log('11111')
             return res.redirect('/');
         } else {
             oauth2Client.getToken(req.query.code, async function (err, token) {
+                console.log('error 2: ', err)
                 if (err) return res.redirect('/');
                 // Store the credentials given by google into a jsonwebtoken in a cookie called 'jwt'
 
                 const userInfo = jwt.decode(token.id_token);
+                console.log('userInfo: ', userInfo)
 
                 const user = await UserModel.findOne({ googleId: userInfo.sub });
 
