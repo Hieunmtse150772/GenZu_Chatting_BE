@@ -7,7 +7,7 @@ const { hashText } = require('../utils/functions');
 const UserSchema = new mongoose.Schema(
     {
         fullName: { type: String, required: true },
-        address: { type: String, required: true },
+        address: { type: String},
         gender: { type: String, enum: ['male', 'female'] },
         email: { type: String, require: true, unique: true },
         password: { type: String, require: true },
