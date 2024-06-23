@@ -33,7 +33,8 @@ const authSwagger = {
                                 picture: {
                                     description: 'Picture for avatar',
                                     type: 'string',
-                                    example: 'https://thucungsaigon.com/timthumb.php?src=data/News/vi-sao-cho-thuong-hay-ngu-nhieu.jpg&h=400&w=760&q=100',
+                                    example:
+                                        'https://thucungsaigon.com/timthumb.php?src=data/News/vi-sao-cho-thuong-hay-ngu-nhieu.jpg&h=400&w=760&q=100',
                                 },
                             },
                         },
@@ -85,7 +86,7 @@ const authSwagger = {
         },
     },
     '/auth/sign-in-google': {
-        post: {
+        get: {
             tags: ['Auth'],
             description: 'Verifying identity for personalized interactions and services with google',
             responses: {

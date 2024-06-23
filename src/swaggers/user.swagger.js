@@ -8,7 +8,7 @@ const userSwagger = {
                 },
             ],
             description: 'Get user for sidebar',
-            
+
             responses: {
                 200: {
                     description: 'Get user for sidebar successfully',
@@ -37,7 +37,7 @@ const userSwagger = {
                         type: 'string',
                         example: 'hieunmt2001@gmail.com',
                     },
-                }
+                },
             ],
             responses: {
                 200: {
