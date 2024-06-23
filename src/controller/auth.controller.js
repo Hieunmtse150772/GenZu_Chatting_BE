@@ -1,7 +1,7 @@
 const jwt = require('jsonwebtoken');
 const google = require('googleapis').google;
 
-const UserModel = require('../model/users.model');
+const UserModel = require('../model/user.model');
 const { generateToken, verifyToken, verifyRefreshToken } = require('../utils/functions');
 const client = require('../connections/redis');
 const CONFIG = require('../config/google');
@@ -17,7 +17,7 @@ module.exports = {
                     message: 'Email already exists',
                 });
             }
-
+            console.log('user: ', user)
             const newUser = await UserModel.create(req.body);
             const { password, ...remain } = newUser._doc;
             const accessToken = generateToken(
@@ -117,8 +117,7 @@ module.exports = {
             })
         }catch(error){
             return next(error);
-        }
-        
+        }       
     },
     callBack: (req, res) => {
         // Create an OAuth2 client object from the credentials in our config file
@@ -136,7 +135,6 @@ module.exports = {
                 // Store the credentials given by google into a jsonwebtoken in a cookie called 'jwt'
 
                 const userInfo = jwt.decode(token.id_token);
-
                 const user = await UserModel.findOne({ googleId: userInfo.sub });
 
                 if (!user) {

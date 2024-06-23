@@ -4,7 +4,8 @@ const package = require('../../package.json');
 const authSwagger = require('../swaggers/auth.swagger');
 const messageSwagger = require('../swaggers/message.swagger');
 const userSwagger = require('../swaggers/user.swagger');
-
+const friendSwagger = require('../swaggers/friend.swagger');
+const conversationSwagger = require('../swaggers/conversation.swagger');
 const options = {
     definition: {
         openapi: '3.0.0',
@@ -24,6 +25,8 @@ const options = {
             ...authSwagger,
             ...messageSwagger,
             ...userSwagger,
+            ...conversationSwagger,
+            ...friendSwagger
         },
         components: {
             /* ... */
@@ -37,11 +40,6 @@ const options = {
                 },
             },
         },
-        security: [
-            {
-                accessToken: [],
-            },
-        ],
     },
     apis: ['./routes/*.js'],
 };
