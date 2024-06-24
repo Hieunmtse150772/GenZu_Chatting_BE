@@ -1,4 +1,4 @@
-const User = require('../model/users.model');
+const User = require('../model/user.model');
 
 module.exports = {
     getUserForSidebar: async (req, res, next) => {
@@ -15,4 +15,25 @@ module.exports = {
             next(error);
         }
     },
+    getUserByKeyWord: async (req, res, next)=>{
+        try{
+
+            const keyword = req.query.search ? {
+                $or: [
+                  { fullName: { $regex: req.query.search, $options: "i" } },
+                  { email: { $regex: req.query.search, $options: "i" } },
+                ],
+              }
+            : {};
+            console.log('keyword: ', keyword)
+            const user = await User.find(keyword).find({ _id: { $ne: req.user._id } });;
+            res.status(200).json({
+                message: 'Search user successfully',
+                messageCode: 'search_user_successfully',
+                user
+            })
+        }catch(error){
+            next(error);
+        }
+    }
 };

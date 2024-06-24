@@ -1,17 +1,17 @@
-const userSwagger = {
-    '/users/sidebar': {
+const friendSwagger = {
+    '/friends': {
         get: {
-            tags: ['User'],
+            tags: ['Friend'],
             security: [
                 {
                     accessToken: [],
                 },
             ],
-            description: 'Get user for sidebar',
-
+            description: 'Get all friends',
+            
             responses: {
                 200: {
-                    description: 'Get user for sidebar successfully',
+                    description: 'Get all friends successfully',
                     content: {
                         'application/json': {},
                     },
@@ -19,7 +19,7 @@ const userSwagger = {
             },
         },
     },
-    '/users/searchUsers': {
+    '/friends/{id}': {
         get: {
             tags: ['User'],
             security: [
@@ -27,21 +27,20 @@ const userSwagger = {
                     accessToken: [],
                 },
             ],
-            description: 'Get user by keyword',
+            description: 'Send add friend request to other user',
             parameters: [
                 {
-                    name: 'search',
-                    in: 'query',
-                    description: 'Name/email of user',
+                    name: 'id',
+                    in: 'path',
+                    description: 'Id of user',
                     schema: {
                         type: 'string',
-                        example: 'hieunmt2001@gmail.com',
                     },
-                },
+                }
             ],
             responses: {
                 200: {
-                    description: 'Get user by email successfully',
+                    description: 'Send add friend request to other user successfully.',
                     content: {
                         'application/json': {},
                     },
@@ -51,4 +50,4 @@ const userSwagger = {
     },
 };
 
-module.exports = userSwagger;
+module.exports = friendSwagger;
