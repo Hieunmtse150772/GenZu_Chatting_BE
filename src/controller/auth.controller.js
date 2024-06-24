@@ -68,7 +68,7 @@ module.exports = {
                 });
             }
 
-            const { password, ...remain } = user._doc;
+            const { password, tokenGoogle, ...remain } = user._doc;
             const accessToken = generateToken(user._id, process.env.ACCESS_TOKEN_KEY, process.env.EXPIRE_ACCESS_TOKEN);
             const refreshToken = generateToken(
                 user._id,
@@ -128,10 +128,10 @@ module.exports = {
         );
         if (req.query.error) {
             // The user did not give us permission.
-            return res.redirect('/');
+            return res.status(403).json(error);
         } else {
             oauth2Client.getToken(req.query.code, async function (err, token) {
-                if (err) return res.redirect('/');
+                if (err) return res.status(403).json(err);
                 // Store the credentials given by google into a jsonwebtoken in a cookie called 'jwt'
 
                 const userInfo = jwt.decode(token.id_token);
@@ -144,9 +144,10 @@ module.exports = {
                         picture: userInfo.picture,
                         email: userInfo.email,
                         email_verified: userInfo.email_verified,
+                        tokenGoogle: token,
                         googleId: userInfo.sub,
                     });
-                    const { password, ...remain } = newUser._doc;
+                    const { password, tokenGoogle, ...remain } = newUser._doc;
                     const accessToken = generateToken(
                         newUser._id,
                         process.env.ACCESS_TOKEN_KEY,
@@ -175,7 +176,7 @@ module.exports = {
                             accessToken,
                         });
                 } else {
-                    const { password, ...remain } = user._doc;
+                    const { password, tokenGoogle, ...remain } = user._doc;
                     const accessToken = generateToken(
                         user._id,
                         process.env.ACCESS_TOKEN_KEY,

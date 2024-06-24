@@ -86,7 +86,7 @@ const authSwagger = {
         },
     },
     '/auth/sign-in-google': {
-        post: {
+        get: {
             tags: ['Auth'],
             description: 'Verifying identity for personalized interactions and services with google',
             responses: {
