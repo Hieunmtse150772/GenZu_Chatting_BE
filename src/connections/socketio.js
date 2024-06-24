@@ -4,10 +4,12 @@ const http = require('http'); // cần một máy chủ HTTP để Socket.IO có
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server);
-
-io.on('connection', (socket) => {
-    console.log('socket was connected');
-});
-
+const io = require("socket.io")(server, {
+    pingTimeout: 60000,
+    cors: {
+      origin: "http://localhost:3000",
+      // credentials: true,
+    },
+  });
+  
 module.exports = { app, io, server };

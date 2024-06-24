@@ -4,7 +4,6 @@ const { verifyToken } = require('../utils/functions');
 module.exports = async function (req, res, next) {
     try {
         const authorization = req.headers.authorization;
-
         if (!authorization) {
             throw createHttpError.Unauthorized();
         }

@@ -1,10 +1,10 @@
 const jwt = require('jsonwebtoken');
 const google = require('googleapis').google;
 
-const UserModel = require('../model/users.model');
-const { generateToken, verifyToken, verifyRefreshToken } = require('../utils/functions');
-const client = require('../connections/redis');
-const CONFIG = require('../config/google');
+const UserModel = require('@/model/user.model');
+const { generateToken, verifyRefreshToken } = require('@/utils/functions');
+const client = require('@/connections/redis');
+const CONFIG = require('@/config');
 const OAuth2 = google.auth.OAuth2;
 
 module.exports = {
@@ -97,17 +97,27 @@ module.exports = {
         }
     },
     signInWithGoogle: (req, res) => {
-        const oauth2Client = new OAuth2(
-            CONFIG.oauth2Credentials.client_id,
-            CONFIG.oauth2Credentials.client_secret,
-            CONFIG.oauth2Credentials.redirect_uris[0],
-        );
-        // Obtain the google login link to which we'll send our users to give us access
-        const loginLink = oauth2Client.generateAuthUrl({
-            access_type: 'offline', // Indicates that we need to be able to access data continously without the user constantly giving us consent
-            scope: CONFIG.oauth2Credentials.scopes, // Using the access scopes from our config file
-        });
-        res.send(`<a href=${loginLink}>Login</a>`);
+        try {
+            const oauth2Client = new OAuth2(
+                CONFIG.oauth2Credentials.client_id,
+                CONFIG.oauth2Credentials.client_secret,
+                CONFIG.oauth2Credentials.redirect_uris[0],
+            );
+            // Obtain the google login link to which we'll send our users to give us access
+            const loginLink = oauth2Client.generateAuthUrl({
+                access_type: 'offline', // Indicates that we need to be able to access data continously without the user constantly giving us consent
+                scope: CONFIG.oauth2Credentials.scopes, // Using the access scopes from our config file
+            });
+            res.status(200).json({
+                success: true,
+                link: loginLink,
+                status: 200,
+                message: 'Auth logged with google in successful.',
+                messageCode: 'Auth_google_successfully',
+            });
+        } catch (error) {
+            return next(error);
+        }
     },
     callBack: (req, res) => {
         // Create an OAuth2 client object from the credentials in our config file

@@ -1,1 +1,3 @@
-"# app_chat_api" 
+# GenZu_Chatting_BE
+
+GenZu chatting API
