@@ -3,17 +3,6 @@
     "version": "1.0.0",
     "description": "app chat",
     "main": "main.js",
-    "prettier": {
-        "printWidth": 80,
-        "tabWidth": 2,
-        "useTabs": false,
-        "semi": true,
-        "singleQuote": true,
-        "trailingComma": "es5",
-        "bracketSpacing": true,
-        "arrowParents": "always",
-        "endOfLine": "lf"
-    },
     "scripts": {
         "dev": "nodemon main.js",
         "start": "node main.js",
@@ -30,12 +19,16 @@
         "googleapis": "^140.0.0",
         "joi": "^17.13.1",
         "jsonwebtoken": "^9.0.2",
+        "module-alias": "^2.2.3",
         "mongodb": "^6.7.0",
         "mongoose": "^8.4.0",
         "redis": "^4.6.14",
         "socket.io": "^4.7.5",
         "swagger-jsdoc": "^6.2.8",
         "swagger-ui-express": "^5.0.0"
+    },
+    "_moduleAliases": {
+        "@": "src/"
     },
     "devDependencies": {
         "@eslint/js": "^9.5.0",
