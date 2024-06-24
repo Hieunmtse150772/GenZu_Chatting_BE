@@ -6,11 +6,11 @@ const MessageTranslatedSchema = mongoose.Schema(
     {
         message_id: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'message',
+            ref: 'Message',
             required: true
         },
         participant_id: {
-            ref: 'participant',
+            ref: 'Participant',
             type: String,
             required: true
         },

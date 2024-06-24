@@ -20,4 +20,4 @@ const ConversationDeletedSchema = mongoose.Schema(
     },
 );
 
-module.exports = connection.model('conversation_deleted', ConversationDeletedSchema);
+module.exports = connection.model('Conversation_deleted', ConversationDeletedSchema);

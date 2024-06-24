@@ -30,6 +30,11 @@ const authSwagger = {
                                     description: 'Password of the user',
                                     type: 'string',
                                 },
+                                picture: {
+                                    description: 'Picture for avatar',
+                                    type: 'string',
+                                    example: 'https://thucungsaigon.com/timthumb.php?src=data/News/vi-sao-cho-thuong-hay-ngu-nhieu.jpg&h=400&w=760&q=100',
+                                },
                             },
                         },
                     },
@@ -69,6 +74,20 @@ const authSwagger = {
                     },
                 },
             },
+            responses: {
+                200: {
+                    description: 'Login successfully',
+                    content: {
+                        'application/json': {},
+                    },
+                },
+            },
+        },
+    },
+    '/auth/sign-in-google': {
+        post: {
+            tags: ['Auth'],
+            description: 'Verifying identity for personalized interactions and services with google',
             responses: {
                 200: {
                     description: 'Login successfully',

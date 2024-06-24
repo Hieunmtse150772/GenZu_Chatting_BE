@@ -6,12 +6,12 @@ const MessageSchema = mongoose.Schema(
     {
         sender_id: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'user',
+            ref: 'User',
             required: true,
         },
         conversation_id: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'conversation',
+            ref: 'Conversation',
             required: true,
         },
         message_type: {
@@ -25,7 +25,8 @@ const MessageSchema = mongoose.Schema(
         status: {
             type: String,
             required:true
-        }
+        },
+        readBy: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     },
     {
         timestamps: true,

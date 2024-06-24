@@ -6,11 +6,11 @@ const ParticipantSchema = mongoose.Schema(
     {
         user_id: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'user',
+            ref: 'Cser',
             required: true
         },
         conversation_id: {
-            ref: 'conversation',
+            ref: 'Conversation',
             type: String,
             required: true
         },
