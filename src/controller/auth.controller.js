@@ -1,10 +1,10 @@
 const jwt = require('jsonwebtoken');
 const google = require('googleapis').google;
 
-const UserModel = require('../model/user.model');
-const { generateToken, verifyToken, verifyRefreshToken } = require('../utils/functions');
-const client = require('../connections/redis');
-const CONFIG = require('../config/google');
+const UserModel = require('@/model/user.model');
+const { generateToken, verifyRefreshToken } = require('@/utils/functions');
+const client = require('@/connections/redis');
+const CONFIG = require('@/config');
 const OAuth2 = google.auth.OAuth2;
 
 module.exports = {
@@ -17,7 +17,7 @@ module.exports = {
                     message: 'Email already exists',
                 });
             }
-            console.log('user: ', user)
+
             const newUser = await UserModel.create(req.body);
             const { password, ...remain } = newUser._doc;
             const accessToken = generateToken(
@@ -68,7 +68,7 @@ module.exports = {
                 });
             }
 
-            const { password, ...remain } = user._doc;
+            const { password, tokenGoogle, ...remain } = user._doc;
             const accessToken = generateToken(user._id, process.env.ACCESS_TOKEN_KEY, process.env.EXPIRE_ACCESS_TOKEN);
             const refreshToken = generateToken(
                 user._id,
@@ -96,8 +96,8 @@ module.exports = {
             next(error);
         }
     },
-    signInWithGoogle: (req, res, next) => {
-        try{
+    signInWithGoogle: (req, res) => {
+        try {
             const oauth2Client = new OAuth2(
                 CONFIG.oauth2Credentials.client_id,
                 CONFIG.oauth2Credentials.client_secret,
@@ -113,11 +113,11 @@ module.exports = {
                 link: loginLink,
                 status: 200,
                 message: 'Auth logged with google in successful.',
-                messageCode: 'Auth_google_successfully'
-            })
-        }catch(error){
+                messageCode: 'Auth_google_successfully',
+            });
+        } catch (error) {
             return next(error);
-        }       
+        }
     },
     callBack: (req, res) => {
         // Create an OAuth2 client object from the credentials in our config file
@@ -128,16 +128,14 @@ module.exports = {
         );
         if (req.query.error) {
             // The user did not give us permission.
-            console.log('error: ', req.query.error);
-            console.log('11111')
-            return res.redirect('/');
+            return res.status(403).json(error);
         } else {
             oauth2Client.getToken(req.query.code, async function (err, token) {
-                console.log('error 2: ', err)
-                if (err) return res.redirect('/');
+                if (err) return res.status(403).json(err);
                 // Store the credentials given by google into a jsonwebtoken in a cookie called 'jwt'
 
                 const userInfo = jwt.decode(token.id_token);
+
                 const user = await UserModel.findOne({ googleId: userInfo.sub });
 
                 if (!user) {
@@ -146,9 +144,10 @@ module.exports = {
                         picture: userInfo.picture,
                         email: userInfo.email,
                         email_verified: userInfo.email_verified,
+                        tokenGoogle: token,
                         googleId: userInfo.sub,
                     });
-                    const { password, ...remain } = newUser._doc;
+                    const { password, tokenGoogle, ...remain } = newUser._doc;
                     const accessToken = generateToken(
                         newUser._id,
                         process.env.ACCESS_TOKEN_KEY,
@@ -177,7 +176,7 @@ module.exports = {
                             accessToken,
                         });
                 } else {
-                    const { password, ...remain } = user._doc;
+                    const { password, tokenGoogle, ...remain } = user._doc;
                     const accessToken = generateToken(
                         user._id,
                         process.env.ACCESS_TOKEN_KEY,
