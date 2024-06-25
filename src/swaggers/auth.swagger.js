@@ -20,6 +20,7 @@ const authSwagger = {
                                 gender: {
                                     description: 'Gender of the user',
                                     type: 'string',
+                                    default: 'male',
                                 },
                                 email: {
                                     description: 'Email of the user',

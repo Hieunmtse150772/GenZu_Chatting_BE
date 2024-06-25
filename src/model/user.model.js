@@ -8,7 +8,7 @@ const UserSchema = new mongoose.Schema(
     {
         fullName: { type: String, required: true, default: null },
         address: { type: String, default: null },
-        gender: { type: String, enum: ['male', 'female'], default: null },
+        gender: { type: String, enum: ['male', 'female', 'other'], default: null },
         email: {
             type: String,
             require: true,
@@ -26,6 +26,7 @@ const UserSchema = new mongoose.Schema(
         role_id: { type: String, ref: 'role', default: null },
         picture: { type: String, require: true, default: null },
         is_active: { type: Boolean, default: true },
+        is_online: { type: Boolean, default: false },
     },
     {
         timestamps: true,
