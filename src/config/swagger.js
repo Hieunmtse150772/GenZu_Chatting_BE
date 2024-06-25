@@ -16,7 +16,7 @@ const options = {
         },
         servers: [
             {
-                url: `${process.env.URL}:${process.env.PORT}`,
+                url: process.env.URL_API,
                 description: process.env.ENVIRONMENT,
             },
         ],
@@ -26,7 +26,7 @@ const options = {
             ...messageSwagger,
             ...userSwagger,
             ...conversationSwagger,
-            ...friendSwagger
+            ...friendSwagger,
         },
         components: {
             /* ... */

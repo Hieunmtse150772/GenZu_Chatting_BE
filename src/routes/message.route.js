@@ -10,5 +10,7 @@ router.get('/chat', (req, res) => {
 });
 router.get('/:id', verifyToken, Validation(getMessages), MessageController.getMessages);
 router.post('/send/:id', verifyToken, Validation(sendMessage), MessageController.sendMessage);
+router.get('/:id', verifyToken, Validation(getMessages), MessageController.getMessages);
+router.post('/send', verifyToken, Validation(sendMessage), MessageController.sendSingleMessage);
 
 module.exports = router;

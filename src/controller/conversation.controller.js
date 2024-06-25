@@ -5,15 +5,14 @@ const Message = require('../model/message.model');
 const User = require('../model/user.model');
 
 module.exports = {
-  accessConversation: async (req, res, next)=>{
-    console.log('req: ', req.body)
+  accessConversation: async (req, res, next) => {
     const { userId } = req.body;
 
     if (!userId) {
-      console.log("UserId param not sent with request");
+      console.log('UserId param not sent with request');
       return res.sendStatus(400);
     }
-  
+
     var isChat = await Conversation.find({
       isGroupChat: false,
       $and: [
@@ -21,29 +20,28 @@ module.exports = {
         { users: { $elemMatch: { $eq: userId } } },
       ],
     })
-      .populate("users", "-password")
-      .populate("latestMessage");
-  
+      .populate('users', '-password')
+      .populate('latestMessage');
+
     isChat = await User.populate(isChat, {
-      path: "latestMessage.sender",
-      select: "name pic email",
+      path: 'latestMessage.sender',
+      select: 'name pic email',
     });
-  
+
     if (isChat.length > 0) {
       res.send(isChat[0]);
     } else {
       var chatData = {
-        chatName: "sender",
+        chatName: 'sender',
         isGroupChat: false,
         users: [req.user._id, userId],
       };
-  
+
       try {
         const createdChat = await Conversation.create(chatData);
-        const FullChat = await Conversation.findOne({ _id: createdChat._id }).populate(
-          "users",
-          "-password"
-        );
+        const FullChat = await Conversation.findOne({
+          _id: createdChat._id,
+        }).populate('users', '-password');
         res.status(200).json(FullChat);
       } catch (error) {
         res.status(400);
@@ -84,7 +82,6 @@ module.exports = {
   },
   fetchConversation: async (req, res, next) => {
     try {
-      console.log('req.user._id : ', req.user._id )
       Conversation.find({ users: { $elemMatch: { $eq: req.user._id } } })
         .populate('users', '-password')
         .populate('groupAdmin', '-password')
@@ -92,7 +89,7 @@ module.exports = {
         .sort({ updatedAt: -1 })
         .then(async (results) => {
           results = await User.populate(results, {
-            path: 'latestMessage.sender_id',
+            path: 'latestMessage.sender',
             select: 'fullName picture email',
           });
           // res.status(200).json({
@@ -101,55 +98,54 @@ module.exports = {
           //   data: results,
           // });
           res.status(200).send(results);
-
         });
     } catch (error) {
       res.status(400);
       throw new Error(error.message);
     }
   },
-  sendMessage: async (req, res, next) => {
-    try {
-      const receiverId = req.params.id;
+  // sendMessage: async (req, res, next) => {
+  //   try {
+  //     const receiverId = req.params.id;
 
-      if (!mongodb.ObjectId.isValid(receiverId)) {
-        return res.status(400).json({
-          message: 'The receiverId is invalid',
-          messageCode: 'invalid_receiverId',
-        });
-      }
-      const senderId = req.user.data;
-      const { message } = req.body;
+  //     if (!mongodb.ObjectId.isValid(receiverId)) {
+  //       return res.status(400).json({
+  //         message: 'The receiverId is invalid',
+  //         messageCode: 'invalid_receiverId',
+  //       });
+  //     }
+  //     const senderId = req.user.data;
+  //     const { message } = req.body;
 
-      let conversation = await Conversation.findOne({
-        paticipants: { $all: [senderId, receiverId] },
-      });
+  //     let conversation = await Conversation.findOne({
+  //       paticipants: { $all: [senderId, receiverId] },
+  //     });
 
-      if (!conversation) {
-        conversation = new Conversation({
-          paticipants: [senderId, receiverId],
-        });
-      }
+  //     if (!conversation) {
+  //       conversation = new Conversation({
+  //         paticipants: [senderId, receiverId],
+  //       });
+  //     }
 
-      const newMessage = await Message.create({
-        senderId,
-        receiverId,
-        message,
-      });
+  //     const newMessage = await Message.create({
+  //       senderId,
+  //       receiverId,
+  //       message,
+  //     });
 
-      if (newMessage) {
-        conversation.messages.push(newMessage._id);
-      }
+  //     if (newMessage) {
+  //       conversation.messages.push(newMessage._id);
+  //     }
 
-      await conversation.save();
+  //     await conversation.save();
 
-      return res.status(201).json({
-        message: 'Message sent successfully',
-        messageCode: 'sent_successfully',
-        data: message,
-      });
-    } catch (error) {
-      next(error);
-    }
-  },
+  //     return res.status(201).json({
+  //       message: 'Message sent successfully',
+  //       messageCode: 'sent_successfully',
+  //       data: message,
+  //     });
+  //   } catch (error) {
+  //     next(error);
+  //   }
+  // },
 };

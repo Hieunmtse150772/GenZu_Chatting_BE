@@ -9,7 +9,7 @@ const ConversationDeletedSchema = mongoose.Schema(
             ref: 'conversation',
             required: true
         },
-        user_id: {
+        user_id:    {
             type: String,
             ref: 'user',
             required: true

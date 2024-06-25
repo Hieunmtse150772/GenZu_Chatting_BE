@@ -2,7 +2,7 @@ const jwt = require('jsonwebtoken');
 const google = require('googleapis').google;
 
 const UserModel = require('@/model/user.model');
-const { generateToken, verifyRefreshToken } = require('@/utils/functions');
+const { generateToken, verifyToken, verifyRefreshToken } = require('@/utils/functions');
 const client = require('@/connections/redis');
 const CONFIG = require('@/config');
 const OAuth2 = google.auth.OAuth2;
@@ -17,7 +17,7 @@ module.exports = {
                     message: 'Email already exists',
                 });
             }
-
+            console.log('user: ', user);
             const newUser = await UserModel.create(req.body);
             const { password, ...remain } = newUser._doc;
             const accessToken = generateToken(
@@ -46,6 +46,10 @@ module.exports = {
                     message: 'Create user successfully',
                     user: remain,
                     accessToken,
+                    refreshToken,
+                    maxAge: Number(process.env.EXPIRE_REFRESH_TOKEN_COOKIE),
+                    success: true,
+                    status: 201,
                 });
         } catch (error) {
             next(error);
@@ -68,7 +72,7 @@ module.exports = {
                 });
             }
 
-            const { password, tokenGoogle, ...remain } = user._doc;
+            const { password, ...remain } = user._doc;
             const accessToken = generateToken(user._id, process.env.ACCESS_TOKEN_KEY, process.env.EXPIRE_ACCESS_TOKEN);
             const refreshToken = generateToken(
                 user._id,
@@ -91,12 +95,16 @@ module.exports = {
                     message: 'Your login was successfully',
                     user: remain,
                     accessToken,
+                    refreshToken,
+                    maxAge: Number(process.env.EXPIRE_REFRESH_TOKEN_COOKIE),
+                    success: true,
+                    status: 200,
                 });
         } catch (error) {
             next(error);
         }
     },
-    signInWithGoogle: (req, res) => {
+    signInWithGoogle: (req, res, next) => {
         try {
             const oauth2Client = new OAuth2(
                 CONFIG.oauth2Credentials.client_id,
@@ -128,14 +136,13 @@ module.exports = {
         );
         if (req.query.error) {
             // The user did not give us permission.
-            return res.status(403).json(error);
+            return res.status(403).json(req.query.error);
         } else {
             oauth2Client.getToken(req.query.code, async function (err, token) {
                 if (err) return res.status(403).json(err);
                 // Store the credentials given by google into a jsonwebtoken in a cookie called 'jwt'
 
                 const userInfo = jwt.decode(token.id_token);
-
                 const user = await UserModel.findOne({ googleId: userInfo.sub });
 
                 if (!user) {
@@ -144,10 +151,9 @@ module.exports = {
                         picture: userInfo.picture,
                         email: userInfo.email,
                         email_verified: userInfo.email_verified,
-                        tokenGoogle: token,
                         googleId: userInfo.sub,
                     });
-                    const { password, tokenGoogle, ...remain } = newUser._doc;
+                    const { password, ...remain } = newUser._doc;
                     const accessToken = generateToken(
                         newUser._id,
                         process.env.ACCESS_TOKEN_KEY,
@@ -174,9 +180,11 @@ module.exports = {
                             message: 'Create user successfully',
                             user: remain,
                             accessToken,
+                            refreshToken,
+                            maxAge: Number(process.env.EXPIRE_REFRESH_TOKEN_COOKIE),
                         });
                 } else {
-                    const { password, tokenGoogle, ...remain } = user._doc;
+                    const { password, ...remain } = user._doc;
                     const accessToken = generateToken(
                         user._id,
                         process.env.ACCESS_TOKEN_KEY,
@@ -203,12 +211,13 @@ module.exports = {
                             message: 'Your login was successfully',
                             user: remain,
                             accessToken,
+                            refreshToken,
+                            maxAge: Number(process.env.EXPIRE_REFRESH_TOKEN_COOKIE),
                         });
                 }
             });
         }
     },
-
     refreshToken: async (req, res, next) => {
         try {
             const decoded = verifyRefreshToken(req.cookies.refreshToken, process.env.REFRESH_TOKEN_KEY);
@@ -243,6 +252,8 @@ module.exports = {
                     messageCode: 'refresh_token_successfully',
                     message: 'Your refresh token was successfully',
                     accessToken,
+                    refreshToken,
+                    maxAge: Number(process.env.EXPIRE_REFRESH_TOKEN_COOKIE),
                 });
         } catch (error) {
             next(error);
