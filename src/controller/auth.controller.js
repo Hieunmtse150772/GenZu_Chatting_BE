@@ -1,10 +1,10 @@
 const jwt = require('jsonwebtoken');
 const google = require('googleapis').google;
 
-const UserModel = require('../model/user.model');
-const { generateToken, verifyToken, verifyRefreshToken } = require('../utils/functions');
-const client = require('../connections/redis');
-const CONFIG = require('../config/google');
+const UserModel = require('@/model/user.model');
+const { generateToken, verifyToken, verifyRefreshToken } = require('@/utils/functions');
+const client = require('@/connections/redis');
+const CONFIG = require('@/config');
 const OAuth2 = google.auth.OAuth2;
 
 module.exports = {
@@ -46,6 +46,8 @@ module.exports = {
                     message: 'Create user successfully',
                     user: remain,
                     accessToken,
+                    success: true,
+                    status: 201,
                 });
         } catch (error) {
             next(error);
@@ -91,12 +93,14 @@ module.exports = {
                     message: 'Your login was successfully',
                     user: remain,
                     accessToken,
+                    success: true,
+                    status: 200,
                 });
         } catch (error) {
             next(error);
         }
     },
-    signInWithGoogle: (req, res, next, next) => {
+    signInWithGoogle: (req, res, next) => {
         try {
             const oauth2Client = new OAuth2(
                 CONFIG.oauth2Credentials.client_id,
@@ -128,13 +132,10 @@ module.exports = {
         );
         if (req.query.error) {
             // The user did not give us permission.
-            console.log('error: ', req.query.error);
-            console.log('11111');
-            return res.redirect('/');
+            return res.status(403).json(req.query.error);
         } else {
             oauth2Client.getToken(req.query.code, async function (err, token) {
-                console.log('error 2: ', err);
-                if (err) return res.redirect('/');
+                if (err) return res.status(403).json(err);
                 // Store the credentials given by google into a jsonwebtoken in a cookie called 'jwt'
 
                 const userInfo = jwt.decode(token.id_token);
