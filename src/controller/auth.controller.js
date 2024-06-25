@@ -46,6 +46,8 @@ module.exports = {
                     message: 'Create user successfully',
                     user: remain,
                     accessToken,
+                    refreshToken,
+                    maxAge: Number(process.env.EXPIRE_REFRESH_TOKEN_COOKIE),
                     success: true,
                     status: 201,
                 });
@@ -93,6 +95,8 @@ module.exports = {
                     message: 'Your login was successfully',
                     user: remain,
                     accessToken,
+                    refreshToken,
+                    maxAge: Number(process.env.EXPIRE_REFRESH_TOKEN_COOKIE),
                     success: true,
                     status: 200,
                 });
@@ -176,6 +180,8 @@ module.exports = {
                             message: 'Create user successfully',
                             user: remain,
                             accessToken,
+                            refreshToken,
+                            maxAge: Number(process.env.EXPIRE_REFRESH_TOKEN_COOKIE),
                         });
                 } else {
                     const { password, ...remain } = user._doc;
@@ -205,12 +211,13 @@ module.exports = {
                             message: 'Your login was successfully',
                             user: remain,
                             accessToken,
+                            refreshToken,
+                            maxAge: Number(process.env.EXPIRE_REFRESH_TOKEN_COOKIE),
                         });
                 }
             });
         }
     },
-
     refreshToken: async (req, res, next) => {
         try {
             const decoded = verifyRefreshToken(req.cookies.refreshToken, process.env.REFRESH_TOKEN_KEY);
@@ -245,6 +252,8 @@ module.exports = {
                     messageCode: 'refresh_token_successfully',
                     message: 'Your refresh token was successfully',
                     accessToken,
+                    refreshToken,
+                    maxAge: Number(process.env.EXPIRE_REFRESH_TOKEN_COOKIE),
                 });
         } catch (error) {
             next(error);
