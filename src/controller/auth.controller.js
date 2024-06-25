@@ -17,7 +17,6 @@ module.exports = {
                     message: 'Email already exists',
                 });
             }
-            console.log('user: ', user);
             const newUser = await UserModel.create(req.body);
             const { password, ...remain } = newUser._doc;
             const accessToken = generateToken(
