@@ -1,4 +1,70 @@
 const userSwagger = {
+    '/users/update/{id}': {
+        patch: {
+            tags: ['User'],
+            description: 'Update profile of user',
+            security: [
+                {
+                    accessToken: [],
+                },
+            ],
+            parameters: [
+                {
+                    name: 'id',
+                    in: 'path',
+                    description: 'Id of user',
+                    schema: {
+                        type: 'string',
+                    },
+                },
+            ],
+            requestBody: {
+                content: {
+                    'application/json': {
+                        schema: {
+                            type: 'object',
+                            properties: {
+                                fullName: {
+                                    description: 'Fullname of user',
+                                    type: 'string',
+                                },
+                                address: {
+                                    description: 'Address of user',
+                                    type: 'string',
+                                },
+                                gender: {
+                                    description: 'Gender of user',
+                                    type: 'string',
+                                    example: 'male',
+                                },
+                                email: {
+                                    description: 'Email of user',
+                                    type: 'string',
+                                    example: 'string@gmail.com',
+                                },
+                                phoneNumber: {
+                                    description: 'Phone of user',
+                                    type: 'string',
+                                },
+                                picture: {
+                                    description: 'Picture of user',
+                                    type: 'string',
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+            responses: {
+                200: {
+                    description: 'Update profile was successfully',
+                    content: {
+                        'application/json': {},
+                    },
+                },
+            },
+        },
+    },
     '/users/sidebar': {
         get: {
             tags: ['User'],

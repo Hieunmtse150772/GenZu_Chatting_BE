@@ -3,7 +3,7 @@ const createHttpError = require('http-errors');
 module.exports = function (validator) {
     return async function (req, res, next) {
         try {
-            const validated = await validator.validateAsync({ ...req.body, ...req.params });
+            const validated = await validator.validateAsync({ ...req.body });
             req.body = validated;
             next();
         } catch (err) {
