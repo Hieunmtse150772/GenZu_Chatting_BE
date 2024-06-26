@@ -80,21 +80,52 @@ io.on('connection', (socket) => {
         }
     });
 
+    socket.on('setup', (userData) => {
+        socket.join(userData._id);
+        socket.emit('connected');
+    });
+
+    socket.on('join chat', (room) => {
+        socket.join(room);
+        console.log('User Joined Room: ' + room);
+    });
+
     socket.on('typing', (room) => {
         socket.in(room).emit('typing');
     });
-    socket.on('stop_typing', (room) => socket.in(room).emit('stop typing'));
+    socket.on('stop_typing', (room) => socket.in(room).emit('stop_typing'));
 
     socket.on('new message', (newMessageReceived) => {
-        var chat = newMessageReceived.conversation;
+        if (!newMessageReceived || !newMessageReceived.conversation || !newMessageReceived.conversation._id) {
+            console.error('Invalid newMessageReceived data');
+            return;
+        }
 
-        if (!chat.users) return console.log('chat.users not defined');
+        const chatRoom = newMessageReceived.conversation._id;
 
-        chat.users.forEach((user) => {
-            console.log('userId: ', user._id);
-            if (user?._id == newMessageReceived?.sender?._id) return;
-            socket.in(user._id).emit('message received', newMessageReceived);
-        });
+        // Gửi tin nhắn đến tất cả socket trong phòng, ngoại trừ socket của người gửi
+        socket.to(chatRoom).emit('message received', newMessageReceived);
+        console.log('Message sent to room: ' + chatRoom);
+    });
+    socket.off('setup', () => {
+        console.log('USER DISCONNECTED');
+        socket.leave(userData._id);
+    });
+
+    socket.on('disconnect', async () => {
+        try {
+            const user = await User.findOne({ socketId: socket.id }).select('-password');
+            if (user) {
+                user.socketId = user.socketId.filter((item) => item !== socket.id);
+                if (!user.socketId.length) {
+                    user.is_online = false;
+                }
+                await user.save();
+            }
+            console.log(socket.id + ' disconnect');
+        } catch (error) {
+            console.log(error);
+        }
     });
 
     socket.on('disconnect', async () => {

@@ -6,7 +6,7 @@ const User = require('../model/user.model');
 
 module.exports = {
     accessConversation: async (req, res, next) => {
-        const { userId } = req.body;
+        const { userId } = req.query;
 
         if (!userId) {
             console.log('UserId param not sent with request');
@@ -102,6 +102,42 @@ module.exports = {
         } catch (error) {
             res.status(400);
             throw new Error(error.message);
+        }
+    },
+    createGroupConversation: async (req, res, next) => {
+        const userId = req.user.data;
+        console.log('userId: ', userId);
+
+        if (!req.body.users || !req.body.name) {
+            return res.status(400).send({ message: 'Please Fill all the field!' });
+        }
+        var users = JSON.parse(req.body.users);
+
+        if (users.length < 2) {
+            return res.status(400).send({ message: 'Please add more than 1 user to create a group chat!' });
+        }
+
+        users.push(userId);
+
+        try {
+            const groupChat = await Conversation.create({
+                chatName: req.body.name,
+                isGroupChat: true,
+                users: users,
+                groupAdmin: userId,
+            });
+            const fullGroupChatInfo = await Conversation.findOne({
+                _id: groupChat._id,
+            })
+                .populate('users', 'picture fullName _id email')
+                .populate('groupAdmin', 'picture fullName _id email');
+            return res.status(201).json({
+                data: fullGroupChatInfo,
+                message: 'Create group chat successful',
+                messageCode: 'create_group_chat_successful',
+            });
+        } catch (error) {
+            return next(error);
         }
     },
     // sendMessage: async (req, res, next) => {

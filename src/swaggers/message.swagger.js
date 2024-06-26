@@ -77,6 +77,26 @@ const messageSwagger = {
                         description: 'Pagination page number (the default value is 1)',
                     },
                 },
+                {
+                    name: 'startDate',
+                    in: 'query',
+                    description: 'The start date of range date you want to search',
+                    schema: {
+                        type: 'string',
+                        description: 'Pagination page number (the default value is 1)',
+                        example: '06/25/2024',
+                    },
+                },
+                {
+                    name: 'endDate',
+                    in: 'query',
+                    description: 'The end date of range date you want to search',
+                    schema: {
+                        type: 'string',
+                        description: 'Pagination page number (the default value is 1)',
+                        example: '06/25/2024',
+                    },
+                },
             ],
             responses: {
                 200: {
