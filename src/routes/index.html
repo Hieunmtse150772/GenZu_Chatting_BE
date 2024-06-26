@@ -8,6 +8,7 @@
     <body>
         <div>
             <button id="login">Login</button>
+            <button id="logout">Logout</button>
         </div>
         <div>
             <input type="text" placeholder="enter your message" id="input_chat" />
@@ -17,10 +18,15 @@
         <script>
             const socket = io('http://localhost:8888');
             const login = document.getElementById('login');
+            const logout = document.getElementById('logout');
 
             login.addEventListener('click', (e) => {
-                socket.emit('join_app', 123456);
+                socket.emit('login', '667bd5bc00fa5340cf7cc415');
                 login.remove();
+            });
+
+            logout.addEventListener('click', (e) => {
+                socket.emit('logout', '667bd5bc00fa5340cf7cc415');
             });
         </script>
     </body>
