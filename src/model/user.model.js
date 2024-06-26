@@ -18,6 +18,7 @@ const UserSchema = new mongoose.Schema(
                 'Please provide a valid email',
             ],
         },
+        socketId: [{ type: String, default: [] }],
         googleId: { type: String, default: null },
         email_verified: { type: Boolean, default: false },
         tokenGoogle: { type: Object, default: null },

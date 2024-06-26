@@ -5,17 +5,7 @@ const User = require('../model/user.model');
 module.exports = {
     updateProfile: async (req, res, next) => {
         try {
-            const id = req.params.id;
-            if (!mongodb.ObjectId.isValid(id)) {
-                return res.status(400).json({
-                    message: 'The user id is invalid',
-                    messageCode: 'invalid_userId',
-                    status: 400,
-                    success: false,
-                });
-            }
-
-            const user = await User.findByIdAndUpdate({ _id: id }, req.body, {
+            const user = await User.findByIdAndUpdate({ _id: req.user.data }, req.body, {
                 new: true,
             }).select('-password');
 

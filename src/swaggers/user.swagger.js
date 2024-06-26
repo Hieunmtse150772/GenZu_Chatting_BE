@@ -8,16 +8,6 @@ const userSwagger = {
                     accessToken: [],
                 },
             ],
-            parameters: [
-                {
-                    name: 'id',
-                    in: 'path',
-                    description: 'Id of user',
-                    schema: {
-                        type: 'string',
-                    },
-                },
-            ],
             requestBody: {
                 content: {
                     'application/json': {
