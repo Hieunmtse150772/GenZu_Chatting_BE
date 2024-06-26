@@ -18,6 +18,33 @@ const conversationSwagger = {
                 },
             },
         },
+        post: {
+            tags: ['Conversation'],
+            description: 'Create single chat',
+            security: [
+                {
+                    accessToken: [],
+                },
+            ],
+            parameters: [
+                {
+                    name: 'userId',
+                    in: 'query',
+                    description: 'Id của người dùng mà bạn muốn nhắn tin',
+                    schema: {
+                        type: 'string',
+                    },
+                },
+            ],
+            responses: {
+                201: {
+                    description: 'Access conversation successfully',
+                    content: {
+                        'application/json': {},
+                    },
+                },
+            },
+        },
     },
 };
 
