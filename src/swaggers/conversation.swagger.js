@@ -2,14 +2,13 @@ const conversationSwagger = {
     '/conversations': {
         get: {
             tags: ['Conversation'],
-            description: 'Get all conversations of conversation',
+            description: 'Get all conversations of user',
             security: [
                 {
                     accessToken: [],
                 },
             ],
-            parameters: [
-            ],
+            parameters: [],
             responses: {
                 200: {
                     description: 'Get all conversation of users successfully',

@@ -6,7 +6,8 @@
     "scripts": {
         "dev": "nodemon main.js",
         "start": "node main.js",
-        "build": "npm install && npm run build"
+        "build": "netlify-lambda build src",
+        "serve": "netlify-lambda serve src"
     },
     "author": "",
     "license": "ISC",
@@ -23,6 +24,7 @@
         "module-alias": "^2.2.3",
         "mongodb": "^6.7.0",
         "mongoose": "^8.4.0",
+        "netlify-lambda": "^2.0.16",
         "redis": "^4.6.14",
         "socket.io": "^4.7.5",
         "swagger-jsdoc": "^6.2.8",

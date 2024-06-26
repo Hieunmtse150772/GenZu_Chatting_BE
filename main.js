@@ -15,6 +15,7 @@ app.use(express.json()); // for parsing application/json
 app.use(express.urlencoded({ extended: true })); // for parsing application/x-www-form-urlencoded
 app.use(cors());
 app.use(cookieParser());
+
 // routes
 routes(app);
 
@@ -26,7 +27,6 @@ app.use((err, req, res, next) => {
     });
     next();
 });
-
 server.listen(port, () => {
     console.log(`Server listening on port ${port}`);
 });
