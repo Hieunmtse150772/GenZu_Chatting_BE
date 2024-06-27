@@ -18,7 +18,7 @@ const io = require('socket.io')(server, {
 
 io.on('connection', (socket) => {
     console.log(socket.id + ' connect');
-    const cookies = cookie.parse(socket.handshake.headers.cookie);
+    const cookies = cookie.parse(socket?.handshake?.headers?.cookie ? socket?.handshake?.headers?.cookie : '');
     if (cookies && cookies.accessToken) {
         jwt.verify(cookies.accessToken, process.env.ACCESS_TOKEN_KEY, async function (err, decoded) {
             if (!err) {

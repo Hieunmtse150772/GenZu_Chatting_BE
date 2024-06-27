@@ -15,21 +15,60 @@ module.exports = {
             }
             // const senderId = req.user.data;
 
-            const conversations = await Conversation.find({
-                'user.user_id': req.user?._id,
+            const friendList = await Friend.find({
+                $or: [
+                    {
+                        sender: user_id,
+                    },
+                    {
+                        receiver: user_id,
+                    },
+                ],
+                status: 'accepted',
             });
 
-            if (!conversations) {
+            if (!friendList) {
                 return res.status(200).json({
-                    message: 'Get conversations was successfully.',
-                    messageCode: 'get_conversations_successfully',
+                    message: 'Get friend list was successfully.',
+                    messageCode: 'get_friend_list_successfully',
                     data: [],
                 });
             }
             return res.status(200).json({
-                message: 'Get conversations was successfully',
-                messageCode: 'get_conversations_successfully',
-                data: conversations,
+                message: 'Get friend list was successfully',
+                messageCode: 'get_friend_list_successfully',
+                data: friendList,
+            });
+        } catch (error) {
+            next(error);
+        }
+    },
+    getAddFriendRequest: async (req, res, next) => {
+        try {
+            const user_id = req.user.data;
+            if (!mongodb.ObjectId.isValid(user_id)) {
+                return res.status(400).json({
+                    message: 'The user id is invalid',
+                    messageCode: 'invalid_userId',
+                });
+            }
+            // const senderId = req.user.data;
+
+            const friendList = await Friend.find({
+                'user.user_id': req.user?._id,
+            });
+
+            if (!friendList) {
+                return res.status(200).json({
+                    message: 'Get friend list was successfully.',
+                    messageCode: 'get_friend_list_successfully',
+                    data: [],
+                });
+            }
+            return res.status(200).json({
+                message: 'Get friend list was successfully',
+                messageCode: 'get_friend_list_successfully',
+                data: friendList,
             });
         } catch (error) {
             next(error);
@@ -58,13 +97,18 @@ module.exports = {
                 ],
             });
             if (isFriend) {
-                res.status();
+                return res.status(409).json({
+                    messageCode: 'add_friend_request_already_exist',
+                    message: 'Add friend request already exist',
+                });
             }
             const addFriendRequest = await Friend.create({
-                senderId,
-                receiverId,
-            });
-
+                sender: senderId,
+                receiver: receiverId,
+                status: 'sended',
+            })
+                .populate('sender', '-password')
+                .populate('receiver', '-password');
             return res.status(201).json({
                 message: 'Send add friend request successfully',
                 messageCode: 'sent_add_friend_successfully',
@@ -76,17 +120,39 @@ module.exports = {
     },
     updateFriendRequest: async (req, res, next) => {
         try {
-            const { requestId, status } = req.query;
+            const { requestId, statusRequest } = req.query;
 
-            const addFriendRequest = await Friend.findOne({
-                sender_id,
-                receiverId,
+            const friendRequest = await Friend.findOne({
+                requestId,
             });
-
+            const { status } = await Friend.findOne({
+                $or: [
+                    {
+                        sender: friendRequest.sender,
+                        receiver: friendRequest.receiver,
+                    },
+                    {
+                        sender: friendRequest.receiver,
+                        receiver: friendRequest.sender,
+                    },
+                ],
+            });
+            if (status === 'accepted') {
+                Friend.findOneAndUpdate({
+                    status: 'cancel',
+                });
+                return res.status(409).json({
+                    messageCode: 'already_friend',
+                    message: 'Your are already friend',
+                });
+            }
+            const updateRequest = Friend.findByIdAndUpdate({
+                status: statusRequest,
+            });
             return res.status(201).json({
-                message: 'Send add friend request successfully',
-                messageCode: 'sent_add_friend_successfully',
-                data: addFriendRequest,
+                message: 'Accept friend request successfully',
+                messageCode: 'accept_friend_successfully',
+                data: updateRequest,
             });
         } catch (error) {
             next(error);
