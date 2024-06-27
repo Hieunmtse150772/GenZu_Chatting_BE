@@ -10,10 +10,10 @@ const app = express();
 const server = http.createServer(app);
 const io = require('socket.io')(server, {
     pingTimeout: 60000,
-    cors: {
-        origin: process.env.URL_CLIENT,
-        // credentials: true,
-    },
+    // cors: {
+    //     origin: process.env.URL_CLIENT,
+    //     // credentials: true,
+    // },
 });
 
 io.on('connection', (socket) => {
