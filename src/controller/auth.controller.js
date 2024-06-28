@@ -352,7 +352,7 @@ module.exports = {
         console.log(user, req.body);
         if (!user) {
             return res.status(404).json({
-                messageCode: 'token_not_found',
+                messageCode: 'user_not_found',
                 message: 'The user not found',
                 success: false,
                 status: 404,
@@ -370,6 +370,81 @@ module.exports = {
         }
 
         user.password = req.body.newPassword;
+        await user.save();
+
+        return res.status(200).json({
+            messageCode: 'change_password_successfully',
+            message: 'Change password successfully',
+            success: true,
+            status: 200,
+        });
+    },
+    forgotPassword: async (req, res) => {
+        const user = await UserModel.findOne({ email: req.body.email }).select('-password');
+        if (!user) {
+            return res.status(404).json({
+                messageCode: 'user_not_found',
+                message: 'The user not found',
+                success: false,
+                status: 404,
+            });
+        }
+
+        const currentTimestamp = moment().unix();
+        const thresholdTimestamp = user.timeResendForgotPassword + 120;
+        const remainingSeconds = thresholdTimestamp - currentTimestamp;
+
+        if (remainingSeconds > 0) {
+            return res.status(400).json({
+                messageCode: 'waiting_time',
+                message: 'Please wait in ' + remainingSeconds,
+                success: false,
+                status: 400,
+            });
+        }
+
+        user.tokenVerifyForgotPassword = crypto.randomBytes(32).toString('hex');
+        user.timeResendForgotPassword = moment().unix();
+        const newUser = await user.save();
+
+        const link = `${process.env.URL_CLIENT}/verify/forgot-password?user_id=${newUser._id}&token=${newUser.tokenVerifyForgotPassword}`;
+
+        const result = await sendEmail(newUser.email, 'Forgot password', link);
+
+        if (!result) {
+            return res.status(500).json({
+                messageCode: 'forgot_password_send_email_failed',
+                message: 'Send email forgot password failed',
+                success: false,
+                status: 500,
+            });
+        }
+
+        return res.status(200).json({
+            messageCode: 'forgot_password_successfully',
+            message: 'Forgot password successfully',
+            success: true,
+            status: 200,
+        });
+    },
+    verifyForgotPassword: async (req, res) => {
+        const user = await UserModel.findOne({ tokenVerifyForgotPassword: req.body.token });
+        if (!user) {
+            return res.status(404).json({
+                messageCode: 'token_not_found',
+                message: 'The user not found',
+                success: false,
+                status: 404,
+            });
+        }
+
+        user.password = req.body.newPassword;
+
+        if (!user.email_verified) {
+            user.is_active = true;
+            user.email_verified = true;
+        }
+
         await user.save();
 
         return res.status(200).json({

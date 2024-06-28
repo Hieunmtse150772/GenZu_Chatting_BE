@@ -215,6 +215,55 @@ const authSwagger = {
         post: {
             tags: ['Auth'],
             description: 'Forgot password for user',
+            requestBody: {
+                content: {
+                    'application/json': {
+                        schema: {
+                            type: 'object',
+                            properties: {
+                                email: {
+                                    description: 'Email of user',
+                                    type: 'string',
+                                    example: 'string@gmail.com',
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+            responses: {
+                200: {
+                    description: 'Forgot password successfully',
+                    content: {
+                        'application/json': {},
+                    },
+                },
+            },
+        },
+    },
+    '/auth/verify-forgot-password': {
+        post: {
+            tags: ['Auth'],
+            description: 'Verify forgot password for user',
+            requestBody: {
+                content: {
+                    'application/json': {
+                        schema: {
+                            type: 'object',
+                            properties: {
+                                token: {
+                                    description: 'Token for forgot password',
+                                    type: 'string',
+                                },
+                                newPassword: {
+                                    description: 'New password',
+                                    type: 'string',
+                                },
+                            },
+                        },
+                    },
+                },
+            },
             responses: {
                 200: {
                     description: 'Forgot password successfully',
