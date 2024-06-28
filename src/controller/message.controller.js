@@ -11,7 +11,7 @@ module.exports = {
             const message = await Message.find({
                 conversation: conversation_id,
             })
-                .populate('sender', '_id fullName email phone_number picture')
+                .populate('sender', '_id fullName picture')
                 .populate('conversation');
             if (!message) {
                 return res.status(200).json({

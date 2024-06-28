@@ -9,8 +9,9 @@ module.exports = async function (req, res, next) {
         excludedFiled.forEach((ele) => delete queryObject[ele]);
         let queryString = JSON.stringify(queryObject);
         const reg = /\bgte|gt|lte|lt\b/g;
+        console.log('queryString 1: ', queryString);
         queryString = queryString.replace(reg, (matchString) => `$${matchString}`);
-
+        console.log('querystring: ', queryString);
         // Search
         let searchQuery;
         if (req.query.search) {
