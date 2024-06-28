@@ -4,9 +4,6 @@ const Conversation = require('../model/conversation.model');
 const Message = require('../model/message.model');
 const User = require('../model/user.model');
 module.exports = {
-    getChat: (req, res) => {
-        res.sendFile(__dirname + '/index.html');
-    },
     getAllMessages: async (req, res, next) => {
         try {
             console.log('req.user: ', req.user.data);

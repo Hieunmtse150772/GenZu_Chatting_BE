@@ -15,7 +15,13 @@ const signIn = Joi.object({
     password: Joi.string().min(6).max(30).required(),
 });
 
+const changePassword = Joi.object({
+    oldPassword: Joi.string().min(6).max(30).required(),
+    newPassword: Joi.string().min(6).max(30).required(),
+});
+
 module.exports = {
     signUp,
     signIn,
+    changePassword,
 };

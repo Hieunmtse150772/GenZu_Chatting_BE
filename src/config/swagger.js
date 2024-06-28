@@ -1,11 +1,12 @@
 const swaggerJsdoc = require('swagger-jsdoc');
 
-const package = require('../../package.json');
-const authSwagger = require('../swaggers/auth.swagger');
-const messageSwagger = require('../swaggers/message.swagger');
-const userSwagger = require('../swaggers/user.swagger');
-const friendSwagger = require('../swaggers/friend.swagger');
-const conversationSwagger = require('../swaggers/conversation.swagger');
+const package = require('@root/package.json');
+const authSwagger = require('@/swaggers/auth.swagger');
+const messageSwagger = require('@/swaggers/message.swagger');
+const userSwagger = require('@/swaggers/user.swagger');
+const friendSwagger = require('@/swaggers/friend.swagger');
+const conversationSwagger = require('@/swaggers/conversation.swagger');
+
 const options = {
     definition: {
         openapi: '3.0.0',
@@ -20,7 +21,7 @@ const options = {
                 description: process.env.ENVIRONMENT,
             },
         ],
-        tags: ['Auth', 'Message', 'User'],
+        tags: ['Auth', 'Message', 'User', 'General'],
         paths: {
             ...authSwagger,
             ...messageSwagger,

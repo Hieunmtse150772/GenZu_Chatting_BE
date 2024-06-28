@@ -6,7 +6,6 @@ const Validation = require('../middlewares/validation.middleware');
 const { getMessages, sendMessage } = require('../validations/message.validation');
 const messageMiddleware = require('@/middlewares/sort-filter-pagination/messageFeature.middleware');
 
-router.get('/getChat', MessageController.getChat);
 router.get(
     '/getPaginationMessage/:id',
     verifyToken,
