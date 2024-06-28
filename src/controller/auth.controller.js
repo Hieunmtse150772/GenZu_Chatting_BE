@@ -1,10 +1,13 @@
 const jwt = require('jsonwebtoken');
-const google = require('googleapis').google;
+const crypto = require('crypto');
+const moment = require('moment');
 
 const UserModel = require('@/model/user.model');
-const { generateToken, verifyToken, verifyRefreshToken } = require('@/utils/functions');
+const { generateToken, verifyRefreshToken, sendEmail } = require('@/utils/functions');
 const client = require('@/connections/redis');
 const CONFIG = require('@/config');
+
+const google = require('googleapis').google;
 const OAuth2 = google.auth.OAuth2;
 
 module.exports = {
@@ -17,39 +20,22 @@ module.exports = {
                     message: 'Email already exists',
                 });
             }
-            const newUser = await UserModel.create(req.body);
-            const { password, ...remain } = newUser._doc;
-            const accessToken = generateToken(
-                newUser._id,
-                process.env.ACCESS_TOKEN_KEY,
-                process.env.EXPIRE_ACCESS_TOKEN,
-            );
-            const refreshToken = generateToken(
-                newUser._id,
-                process.env.REFRESH_TOKEN_KEY,
-                process.env.EXPIRE_REFRESH_TOKEN,
-            );
-            await client.set(String(newUser._id), refreshToken, {
-                PX: Number(process.env.EXPIRE_REFRESH_TOKEN_COOKIE),
+
+            const newUser = await UserModel.create({
+                ...req.body,
+                tokenEmailVerify: crypto.randomBytes(32).toString('hex'),
             });
 
-            return res
-                .status(201)
-                .cookie('refreshToken', refreshToken, {
-                    maxAge: Number(process.env.EXPIRE_REFRESH_TOKEN_COOKIE),
-                    httpOnly: true, // không thể được truy cập bởi JavaScript
-                    secure: true, // đảm bảo rằng cookies chỉ được gửi qua các kết nối an toàn (HTTPS)
-                })
-                .json({
-                    messageCode: 'create_user_successfully',
-                    message: 'Create user successfully',
-                    user: remain,
-                    accessToken,
-                    refreshToken,
-                    maxAge: Number(process.env.EXPIRE_REFRESH_TOKEN_COOKIE),
-                    success: true,
-                    status: 201,
-                });
+            const link = `${process.env.URL_CLIENT}/verify?user_id=${newUser._id}&token=${newUser.tokenEmailVerify}`;
+
+            await sendEmail(newUser.email, 'Verify email', link);
+
+            return res.status(201).json({
+                messageCode: 'please_verify_email',
+                message: 'Please verify your email',
+                success: true,
+                status: 201,
+            });
         } catch (error) {
             next(error);
         }
@@ -61,6 +47,8 @@ module.exports = {
                 return res.status(400).json({
                     messageCode: 'user_is_not_registered',
                     message: 'The user is not registered',
+                    success: false,
+                    status: 400,
                 });
             }
             const isValid = user.checkPassword(req.body.password);
@@ -68,6 +56,17 @@ module.exports = {
                 return res.status(400).json({
                     messageCode: 'incorrect_password',
                     message: 'Your password is incorrect',
+                    success: false,
+                    status: 400,
+                });
+            }
+
+            if (!user.is_active) {
+                return res.status(400).json({
+                    messageCode: 'account_not_activated',
+                    message: 'Your account is not activated',
+                    success: false,
+                    status: 400,
                 });
             }
 
@@ -257,6 +256,203 @@ module.exports = {
         } catch (error) {
             next(error);
         }
+    },
+    resendVerifyEmail: async (req, res) => {
+        const user = await UserModel.findOne({ email: req.body.email }).select('-password');
+
+        if (!user) {
+            return res.status(404).json({
+                messageCode: 'user_not_found',
+                message: 'The user not found',
+                success: false,
+                status: 404,
+            });
+        }
+        const currentTimestamp = moment().unix();
+        const thresholdTimestamp = user.timeResendVerifyEmail + 120;
+        const remainingSeconds = thresholdTimestamp - currentTimestamp;
+
+        if (remainingSeconds > 0) {
+            return res.status(400).json({
+                messageCode: 'waiting_time',
+                message: 'Please wait in ' + remainingSeconds,
+                success: false,
+                status: 400,
+            });
+        }
+
+        if (user.email_verified) {
+            return res.status(400).json({
+                messageCode: 'email_already_verified',
+                message: 'The email already verified',
+                success: false,
+                status: 400,
+            });
+        }
+
+        user.tokenEmailVerify = crypto.randomBytes(32).toString('hex');
+        user.timeResendVerifyEmail = moment().unix();
+        const newUser = await user.save();
+
+        const link = `${process.env.URL_CLIENT}/verify?user_id=${newUser._id}&token=${newUser.tokenEmailVerify}`;
+
+        const result = await sendEmail(newUser.email, 'Verify email', link);
+
+        if (!result) {
+            return res.status(500).json({
+                messageCode: 'resend_verify_email_failed',
+                message: 'Resend verify your email failed',
+                success: false,
+                status: 500,
+            });
+        }
+
+        return res.status(200).json({
+            messageCode: 'resend_verify_email_successfully',
+            message: 'Resend verify your email successfully',
+            success: true,
+            status: 200,
+        });
+    },
+    verifyEmail: async (req, res) => {
+        const user = await UserModel.findOne({ tokenEmailVerify: req.body.token }).select('-password');
+
+        if (!user) {
+            return res.status(400).json({
+                messageCode: 'token_invalid',
+                message: 'The token invalid',
+                success: false,
+                status: 400,
+            });
+        }
+
+        if (user.email_verified) {
+            return res.status(400).json({
+                messageCode: 'email_already_verified',
+                message: 'The email already verified',
+                success: false,
+                status: 400,
+            });
+        }
+
+        user.is_active = true;
+        user.email_verified = true;
+
+        await user.save();
+
+        return res.status(200).json({
+            messageCode: 'verify_email_successfully',
+            message: 'Verify your email successfully',
+            success: true,
+            status: 200,
+        });
+    },
+    changePassword: async (req, res) => {
+        const user = await UserModel.findById(req.user.data);
+        console.log(user, req.body);
+        if (!user) {
+            return res.status(404).json({
+                messageCode: 'user_not_found',
+                message: 'The user not found',
+                success: false,
+                status: 404,
+            });
+        }
+
+        const isValid = user.checkPassword(req.body.oldPassword);
+        if (!isValid) {
+            return res.status(400).json({
+                messageCode: 'wrong_password',
+                message: 'Wrong password',
+                success: false,
+                status: 400,
+            });
+        }
+
+        user.password = req.body.newPassword;
+        await user.save();
+
+        return res.status(200).json({
+            messageCode: 'change_password_successfully',
+            message: 'Change password successfully',
+            success: true,
+            status: 200,
+        });
+    },
+    forgotPassword: async (req, res) => {
+        const user = await UserModel.findOne({ email: req.body.email }).select('-password');
+        if (!user) {
+            return res.status(404).json({
+                messageCode: 'user_not_found',
+                message: 'The user not found',
+                success: false,
+                status: 404,
+            });
+        }
+
+        const currentTimestamp = moment().unix();
+        const thresholdTimestamp = user.timeResendForgotPassword + 120;
+        const remainingSeconds = thresholdTimestamp - currentTimestamp;
+
+        if (remainingSeconds > 0) {
+            return res.status(400).json({
+                messageCode: 'waiting_time',
+                message: 'Please wait in ' + remainingSeconds,
+                success: false,
+                status: 400,
+            });
+        }
+
+        user.tokenVerifyForgotPassword = crypto.randomBytes(32).toString('hex');
+        user.timeResendForgotPassword = moment().unix();
+        const newUser = await user.save();
+
+        const link = `${process.env.URL_CLIENT}/verify/forgot-password?user_id=${newUser._id}&token=${newUser.tokenVerifyForgotPassword}`;
+
+        const result = await sendEmail(newUser.email, 'Forgot password', link);
+
+        if (!result) {
+            return res.status(500).json({
+                messageCode: 'forgot_password_send_email_failed',
+                message: 'Send email forgot password failed',
+                success: false,
+                status: 500,
+            });
+        }
+
+        return res.status(200).json({
+            messageCode: 'forgot_password_successfully',
+            message: 'Forgot password successfully',
+            success: true,
+            status: 200,
+        });
+    },
+    verifyForgotPassword: async (req, res) => {
+        const user = await UserModel.findOne({ tokenVerifyForgotPassword: req.body.token });
+        if (!user) {
+            return res.status(404).json({
+                messageCode: 'token_not_found',
+                message: 'The user not found',
+                success: false,
+                status: 404,
+            });
+        }
+
+        user.password = req.body.newPassword;
+
+        if (!user.email_verified) {
+            user.is_active = true;
+            user.email_verified = true;
+        }
+
+        await user.save();
+
+        return res.status(200).json({
+            messageCode: 'change_password_successfully',
+            message: 'Change password successfully',
+            success: true,
+            status: 200,
+        });
     },
     logout: async (req, res, next) => {
         try {

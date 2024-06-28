@@ -114,6 +114,166 @@ const authSwagger = {
             },
         },
     },
+    '/auth/resend-verify-email': {
+        post: {
+            tags: ['Auth'],
+            description: 'Resend an email to verify',
+            requestBody: {
+                content: {
+                    'application/json': {
+                        schema: {
+                            type: 'object',
+                            properties: {
+                                email: {
+                                    description: 'Email of the user',
+                                    type: 'string',
+                                    example: 'string@gmail.com',
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+            responses: {
+                200: {
+                    description: 'Resend a verify email successfully',
+                    content: {
+                        'application/json': {},
+                    },
+                },
+            },
+        },
+    },
+    '/auth/verify-email': {
+        post: {
+            tags: ['Auth'],
+            description: 'Verify email',
+            requestBody: {
+                content: {
+                    'application/json': {
+                        schema: {
+                            type: 'object',
+                            properties: {
+                                token: {
+                                    description: 'Token for verify email',
+                                    type: 'string',
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+            responses: {
+                200: {
+                    description: 'Resend a verify email successfully',
+                    content: {
+                        'application/json': {},
+                    },
+                },
+            },
+        },
+    },
+    '/auth/change-password': {
+        post: {
+            tags: ['Auth'],
+            description: 'Change password for user',
+            security: [
+                {
+                    accessToken: [],
+                },
+            ],
+            requestBody: {
+                content: {
+                    'application/json': {
+                        schema: {
+                            type: 'object',
+                            properties: {
+                                oldPassword: {
+                                    description: 'Old password',
+                                    type: 'string',
+                                },
+                                newPassword: {
+                                    description: 'New password',
+                                    type: 'string',
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+            responses: {
+                200: {
+                    description: 'Change password successfully',
+                    content: {
+                        'application/json': {},
+                    },
+                },
+            },
+        },
+    },
+    '/auth/forgot-password': {
+        post: {
+            tags: ['Auth'],
+            description: 'Forgot password for user',
+            requestBody: {
+                content: {
+                    'application/json': {
+                        schema: {
+                            type: 'object',
+                            properties: {
+                                email: {
+                                    description: 'Email of user',
+                                    type: 'string',
+                                    example: 'string@gmail.com',
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+            responses: {
+                200: {
+                    description: 'Forgot password successfully',
+                    content: {
+                        'application/json': {},
+                    },
+                },
+            },
+        },
+    },
+    '/auth/verify-forgot-password': {
+        post: {
+            tags: ['Auth'],
+            description: 'Verify forgot password for user',
+            requestBody: {
+                content: {
+                    'application/json': {
+                        schema: {
+                            type: 'object',
+                            properties: {
+                                token: {
+                                    description: 'Token for forgot password',
+                                    type: 'string',
+                                },
+                                newPassword: {
+                                    description: 'New password',
+                                    type: 'string',
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+            responses: {
+                200: {
+                    description: 'Forgot password successfully',
+                    content: {
+                        'application/json': {},
+                    },
+                },
+            },
+        },
+    },
     '/auth/logout': {
         delete: {
             tags: ['Auth'],

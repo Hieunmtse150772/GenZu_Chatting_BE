@@ -15,7 +15,24 @@ const signIn = Joi.object({
     password: Joi.string().min(6).max(30).required(),
 });
 
+const changePassword = Joi.object({
+    oldPassword: Joi.string().min(6).max(30).required(),
+    newPassword: Joi.string().min(6).max(30).required(),
+});
+
+const forgotPassword = Joi.object({
+    email: Joi.string().pattern(new RegExp('gmail.com$')).email().required(),
+});
+
+const verifyForgotPassword = Joi.object({
+    token: Joi.string(),
+    newPassword: Joi.string().min(6).max(30).required(),
+});
+
 module.exports = {
     signUp,
     signIn,
+    changePassword,
+    forgotPassword,
+    verifyForgotPassword,
 };
