@@ -7,19 +7,22 @@ const MESSAGE_CODE = require('@/enums/messageCode.enum');
 module.exports = {
     getFriendList: async (req, res, next) => {
         try {
-            const user_id = req.user.data;
-            if (!mongodb.ObjectId.isValid(user_id)) {
+            const userId = req.user.data;
+            if (!mongodb.ObjectId.isValid(userId)) {
                 return res.status(400).json({
                     message: 'The user id is invalid',
                     messageCode: 'invalid_userId',
                 });
             }
             // const senderId = req.user.data;
-
+            console.log('userId: ', userId);
             var friendList = await FriendShip.find({
-                users: user_id,
+                users: userId,
                 status: 'active',
             }).populate('users', 'fullName picture email');
+            friendList = friendList.map(
+                (friend) => friend.users.filter((user) => user._id.toString() !== userId.toString())[0],
+            );
             if (!friendList) {
                 return res.status(200).json({
                     message: 'Get friend list was successfully.',
