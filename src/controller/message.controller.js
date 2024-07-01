@@ -1,15 +1,18 @@
 const mongodb = require('mongodb');
-
+const MESSAGE = require('@/enums/message.enum.js');
 const Conversation = require('../model/conversation.model');
 const Message = require('../model/message.model');
 const User = require('../model/user.model');
+const MESSAGE_CODE = require('@/enums/messageCode.enum');
 module.exports = {
     getAllMessages: async (req, res, next) => {
         try {
-            console.log('req.user: ', req.user.data);
+            const userId = req.user.data;
             const conversation_id = req.params.id;
             const message = await Message.find({
                 conversation: conversation_id,
+                status: 'active',
+                deleteBy: { $nin: userId },
             })
                 .populate('sender', '_id fullName picture')
                 .populate('conversation');
@@ -95,6 +98,61 @@ module.exports = {
             });
 
             res.json(newMessage);
+        } catch (error) {
+            next(error);
+        }
+    },
+    deleteMessage: async (req, res, next) => {
+        const messageId = req.query.messageId;
+        const userId = req.user.data;
+        try {
+            console.log('messageId: ', messageId);
+            console.log('userId: ', userId);
+
+            const messageUpdate = await Message.findByIdAndUpdate(
+                messageId,
+                { $push: { deleteBy: userId } },
+                { new: true, useFindAndModify: false },
+            );
+            return res.status(200).json({
+                message: MESSAGE.DELETE_MESSAGE_SUCCESS,
+                data: messageUpdate,
+            });
+        } catch (error) {
+            next(error);
+        }
+    },
+    deleteAllMessage: async (req, res, next) => {
+        const userId = req.user.data;
+        try {
+            console.log('userId: ', userId);
+
+            const messageUpdate = await Message.updateMany({}, { status: 'deleted' });
+            return res.status(200).json({
+                message: MESSAGE.DELETE_MESSAGE_SUCCESS,
+                data: messageUpdate,
+            });
+        } catch (error) {
+            next(error);
+        }
+    },
+    recallMessage: async (req, res, next) => {
+        const messageId = req.query.messageId;
+        const userId = req.user.data;
+        try {
+            const message = Message.findOne(messageId);
+            if (message.sender !== userId) {
+                return res.status(200).json({
+                    message: MESSAGE.NO_PERMISSION_RECALL_MESSAGE,
+                    messageCode: 'no_permission_recall_message',
+                    status: MESSAGE_CODE.NO_PERMISSION_RECALL_MESSAGE,
+                });
+            }
+            const messageUpdate = Message.findByIdAndUpdate(messageId, { status: 'recalled' });
+            return res.status(200).json({
+                message: MESSAGE.RECALL_MESSAGE_SUCCESS,
+                data: messageUpdate,
+            });
         } catch (error) {
             next(error);
         }

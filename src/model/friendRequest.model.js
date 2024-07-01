@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 const connection = require('../connections/mongodb');
 
-const FriendSchema = new mongoose.Schema(
+const FriendRequestSchema = new mongoose.Schema(
     {
         sender: { type: mongoose.Schema.ObjectId, ref: 'User', required: true },
         receiver: { type: mongoose.Schema.ObjectId, ref: 'User', required: true },
@@ -13,4 +13,4 @@ const FriendSchema = new mongoose.Schema(
     },
 );
 
-module.exports = connection.model('Friend', FriendSchema);
+module.exports = connection.model('FriendRequest', FriendRequestSchema);

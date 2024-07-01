@@ -1,8 +1,11 @@
 const mongodb = require('mongodb');
 
 const Conversation = require('../model/conversation.model');
+const FriendShip = require('../model/friendShip.model');
 const Message = require('../model/message.model');
 const User = require('../model/user.model');
+const MESSAGE_CODE = require('@/enums/messageCode.enum');
+const STATUS_MESSAGE = require('@/enums/message.enum');
 
 module.exports = {
     accessConversation: async (req, res, next) => {
@@ -13,6 +16,14 @@ module.exports = {
             return res.sendStatus(400);
         }
 
+        const isFriend = await FriendShip.findOne({ users: { $all: [userId, req.user.data] }, status: 'active' });
+        if (!isFriend) {
+            return res.status(200).json({
+                message: 'Your are not a friend, pls add friend before send message',
+                messageCode: 'not_a_friend',
+                status: 1002,
+            });
+        }
         var isChat = await Conversation.find({
             isGroupChat: false,
             $and: [{ users: { $elemMatch: { $eq: req.user.data } } }, { users: { $elemMatch: { $eq: userId } } }],
@@ -83,7 +94,7 @@ module.exports = {
         try {
             console.log('userId: ', req.user.data);
             Conversation.find({ users: { $elemMatch: { $eq: req.user.data } } })
-                .populate('users', '-password')
+                .populate('users', 'email fullName picture')
                 .populate('groupAdmin', '-password')
                 .populate('latestMessage')
                 .sort({ updatedAt: -1 })
@@ -135,6 +146,28 @@ module.exports = {
                 data: fullGroupChatInfo,
                 message: 'Create group chat successful',
                 messageCode: 'create_group_chat_successful',
+            });
+        } catch (error) {
+            return next(error);
+        }
+    },
+    removeConversation: async (req, res, next) => {
+        const conversationId = req.query.conversationId;
+        const userId = req.user.data;
+        if (!mongodb.ObjectId.isValid(userId) || !mongodb.ObjectId.isValid(conversationId)) {
+            return res.status(400).json({
+                message: 'The id is invalid',
+                messageCode: 'invalid_id',
+            });
+        }
+        try {
+            const conversation = await Conversation.findByIdAndUpdate(
+                { conversationId },
+                { $push: { deleteBy: userId } },
+            );
+            return res.status(200).json({
+                data: conversation,
+                message: STATUS_MESSAGE.REMOVE_CONVERSATION_SUCCESS,
             });
         } catch (error) {
             return next(error);

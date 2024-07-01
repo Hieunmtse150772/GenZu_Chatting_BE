@@ -105,6 +105,36 @@ const userSwagger = {
             },
         },
     },
+    '/users/getUserById': {
+        get: {
+            tags: ['User'],
+            security: [
+                {
+                    accessToken: [],
+                },
+            ],
+            description: 'Get user by keyword',
+            parameters: [
+                {
+                    name: 'userId',
+                    in: 'query',
+                    description: 'Id of user(Id của người dùng mà bạn muốn lấy thông tin)',
+                    schema: {
+                        type: 'string',
+                        example: '667bbe7cd4df68dfbbd89a4c',
+                    },
+                },
+            ],
+            responses: {
+                200: {
+                    description: 'Get user by email successfully',
+                    content: {
+                        'application/json': {},
+                    },
+                },
+            },
+        },
+    },
 };
 
 module.exports = userSwagger;

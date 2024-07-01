@@ -11,7 +11,6 @@ module.exports = async function (req, res, next) {
         }
         const token = authorization.split(' ')[1];
         const decoded = verifyToken(token, process.env.ACCESS_TOKEN_KEY);
-
         if (!decoded) {
             throw createHttpError(400, {
                 message: 'Token invalid',

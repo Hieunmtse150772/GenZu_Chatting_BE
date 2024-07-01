@@ -99,6 +99,17 @@ io.on('connection', (socket) => {
         socket.in(room).emit('typing');
     });
     socket.on('stop_typing', (room) => socket.in(room).emit('stop_typing'));
+    socket.on('recall', (messageRecalled) => {
+        if (!messageRecalled || !messageRecalled.conversation || !messageRecalled.conversation._id) {
+            console.error('Invalid newMessageReceived data');
+            return;
+        }
+
+        const chatRoom = messageRecalled.conversation._id;
+
+        socket.to(chatRoom).emit('recall', messageRecalled);
+    });
+    // Gửi tin nhắn đã bị thu hồi đến tất cả socket trong phòng, ngoại trừ socket của người gửi
 
     socket.on('new message', (newMessageReceived) => {
         if (!newMessageReceived || !newMessageReceived.conversation || !newMessageReceived.conversation._id) {
@@ -115,22 +126,6 @@ io.on('connection', (socket) => {
     socket.off('setup', () => {
         console.log('USER DISCONNECTED');
         socket.leave(userData._id);
-    });
-
-    socket.on('disconnect', async () => {
-        try {
-            const user = await User.findOne({ socketId: socket.id }).select('-password');
-            if (user) {
-                user.socketId = user.socketId.filter((item) => item !== socket.id);
-                if (!user.socketId.length) {
-                    user.is_online = false;
-                }
-                await user.save();
-            }
-            console.log(socket.id + ' disconnect');
-        } catch (error) {
-            console.log(error);
-        }
     });
 
     socket.on('disconnect', async () => {
