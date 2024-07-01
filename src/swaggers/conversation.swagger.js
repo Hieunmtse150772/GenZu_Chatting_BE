@@ -26,16 +26,21 @@ const conversationSwagger = {
                     accessToken: [],
                 },
             ],
-            parameters: [
-                {
-                    name: 'userId',
-                    in: 'query',
-                    description: 'Id của người dùng mà bạn muốn nhắn tin',
-                    schema: {
-                        type: 'string',
+            requestBody: {
+                content: {
+                    'application/json': {
+                        schema: {
+                            type: 'object',
+                            properties: {
+                                userId: {
+                                    description: 'Id của người dùng mà bạn muốn nhắn tin',
+                                    type: 'string',
+                                },
+                            },
+                        },
                     },
                 },
-            ],
+            },
             responses: {
                 201: {
                     description: 'Access conversation successfully',

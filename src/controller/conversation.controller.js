@@ -9,7 +9,7 @@ const STATUS_MESSAGE = require('@/enums/message.enum');
 
 module.exports = {
     accessConversation: async (req, res, next) => {
-        const { userId } = req.query;
+        const { userId } = req.body;
 
         if (!userId) {
             console.log('UserId param not sent with request');
