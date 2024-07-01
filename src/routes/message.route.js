@@ -7,7 +7,7 @@ const { getMessages, sendMessage } = require('../validations/message.validation'
 const messageMiddleware = require('@/middlewares/sort-filter-pagination/messageFeature.middleware');
 
 router.get(
-    '/getPaginationMessage/:id',
+    '/getMessagePagination',
     verifyToken,
     Validation(getMessages),
     messageMiddleware,
@@ -15,5 +15,6 @@ router.get(
 );
 router.get('/:id', verifyToken, Validation(getMessages), MessageController.getAllMessages);
 router.post('/send', verifyToken, Validation(sendMessage), MessageController.sendSingleMessage);
+router.patch('/deleteMessageByOneSide', verifyToken, MessageController.deleteMessage);
 
 module.exports = router;

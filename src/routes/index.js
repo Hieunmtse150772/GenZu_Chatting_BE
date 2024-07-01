@@ -4,8 +4,8 @@ const AuthRoutes = require('../routes/auth.route');
 const UserRoutes = require('../routes/user.router');
 const GeneralRoutes = require('../routes/general.route');
 const MessageRoutes = require('../routes/message.route');
-const ConversationRoutes = require('../routes/conversation.route')
-const FriendRoute = require('../routes/friend.route')
+const ConversationRoutes = require('../routes/conversation.route');
+const FriendRoute = require('../routes/friend.route');
 const configSwagger = require('../config/swagger');
 
 const routes = (app) => {
