@@ -6,15 +6,13 @@ const Friend = require('../model/friend.model');
 module.exports = {
     getFriendList: async (req, res, next) => {
         try {
-            const user_id = req.user.data;
+            const user_id = req.user._id;
             if (!mongodb.ObjectId.isValid(user_id)) {
                 return res.status(400).json({
                     message: 'The user id is invalid',
                     messageCode: 'invalid_userId',
                 });
             }
-            // const senderId = req.user.data;
-
             const friendList = await Friend.find({
                 $or: [
                     {
@@ -45,14 +43,13 @@ module.exports = {
     },
     getAddFriendRequest: async (req, res, next) => {
         try {
-            const user_id = req.user.data;
+            const user_id = req.user._id;
             if (!mongodb.ObjectId.isValid(user_id)) {
                 return res.status(400).json({
                     message: 'The user id is invalid',
                     messageCode: 'invalid_userId',
                 });
             }
-            // const senderId = req.user.data;
 
             const friendList = await Friend.find({
                 'user.user_id': req.user?._id,
@@ -85,7 +82,7 @@ module.exports = {
                 });
             }
 
-            const senderId = req.user.data;
+            const senderId = req.user._id;
             const isFriend = await Friend.findOne({
                 $and: [
                     {

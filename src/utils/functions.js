@@ -2,6 +2,8 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const createHttpError = require('http-errors');
 const nodemailer = require('nodemailer');
+const { ObjectId } = require('mongodb');
+
 const verifyEmail = require('@/email/verify_email');
 
 const hashText = (text, numberSalt) => {
@@ -28,6 +30,27 @@ const verifyToken = (token, secretKey) => {
     } catch (error) {
         return error;
     }
+};
+
+const objectIdValidator = (value, helpers) => {
+    if (!ObjectId.isValid(value)) {
+        return helpers.message('"{{#label}}" must be a valid MongoDB ObjectId');
+    }
+
+    return value;
+};
+
+const arrayUniqueValidator = (value, helpers) => {
+    const { _id } = helpers.prefs.context?.user;
+    let newArray = [...value];
+    if (_id) {
+        newArray.push(String(_id));
+    }
+    const uniqueIds = new Set(newArray);
+    if (uniqueIds.size !== newArray.length) {
+        return helpers.message('Array contains duplicate ObjectId');
+    }
+    return value;
 };
 
 const verifyRefreshToken = (refreshToken, secretRefreshTokenKey) => {
@@ -78,4 +101,6 @@ module.exports = {
     verifyToken,
     verifyRefreshToken,
     sendEmail,
+    objectIdValidator,
+    arrayUniqueValidator,
 };

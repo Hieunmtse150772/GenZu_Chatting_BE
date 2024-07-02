@@ -1,11 +1,6 @@
 const Joi = require('joi');
 
-const getMessages = Joi.object({
-    id: Joi.string().required(),
-});
-
-const sendMessage = Joi.object({
-    id: Joi.string().required(),
+const sendMessageBody = Joi.object({
     message: Joi.string().min(1).required(),
     //   sender_id: Joi.string().required(),
     //   conversation_id: Joi.string().required(),
@@ -14,6 +9,5 @@ const sendMessage = Joi.object({
 });
 
 module.exports = {
-    getMessages,
-    sendMessage,
+    sendMessageBody,
 };

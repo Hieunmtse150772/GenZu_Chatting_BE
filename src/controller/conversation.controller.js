@@ -15,7 +15,7 @@ module.exports = {
 
         var isChat = await Conversation.find({
             isGroupChat: false,
-            $and: [{ users: { $elemMatch: { $eq: req.user.data } } }, { users: { $elemMatch: { $eq: userId } } }],
+            $and: [{ users: { $elemMatch: { $eq: req.user._id } } }, { users: { $elemMatch: { $eq: userId } } }],
         })
             .populate('users', '-password')
             .populate('latestMessage');
@@ -33,7 +33,7 @@ module.exports = {
             var chatData = {
                 chatName: 'sender',
                 isGroupChat: false,
-                users: [req.user.data, userId],
+                users: [req.user._id, userId],
             };
             console.log('chatData: ', chatData);
             try {
@@ -81,8 +81,8 @@ module.exports = {
     },
     fetchConversation: async (req, res, next) => {
         try {
-            console.log('userId: ', req.user.data);
-            Conversation.find({ users: { $elemMatch: { $eq: req.user.data } } })
+            console.log('userId: ', req.user._id);
+            Conversation.find({ users: { $elemMatch: { $eq: req.user._id } } })
                 .populate('users', '-password')
                 .populate('groupAdmin', '-password')
                 .populate('latestMessage')
@@ -104,84 +104,4 @@ module.exports = {
             throw new Error(error.message);
         }
     },
-    createGroupConversation: async (req, res, next) => {
-        const userId = req.user.data;
-        console.log('userId: ', userId);
-
-        if (!req.body.users || !req.body.name) {
-            return res.status(400).send({ message: 'Please Fill all the field!' });
-        }
-        var users = JSON.parse(req.body.users);
-
-        if (users.length < 2) {
-            return res.status(400).send({ message: 'Please add more than 1 user to create a group chat!' });
-        }
-
-        users.push(userId);
-
-        try {
-            const groupChat = await Conversation.create({
-                chatName: req.body.name,
-                isGroupChat: true,
-                users: users,
-                groupAdmin: userId,
-            });
-            const fullGroupChatInfo = await Conversation.findOne({
-                _id: groupChat._id,
-            })
-                .populate('users', 'picture fullName _id email')
-                .populate('groupAdmin', 'picture fullName _id email');
-            return res.status(201).json({
-                data: fullGroupChatInfo,
-                message: 'Create group chat successful',
-                messageCode: 'create_group_chat_successful',
-            });
-        } catch (error) {
-            return next(error);
-        }
-    },
-    // sendMessage: async (req, res, next) => {
-    //   try {
-    //     const receiverId = req.params.id;
-
-    //     if (!mongodb.ObjectId.isValid(receiverId)) {
-    //       return res.status(400).json({
-    //         message: 'The receiverId is invalid',
-    //         messageCode: 'invalid_receiverId',
-    //       });
-    //     }
-    //     const senderId = req.user._id ;
-    //     const { message } = req.body;
-
-    //     let conversation = await Conversation.findOne({
-    //       paticipants: { $all: [senderId, receiverId] },
-    //     });
-
-    //     if (!conversation) {
-    //       conversation = new Conversation({
-    //         paticipants: [senderId, receiverId],
-    //       });
-    //     }
-
-    //     const newMessage = await Message.create({
-    //       senderId,
-    //       receiverId,
-    //       message,
-    //     });
-
-    //     if (newMessage) {
-    //       conversation.messages.push(newMessage._id);
-    //     }
-
-    //     await conversation.save();
-
-    //     return res.status(201).json({
-    //       message: 'Message sent successfully',
-    //       messageCode: 'sent_successfully',
-    //       data: message,
-    //     });
-    //   } catch (error) {
-    //     next(error);
-    //   }
-    // },
 };

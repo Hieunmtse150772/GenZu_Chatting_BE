@@ -153,12 +153,12 @@ module.exports = {
                     });
                     const { password, ...remain } = newUser._doc;
                     const accessToken = generateToken(
-                        newUser._id,
+                        user.id,
                         process.env.ACCESS_TOKEN_KEY,
                         process.env.EXPIRE_ACCESS_TOKEN,
                     );
                     const refreshToken = generateToken(
-                        newUser._id,
+                        user.id,
                         process.env.REFRESH_TOKEN_KEY,
                         process.env.EXPIRE_REFRESH_TOKEN,
                     );
@@ -348,8 +348,7 @@ module.exports = {
         });
     },
     changePassword: async (req, res) => {
-        const user = await UserModel.findById(req.user.data);
-        console.log(user, req.body);
+        const user = await UserModel.findById(req.user._id);
         if (!user) {
             return res.status(404).json({
                 messageCode: 'user_not_found',
@@ -439,6 +438,7 @@ module.exports = {
         }
 
         user.password = req.body.newPassword;
+        user.tokenVerifyForgotPassword = null;
 
         if (!user.email_verified) {
             user.is_active = true;

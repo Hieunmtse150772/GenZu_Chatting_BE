@@ -1,6 +1,6 @@
 const Joi = require('joi');
 
-const updateProfile = Joi.object({
+const updateProfileBody = Joi.object({
     fullName: Joi.string(),
     email: Joi.string().pattern(new RegExp('gmail.com$')).email(),
     gender: Joi.string().valid('male', 'female', 'other'),
@@ -10,5 +10,5 @@ const updateProfile = Joi.object({
 });
 
 module.exports = {
-    updateProfile,
+    updateProfileBody,
 };

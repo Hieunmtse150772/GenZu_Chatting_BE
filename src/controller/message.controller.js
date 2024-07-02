@@ -6,7 +6,6 @@ const User = require('../model/user.model');
 module.exports = {
     getAllMessages: async (req, res, next) => {
         try {
-            console.log('req.user: ', req.user.data);
             const conversation_id = req.params.id;
             const message = await Message.find({
                 conversation: conversation_id,
@@ -76,7 +75,7 @@ module.exports = {
         }
 
         var messageCreated = {
-            sender: req.user.data,
+            sender: req.user._id,
             message: message,
             conversation: id,
             status: 'active',
