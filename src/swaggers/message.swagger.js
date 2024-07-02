@@ -117,6 +117,17 @@ const messageSwagger = {
                     accessToken: [],
                 },
             ],
+            parameters: [
+                {
+                    name: 'id',
+                    in: 'query',
+                    description: 'Id of conversation',
+                    schema: {
+                        type: 'string',
+                        example: '6679c40ab0528a3618e7e646',
+                    },
+                },
+            ],
             requestBody: {
                 content: {
                     'application/json': {
@@ -127,9 +138,39 @@ const messageSwagger = {
                                     description: 'Send message',
                                     type: 'string',
                                 },
-                                id: {
-                                    description: 'id of receiver',
+                                isSpoiled: {
+                                    description: 'Spoiler',
                                     type: 'string',
+                                },
+                                messageType: {
+                                    description: 'Type of message',
+                                    type: 'string',
+                                },
+                                styles: {
+                                    description: 'Styles of message',
+                                    type: 'object',
+                                    properties: {
+                                        fontSize: {
+                                            description: 'Font size',
+                                            type: 'number',
+                                            example: '10',
+                                        },
+                                        bold: {
+                                            description: 'Bold',
+                                            type: 'boolean',
+                                            example: 'false',
+                                        },
+                                        italic: {
+                                            description: 'Italic',
+                                            type: 'boolean',
+                                            example: 'false',
+                                        },
+                                        underline: {
+                                            description: 'Underline',
+                                            type: 'boolean',
+                                            example: 'false',
+                                        },
+                                    },
                                 },
                             },
                             required: ['message'],
@@ -150,7 +191,7 @@ const messageSwagger = {
     '/messages/deleteMessageByOneSide': {
         patch: {
             tags: ['Message'],
-            description: 'Send message',
+            description: 'Delete message by one side',
             security: [
                 {
                     accessToken: [],
@@ -170,6 +211,165 @@ const messageSwagger = {
             responses: {
                 200: {
                     description: 'Delete message successfully',
+                    content: {
+                        'application/json': {},
+                    },
+                },
+            },
+        },
+    },
+    '/messages/emoji': {
+        post: {
+            tags: ['Message'],
+            description: 'Add emoji message',
+            security: [
+                {
+                    accessToken: [],
+                },
+            ],
+            parameters: [
+                {
+                    name: 'messageId',
+                    in: 'query',
+                    description: 'Id of message',
+                    schema: {
+                        type: 'string',
+                        example: '6679c40ab0528a3618e7e646',
+                    },
+                },
+            ],
+            requestBody: {
+                content: {
+                    'application/json': {
+                        schema: {
+                            type: 'object',
+                            properties: {
+                                emoji: {
+                                    description: 'Add emoji message',
+                                    type: 'string',
+                                    example: '😀',
+                                },
+                            },
+                            required: ['message'],
+                        },
+                    },
+                },
+            },
+            responses: {
+                200: {
+                    description: 'Add emoji message successfully',
+                    content: {
+                        'application/json': {},
+                    },
+                },
+            },
+        },
+        patch: {
+            tags: ['Message'],
+            description: 'Update emoji message',
+            security: [
+                {
+                    accessToken: [],
+                },
+            ],
+            parameters: [
+                {
+                    name: 'id',
+                    in: 'query',
+                    description: 'Id of emoji',
+                    schema: {
+                        type: 'string',
+                        example: '6679c40ab0528a3618e7e646',
+                    },
+                },
+            ],
+            requestBody: {
+                content: {
+                    'application/json': {
+                        schema: {
+                            type: 'object',
+                            properties: {
+                                newEmoji: {
+                                    description: 'Update emoji message',
+                                    type: 'string',
+                                    example: '😀',
+                                },
+                            },
+                            required: ['message'],
+                        },
+                    },
+                },
+            },
+            responses: {
+                200: {
+                    description: 'Remove emoji message successfully',
+                    content: {
+                        'application/json': {},
+                    },
+                },
+            },
+        },
+        delete: {
+            tags: ['Message'],
+            description: 'Remove emoji message',
+            security: [
+                {
+                    accessToken: [],
+                },
+            ],
+            parameters: [
+                {
+                    name: 'emojiId',
+                    in: 'query',
+                    description: 'Id of emoji',
+                    schema: {
+                        type: 'string',
+                        example: '6679c40ab0528a3618e7e646',
+                    },
+                },
+                {
+                    name: 'messageId',
+                    in: 'query',
+                    description: 'Id of emoji',
+                    schema: {
+                        type: 'string',
+                        example: '6679c40ab0528a3618e7e646',
+                    },
+                },
+            ],
+            responses: {
+                200: {
+                    description: 'Remove emoji message successfully',
+                    content: {
+                        'application/json': {},
+                    },
+                },
+            },
+        },
+    },
+    '/messages/recall': {
+        delete: {
+            tags: ['Message'],
+            description: 'Recall message',
+            security: [
+                {
+                    accessToken: [],
+                },
+            ],
+            parameters: [
+                {
+                    name: 'id',
+                    in: 'query',
+                    description: 'Id of message',
+                    schema: {
+                        type: 'string',
+                        example: '6679c40ab0528a3618e7e646',
+                    },
+                },
+            ],
+            responses: {
+                200: {
+                    description: 'Recall message successfully',
                     content: {
                         'application/json': {},
                     },

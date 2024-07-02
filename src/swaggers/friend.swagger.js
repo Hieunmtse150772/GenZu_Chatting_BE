@@ -161,6 +161,82 @@ const friendSwagger = {
             },
         },
     },
+    '/friends/friendRequestHasBeenSent': {
+        get: {
+            tags: ['Friend'],
+            security: [
+                {
+                    accessToken: [],
+                },
+            ],
+            description: 'Get all friend request has been sent(Lấy danh sách các lời mời kết bạn đã gửi)',
+            responses: {
+                200: {
+                    description: 'Get all friend request has been sent successfully.',
+                    content: {
+                        'application/json': {},
+                    },
+                },
+            },
+        },
+        delete: {
+            tags: ['Friend'],
+            security: [
+                {
+                    accessToken: [],
+                },
+            ],
+            description: 'Delete friend request which has been sent(Xóa lời mời kết bạn đã gửi)',
+            parameters: [
+                {
+                    name: 'requestId',
+                    in: 'query',
+                    description: 'Request Id (Id của lời mời kết bạn)',
+                    schema: {
+                        type: 'string',
+                    },
+                },
+            ],
+            responses: {
+                200: {
+                    description: 'Update status request successfully.',
+                    content: {
+                        'application/json': {},
+                    },
+                },
+            },
+        },
+    },
+    '/friends/deleteFriend': {
+        delete: {
+            tags: ['Friend'],
+            security: [
+                {
+                    accessToken: [],
+                },
+            ],
+            description: 'Delete friend (Xóa kết bạn)',
+            parameters: [
+                {
+                    name: 'id',
+                    in: 'query',
+                    description: 'Id user (Id của user)',
+                    schema: {
+                        type: 'string',
+                    },
+                },
+            ],
+            responses: {
+                200: {
+                    description: 'Delete friend successfully.',
+                    content: {
+                        'application/json': {},
+                    },
+                },
+            },
+        },
+    },
+
     // '/friends/sentFriendRequest': {
     //     get: {
     //         tags: ['Friend'],

@@ -13,8 +13,19 @@ router.get(
     messageMiddleware,
     MessageController.getAllMessagePagination,
 );
+
 router.get('/:id', verifyToken, Validation(getMessages), MessageController.getAllMessages);
+
 router.post('/send', verifyToken, Validation(sendMessage), MessageController.sendSingleMessage);
+
 router.patch('/deleteMessageByOneSide', verifyToken, MessageController.deleteMessage);
+
+router.delete('/recall', verifyToken, MessageController.recallMessage);
+
+router.post('/emoji', verifyToken, MessageController.addEmojiMessage);
+
+router.patch('/emoji', verifyToken, MessageController.updateEmojiMessage);
+
+router.delete('/emoji', verifyToken, MessageController.removeEmojiMessage);
 
 module.exports = router;

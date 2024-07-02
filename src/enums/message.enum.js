@@ -38,6 +38,12 @@ const STATUS_MESSAGE = {
     CREATE_USER_SUCCESS: 'Create user successfully',
     UPDATE_USER_SUCCESS: 'Update user successfully',
     DELETE_USER_SUCCESS: 'Delete user successfully',
+
+    //Emoji
+    ADD_EMOJI_MESSAGE_SUCCESS: 'Add emoji success',
+    UPDATE_EMOJI_MESSAGE_SUCCESS: 'Update emoji success',
+    REMOVE_EMOJI_MESSAGE_SUCCESS: 'Remove emoji success',
+    NOT_YOUR_EMOJI: 'Not your emoji',
 };
 
 module.exports = STATUS_MESSAGE;
