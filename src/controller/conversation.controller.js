@@ -10,12 +10,16 @@ const STATUS_MESSAGE = require('@/enums/message.enum');
 module.exports = {
     accessConversation: async (req, res, next) => {
         const { userId } = req.body;
-
         if (!userId) {
             console.log('UserId param not sent with request');
             return res.sendStatus(400);
         }
-
+        if (!mongodb.ObjectId.isValid(userId)) {
+            return res.status(400).json({
+                message: 'The user id is invalid',
+                messageCode: 'invalid_userId',
+            });
+        }
         const isFriend = await FriendShip.findOne({ users: { $all: [userId, req.user.data] }, status: 'active' });
         if (!isFriend) {
             return res.status(200).json({

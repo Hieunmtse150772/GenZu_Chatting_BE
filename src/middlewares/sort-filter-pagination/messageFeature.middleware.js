@@ -19,6 +19,20 @@ module.exports = async function (req, res, next) {
                 $or: [{ message: { $regex: searchText } }],
             };
         }
+        // Date Range
+        console.log('searchQuery: 1', searchQuery);
+
+        const dateQuery = {};
+        if (req.query.startDate) {
+            dateQuery.$gte = new Date(req.query.startDate);
+        }
+        if (req.query.endDate) {
+            dateQuery.$lte = new Date(req.query.endDate);
+        }
+        if (req.query.startDate || req.query.endDate) {
+            searchQuery = { createdAt: dateQuery };
+        }
+        console.log('searchQuery: ', searchQuery);
         let query = Message.find({
             conversation: conversation_id,
             status: 'active',
@@ -77,16 +91,7 @@ module.exports = async function (req, res, next) {
         // Final pagination query
         query = query.limit(limit).skip(startIndex);
 
-        // Sorting
-        if (req.query.sort) {
-            const sortBy = req.query.sort.split(',').join(' ');
-            // (example for companied sort) sort(price ratings)
-
-            // ?sort=-price,-ratings
-            query = query.sort(sortBy);
-        } else {
-            query = query.sort('-createdAt');
-        }
+        query = query.sort('-createdAt');
 
         // Fields Limiting
         if (req.query.fields) {

@@ -53,16 +53,9 @@ module.exports = {
                 status: 'pending',
             });
 
-            if (!friendList) {
-                return res.status(200).json({
-                    message: 'Get friend list was successfully.',
-                    messageCode: 'get_friend_list_successfully',
-                    data: [],
-                });
-            }
             return res.status(200).json({
-                message: 'Get friend list was successfully',
-                messageCode: 'get_friend_list_successfully',
+                message: 'Get friend request list was successfully',
+                messageCode: 'get_friend_request_list_successfully',
                 data: friendList,
             });
         } catch (error) {
