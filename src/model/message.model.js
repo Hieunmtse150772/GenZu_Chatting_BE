@@ -12,7 +12,10 @@ const MessageSchema = mongoose.Schema(
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Conversation',
         },
-        message_type: {
+        messageType: {
+            type: String,
+        },
+        isSpoiled: {
             type: String,
         },
         message: {
@@ -24,6 +27,21 @@ const MessageSchema = mongoose.Schema(
         },
         deleteBy: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
         readBy: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+        emojiBy: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Emoji' }],
+        styles: {
+            fontSize: {
+                type: Number,
+            },
+            bold: {
+                type: Boolean,
+            },
+            italic: {
+                type: Boolean,
+            },
+            underline: {
+                type: Boolean,
+            },
+        },
     },
     {
         timestamps: true,

@@ -69,6 +69,36 @@ module.exports = {
             next(error);
         }
     },
+    getAddFriendRequestHasBeenSent: async (req, res, next) => {
+        try {
+            const user_id = req.user.data;
+            if (!mongodb.ObjectId.isValid(user_id)) {
+                return res.status(400).json({
+                    message: 'The user id is invalid',
+                    messageCode: 'invalid_userId',
+                });
+            }
+            const friendList = await FriendRequest.find({
+                sender: user_id,
+                status: 'pending',
+            });
+
+            if (!friendList) {
+                return res.status(200).json({
+                    message: 'Get friend list was successfully.',
+                    messageCode: 'get_friend_list_successfully',
+                    data: [],
+                });
+            }
+            return res.status(200).json({
+                message: 'Get friend list was successfully',
+                messageCode: 'get_friend_list_successfully',
+                data: friendList,
+            });
+        } catch (error) {
+            next(error);
+        }
+    },
     createAddFriendRequest: async (req, res, next) => {
         try {
             const { receiverId } = req.query;
@@ -81,7 +111,12 @@ module.exports = {
                     messageCode: 'invalid_userId',
                 });
             }
-
+            if (String(senderId) === String(receiverId)) {
+                return res.status(400).json({
+                    message: 'Can not add friend to yourself',
+                    messageCode: 'can_not_add_friend_to_yourself',
+                });
+            }
             //Trường hợp đã là bạn bè
             const isFriend = await FriendShip.findOne({ users: { $all: [senderId, receiverId] }, status: 'active' });
             if (isFriend) {
@@ -150,10 +185,12 @@ module.exports = {
             const friendRequest = await FriendRequest.findOne({
                 requestId,
             });
+
             const { status } = await FriendRequest.findOne({
                 users: { $all: [friendRequest.sender, friendRequest.receiver] },
                 status: 'active',
             });
+
             if (status === 'accepted') {
                 FriendRequest.findOneAndUpdate({
                     status: 'cancel',
@@ -163,6 +200,7 @@ module.exports = {
                     message: 'Your are already friend',
                 });
             }
+
             const updateRequest = FriendRequest.findByIdAndUpdate(requestId, {
                 status: statusRequest,
             });

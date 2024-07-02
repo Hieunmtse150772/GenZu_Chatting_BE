@@ -15,4 +15,10 @@ router.put('/acceptFriendRequest', verifyToken, FriendController.acceptFriendReq
 
 router.patch('/rejectFriendRequest', verifyToken, FriendController.rejectFriendRequest);
 
+router.get('/friendRequestHasBeenSent', verifyToken, FriendController.getAddFriendRequestHasBeenSent);
+
+router.delete('/friendRequestHasBeenSent', verifyToken, FriendController.removeFriendRequest);
+
+router.delete('/deleteFriend', verifyToken, FriendController.removeFriend);
+
 module.exports = router;
