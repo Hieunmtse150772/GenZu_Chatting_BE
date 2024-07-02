@@ -82,9 +82,9 @@ const messageSwagger = {
                     in: 'query',
                     description: 'The start date of range date you want to search',
                     schema: {
-                        type: 'string',
+                        type: 'date',
                         description: 'Pagination page number (the default value is 1)',
-                        example: '06/25/2024',
+                        example: '2024-06-30T07:00:00.000Z',
                     },
                 },
                 {
@@ -92,9 +92,9 @@ const messageSwagger = {
                     in: 'query',
                     description: 'The end date of range date you want to search',
                     schema: {
-                        type: 'string',
+                        type: 'date',
                         description: 'Pagination page number (the default value is 1)',
-                        example: '06/25/2024',
+                        example: '2024-06-26T07:00:00.000Z',
                     },
                 },
             ],

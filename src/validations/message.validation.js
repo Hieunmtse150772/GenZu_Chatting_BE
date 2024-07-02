@@ -4,6 +4,8 @@ const getMessages = Joi.object({
     id: Joi.string().required(),
     limit: Joi.number(),
     search: Joi.string(),
+    startDate: Joi.date(),
+    endDate: Joi.date(),
 });
 
 const sendMessage = Joi.object({
