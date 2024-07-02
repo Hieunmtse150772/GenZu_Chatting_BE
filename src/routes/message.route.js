@@ -7,12 +7,24 @@ const messageMiddleware = require('@/middlewares/sort-filter-pagination/messageF
 const { validateIdMongodb, sendMessageBody } = require('@/validations');
 
 router.get(
-    '/getPaginationMessage/:id',
+    '/getMessagePagination',
     verifyToken,
     validateParams(validateIdMongodb),
     messageMiddleware,
     MessageController.getAllMessagePagination,
 );
+router.get('/:id', verifyToken, validateParams(validateIdMongodb), MessageController.getAllMessages);
+router.post('/send', verifyToken, validateBody(sendMessageBody), MessageController.sendSingleMessage);
+
+router.patch('/deleteMessageByOneSide', verifyToken, MessageController.deleteMessage);
+
+router.delete('/recall', verifyToken, MessageController.recallMessage);
+
+router.post('/emoji', verifyToken, MessageController.addEmojiMessage);
+
+router.patch('/emoji', verifyToken, MessageController.updateEmojiMessage);
+
+router.delete('/emoji', verifyToken, MessageController.removeEmojiMessage);
 router.get('/:id', verifyToken, validateParams(validateIdMongodb), MessageController.getAllMessages);
 router.post('/send', verifyToken, validateBody(sendMessageBody), MessageController.sendSingleMessage);
 

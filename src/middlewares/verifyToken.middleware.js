@@ -9,6 +9,7 @@ module.exports = async function (req, res, next) {
         if (!authorization) {
             throw createHttpError.Unauthorized();
         }
+
         const token = authorization.split(' ')[1];
         const decoded = verifyToken(token, process.env.ACCESS_TOKEN_KEY);
 

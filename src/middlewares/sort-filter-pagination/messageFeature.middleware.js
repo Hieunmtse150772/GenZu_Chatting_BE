@@ -1,28 +1,54 @@
-const MessageModel = require('@/model/message.model');
+const Message = require('@/model/message.model');
 
 module.exports = async function (req, res, next) {
     try {
         const queryObject = { ...req.query };
-        const conversation_id = req.params.id;
-        console.log('queryObject: ', queryObject);
+        const userId = req.user.data;
+        const conversation_id = req.query.id;
         const excludedFiled = ['sort', 'limit', 'page', 'field'];
         excludedFiled.forEach((ele) => delete queryObject[ele]);
         let queryString = JSON.stringify(queryObject);
         const reg = /\bgte|gt|lte|lt\b/g;
-        console.log('queryString 1: ', queryString);
         queryString = queryString.replace(reg, (matchString) => `$${matchString}`);
-        console.log('querystring: ', queryString);
         // Search
         let searchQuery;
+        console.log('conversation_id: ', conversation_id);
         if (req.query.search) {
             const searchText = req.query.search.toLowerCase();
             searchQuery = {
                 $or: [{ message: { $regex: searchText } }],
             };
         }
-        let query = MessageModel.find({
+        // Date Range
+        console.log('searchQuery: 1', searchQuery);
+
+        const dateQuery = {};
+        if (req.query.startDate) {
+            dateQuery.$gte = new Date(req.query.startDate);
+        }
+        if (req.query.endDate) {
+            dateQuery.$lte = new Date(req.query.endDate);
+        }
+        if (req.query.startDate || req.query.endDate) {
+            searchQuery = { createdAt: dateQuery };
+        }
+        console.log('searchQuery: ', searchQuery);
+        let query = Message.find({
             conversation: conversation_id,
-        }).find(req.query.search ? searchQuery : JSON.parse(queryString));
+            status: 'active',
+            deleteBy: { $nin: userId },
+        })
+            .find(req.query.search ? searchQuery : {})
+            .populate('sender', '_id fullName picture')
+            .populate('conversation')
+            .populate({
+                path: 'emojiBy',
+                populate: {
+                    path: 'sender',
+                    select: 'fullName _id',
+                },
+            });
+
         // Pagination
         const page = Number(req.query.page) || 1;
         const limit = Number(req.query.limit) || 20;
@@ -37,7 +63,7 @@ module.exports = async function (req, res, next) {
             totalDocs: 0,
         };
 
-        const totalCount = await MessageModel.countDocuments().exec();
+        const totalCount = await Message.countDocuments().exec();
         results.totalDocs = totalCount;
 
         if (endIndex < totalCount) {
@@ -65,16 +91,7 @@ module.exports = async function (req, res, next) {
         // Final pagination query
         query = query.limit(limit).skip(startIndex);
 
-        // Sorting
-        if (req.query.sort) {
-            const sortBy = req.query.sort.split(',').join(' ');
-            // (example for companied sort) sort(price ratings)
-
-            // ?sort=-price,-ratings
-            query = query.sort(sortBy);
-        } else {
-            query = query.sort('-createdAt');
-        }
+        query = query.sort('-createdAt');
 
         // Fields Limiting
         if (req.query.fields) {

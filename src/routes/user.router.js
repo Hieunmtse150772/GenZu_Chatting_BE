@@ -8,5 +8,6 @@ const { updateProfileBody } = require('@/validations');
 router.patch('/update/:id', verifyToken, validateBody(updateProfileBody), User.updateProfile);
 router.get('/sidebar', verifyToken, User.getUserForSidebar);
 router.get('/searchUsers', verifyToken, User.getUserByKeyWord);
+router.get('/getUserById', verifyToken, User.getUserById);
 
 module.exports = router;

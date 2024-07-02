@@ -15,6 +15,8 @@ const ConversationSchema = mongoose.Schema(
             ref: 'Message',
         },
         groupAdmin: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+        deleteBy: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+        status: { type: mongoose.Schema.Types.ObjectId },
     },
     {
         timestamps: true,

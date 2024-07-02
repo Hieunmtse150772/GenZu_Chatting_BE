@@ -22,7 +22,7 @@ const options = {
                 description: process.env.ENVIRONMENT,
             },
         ],
-        tags: ['Auth', 'Message', 'User', 'Single', 'Group'],
+        tags: ['Auth', 'Message', 'User', 'Single', 'Group', 'Friend', 'Conversation'],
         paths: {
             ...authSwagger,
             ...messageSwagger,

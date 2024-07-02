@@ -11,5 +11,6 @@ const STATUS_CODE = {
     UNPROCESSABLE_CONTENT: 422,
     INTERNAL_SERVER_ERROR: 500,
 };
+module.exports = STATUS_CODE;
 
 module.exports = STATUS_CODE;
