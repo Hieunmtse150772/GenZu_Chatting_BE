@@ -26,5 +26,6 @@ const sendMessage = Joi.object({
 });
 
 module.exports = {
-    sendMessageBody,
+    getMessages,
+    sendMessage,
 };
