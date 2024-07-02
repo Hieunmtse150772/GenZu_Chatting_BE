@@ -30,7 +30,7 @@ module.exports = {
         }
         var isChat = await Conversation.find({
             isGroupChat: false,
-            $and: [{ users: { $elemMatch: { $eq: req.user.data } } }, { users: { $elemMatch: { $eq: userId } } }],
+            $and: [{ users: { $elemMatch: { $eq: req.user._id } } }, { users: { $elemMatch: { $eq: userId } } }],
         })
             .populate('users', '-password')
             .populate('latestMessage');
@@ -48,7 +48,7 @@ module.exports = {
             var chatData = {
                 chatName: 'sender',
                 isGroupChat: false,
-                users: [req.user.data, userId],
+                users: [req.user._id, userId],
             };
             console.log('chatData: ', chatData);
             try {

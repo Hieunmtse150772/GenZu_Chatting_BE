@@ -82,7 +82,7 @@ module.exports = {
         const { message, messageType, isSpoiled, styles } = req.body;
         const conversationId = req.query.id;
         var messageCreated = {
-            sender: req.user.data,
+            sender: req.user._id,
             message: message,
             conversation: conversationId,
             isSpoiled: isSpoiled,

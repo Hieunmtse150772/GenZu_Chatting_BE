@@ -41,7 +41,7 @@ module.exports = {
     },
     getAddFriendRequest: async (req, res, next) => {
         try {
-            const user_id = req.user.data;
+            const user_id = req.user._id;
             if (!mongodb.ObjectId.isValid(user_id)) {
                 return res.status(400).json({
                     message: 'The user id is invalid',
