@@ -83,7 +83,7 @@ const friendSwagger = {
             description: 'Send add friend request to other user (Gửi lời mời kết bạn cho người dùng có Id __)',
             parameters: [
                 {
-                    name: 'receiverId',
+                    name: 'id',
                     in: 'query',
                     description: 'Id of receiver (Id của người dùng bạn muốn gửi lời mời kết bạn)',
                     schema: {
@@ -113,7 +113,7 @@ const friendSwagger = {
             description: 'Update status of friend request (Cập nhật trạng thái lời mời kết bạn)',
             parameters: [
                 {
-                    name: 'requestId',
+                    name: 'id',
                     in: 'query',
                     description: 'Request Id (Id của lời mời kết bạn)',
                     schema: {
@@ -143,7 +143,7 @@ const friendSwagger = {
                 'Update status of friend request to reject (Cập nhật trạng thái lời mời kết bạn thành từ chối)',
             parameters: [
                 {
-                    name: 'requestId',
+                    name: 'id',
                     in: 'query',
                     description: 'Request Id (Id của lời mời kết bạn)',
                     schema: {
@@ -189,7 +189,7 @@ const friendSwagger = {
             description: 'Delete friend request which has been sent(Xóa lời mời kết bạn đã gửi)',
             parameters: [
                 {
-                    name: 'requestId',
+                    name: 'id',
                     in: 'query',
                     description: 'Request Id (Id của lời mời kết bạn)',
                     schema: {

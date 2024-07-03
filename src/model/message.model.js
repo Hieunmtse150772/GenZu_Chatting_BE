@@ -14,6 +14,7 @@ const MessageSchema = mongoose.Schema(
         },
         messageType: {
             type: String,
+            enum: ['text', 'image', 'notification'],
         },
         isSpoiled: {
             type: String,
@@ -42,6 +43,7 @@ const MessageSchema = mongoose.Schema(
                 type: Boolean,
             },
         },
+        invitedUser: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
     },
     {
         timestamps: true,

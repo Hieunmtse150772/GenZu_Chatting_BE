@@ -20,7 +20,7 @@ module.exports = {
                 messageCode: 'invalid_userId',
             });
         }
-        const isFriend = await FriendShip.findOne({ users: { $all: [userId, req.user.data] }, status: 'active' });
+        const isFriend = await FriendShip.findOne({ users: { $all: [userId, req.user._id] }, status: 'active' });
         if (!isFriend) {
             return res.status(200).json({
                 message: 'Your are not a friend, pls add friend before send message',
@@ -30,7 +30,7 @@ module.exports = {
         }
         var isChat = await Conversation.find({
             isGroupChat: false,
-            $and: [{ users: { $elemMatch: { $eq: req.user.data } } }, { users: { $elemMatch: { $eq: userId } } }],
+            $and: [{ users: { $elemMatch: { $eq: req.user._id } } }, { users: { $elemMatch: { $eq: userId } } }],
         })
             .populate('users', '-password')
             .populate('latestMessage');
@@ -48,7 +48,7 @@ module.exports = {
             var chatData = {
                 chatName: 'sender',
                 isGroupChat: false,
-                users: [req.user.data, userId],
+                users: [req.user._id, userId],
             };
             console.log('chatData: ', chatData);
             try {
@@ -96,8 +96,8 @@ module.exports = {
     },
     fetchConversation: async (req, res, next) => {
         try {
-            console.log('userId: ', req.user.data);
-            Conversation.find({ users: { $elemMatch: { $eq: req.user.data } } })
+            console.log('userId: ', req.user._id);
+            Conversation.find({ users: { $elemMatch: { $eq: req.user._id } } })
                 .populate('users', 'email fullName picture')
                 .populate('groupAdmin', '-password')
                 .populate('latestMessage')
@@ -120,7 +120,7 @@ module.exports = {
         }
     },
     createGroupConversation: async (req, res, next) => {
-        const userId = req.user.data;
+        const userId = req.user._id;
         console.log('userId: ', userId);
 
         if (!req.body.users || !req.body.name) {
@@ -157,7 +157,7 @@ module.exports = {
     },
     removeConversation: async (req, res, next) => {
         const conversationId = req.query.conversationId;
-        const userId = req.user.data;
+        const userId = req.user._id;
         if (!mongodb.ObjectId.isValid(userId) || !mongodb.ObjectId.isValid(conversationId)) {
             return res.status(400).json({
                 message: 'The id is invalid',

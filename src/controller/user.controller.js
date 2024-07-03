@@ -7,7 +7,7 @@ const FriendShip = require('../model/friendShip.model');
 module.exports = {
     updateProfile: async (req, res, next) => {
         try {
-            const user = await User.findByIdAndUpdate({ _id: req.user.data }, req.body, {
+            const user = await User.findByIdAndUpdate({ _id: req.user._id }, req.body, {
                 new: true,
             }).select('-password');
 
@@ -33,7 +33,7 @@ module.exports = {
     },
     getUserForSidebar: async (req, res, next) => {
         try {
-            const id = req.user.data;
+            const id = req.user._id;
             const users = await User.find({ _id: { $ne: id } }).select('-password');
 
             res.status(200).json({
@@ -80,7 +80,7 @@ module.exports = {
             const user = await User.findOne({ _id: user_id }, 'fullName email picture');
 
             const relationShip = await FriendShip.findOne({
-                users: { $all: [user_id, req.user.data] },
+                users: { $all: [user_id, req.user._id] },
                 status: 'active',
             });
 

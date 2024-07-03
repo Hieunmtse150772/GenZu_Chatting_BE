@@ -2,29 +2,34 @@ const router = require('express').Router();
 
 const MessageController = require('../controller/message.controller');
 const verifyToken = require('../middlewares/verifyToken.middleware');
-const Validation = require('../middlewares/validation.middleware');
-const { getMessages, sendMessage } = require('../validations/message.validation');
+const { validateParams, validateBody, validateQuery } = require('@/middlewares/validator.middleware');
 const messageMiddleware = require('@/middlewares/sort-filter-pagination/messageFeature.middleware');
+const { validateIdMongodb, sendMessage, sendEmoji, getMessages, updateEmoji } = require('@/validations');
 
 router.get(
     '/getMessagePagination',
     verifyToken,
-    Validation(getMessages),
+    validateQuery(getMessages),
     messageMiddleware,
     MessageController.getAllMessagePagination,
 );
+router.get('/:id', verifyToken, validateParams(validateIdMongodb), MessageController.getAllMessages);
 
-router.get('/:id', verifyToken, Validation(getMessages), MessageController.getAllMessages);
+router.post(
+    '/send',
+    verifyToken,
+    validateQuery(validateIdMongodb),
+    validateBody(sendMessage),
+    MessageController.sendSingleMessage,
+);
 
-router.post('/send', verifyToken, Validation(sendMessage), MessageController.sendSingleMessage);
+router.patch('/deleteMessageByOneSide', validateQuery(validateIdMongodb), verifyToken, MessageController.deleteMessage);
 
-router.patch('/deleteMessageByOneSide', verifyToken, MessageController.deleteMessage);
+router.delete('/recall', verifyToken, validateParams(validateIdMongodb), MessageController.recallMessage);
 
-router.delete('/recall', verifyToken, MessageController.recallMessage);
+router.post('/emoji', verifyToken, validateBody(sendEmoji), MessageController.addEmojiMessage);
 
-router.post('/emoji', verifyToken, MessageController.addEmojiMessage);
-
-router.patch('/emoji', verifyToken, MessageController.updateEmojiMessage);
+router.patch('/emoji', validateBody(updateEmoji), verifyToken, MessageController.updateEmojiMessage);
 
 router.delete('/emoji', verifyToken, MessageController.removeEmojiMessage);
 

@@ -30,6 +30,7 @@ const UserSchema = new mongoose.Schema(
         phone_number: { type: String, default: null },
         role_id: { type: String, ref: 'role', default: null },
         picture: { type: String, require: true, default: null },
+        language: { type: String, default: 'vn' },
         is_active: { type: Boolean, default: false },
         is_online: { type: Boolean, default: false },
     },
