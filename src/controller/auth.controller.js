@@ -149,6 +149,7 @@ module.exports = {
                         picture: userInfo.picture,
                         email: userInfo.email,
                         email_verified: userInfo.email_verified,
+                        is_active: userInfo.email_verified,
                         googleId: userInfo.sub,
                     });
                     const { password, ...remain } = newUser._doc;
@@ -406,7 +407,7 @@ module.exports = {
         user.timeResendForgotPassword = moment().unix();
         const newUser = await user.save();
 
-        const link = `${process.env.URL_CLIENT}/verify/forgot-password?user_id=${newUser._id}&token=${newUser.tokenVerifyForgotPassword}`;
+        const link = `${process.env.URL_CLIENT}/login/forgot/${newUser.tokenVerifyForgotPassword}`;
 
         const result = await sendEmail(newUser.email, 'Forgot password', link);
 
