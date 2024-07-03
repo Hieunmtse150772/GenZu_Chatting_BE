@@ -2,30 +2,35 @@ const router = require('express').Router();
 
 const MessageController = require('../controller/message.controller');
 const verifyToken = require('../middlewares/verifyToken.middleware');
-const { validateParams, validateBody } = require('@/middlewares/validator.middleware');
+const { validateParams, validateBody, validateQuery } = require('@/middlewares/validator.middleware');
 const messageMiddleware = require('@/middlewares/sort-filter-pagination/messageFeature.middleware');
-const { validateIdMongodb, sendMessageBody } = require('@/validations');
+const { validateIdMongodb, sendMessage, sendEmoji, getMessages, updateEmoji } = require('@/validations');
 
 router.get(
     '/getMessagePagination',
     verifyToken,
-    validateParams(validateIdMongodb),
+    validateQuery(getMessages),
     messageMiddleware,
     MessageController.getAllMessagePagination,
 );
 router.get('/:id', verifyToken, validateParams(validateIdMongodb), MessageController.getAllMessages);
-router.post('/send', verifyToken, validateBody(sendMessageBody), MessageController.sendSingleMessage);
 
-router.patch('/deleteMessageByOneSide', verifyToken, MessageController.deleteMessage);
+router.post(
+    '/send',
+    verifyToken,
+    validateQuery(validateIdMongodb),
+    validateBody(sendMessage),
+    MessageController.sendSingleMessage,
+);
 
-router.delete('/recall', verifyToken, MessageController.recallMessage);
+router.patch('/deleteMessageByOneSide', validateQuery(validateIdMongodb), verifyToken, MessageController.deleteMessage);
 
-router.post('/emoji', verifyToken, MessageController.addEmojiMessage);
+router.delete('/recall', verifyToken, validateParams(validateIdMongodb), MessageController.recallMessage);
 
-router.patch('/emoji', verifyToken, MessageController.updateEmojiMessage);
+router.post('/emoji', verifyToken, validateBody(sendEmoji), MessageController.addEmojiMessage);
+
+router.patch('/emoji', validateBody(updateEmoji), verifyToken, MessageController.updateEmojiMessage);
 
 router.delete('/emoji', verifyToken, MessageController.removeEmojiMessage);
-router.get('/:id', verifyToken, validateParams(validateIdMongodb), MessageController.getAllMessages);
-router.post('/send', verifyToken, validateBody(sendMessageBody), MessageController.sendSingleMessage);
 
 module.exports = router;

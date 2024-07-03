@@ -23,6 +23,12 @@ const io = require('socket.io')(server, {
 
 io.on('connection', (socket) => {
     console.log(socket.id + ' connect');
+    socket.on('friend request', async (userId) => {
+        const user = await User.findOne({ _id: userId });
+        const { socket } = user;
+
+        socket.to(socket).emit('send request');
+    });
     const cookies = cookie.parse(socket?.handshake?.headers?.cookie ? socket?.handshake?.headers?.cookie : '');
     if (cookies && cookies.accessToken) {
         jwt.verify(cookies.accessToken, process.env.ACCESS_TOKEN_KEY, async function (err, decoded) {
@@ -94,6 +100,10 @@ io.on('connection', (socket) => {
         socket.join(room);
         console.log('User Joined Room: ' + room);
     });
+    socket.on('leave chat', (room) => {
+        socket.leave(room);
+        console.log('user leave room: ', room);
+    });
 
     socket.on('typing', (room) => {
         socket.in(room).emit('typing');
@@ -123,7 +133,7 @@ io.on('connection', (socket) => {
         socket.to(chatRoom).emit('message received', newMessageReceived);
         console.log('Message sent to room: ' + chatRoom);
     });
-    socket.off('setup', () => {
+    socket.off('setup', (userData) => {
         console.log('USER DISCONNECTED');
         socket.leave(userData._id);
     });

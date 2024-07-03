@@ -8,7 +8,7 @@ const MESSAGE_CODE = require('@/enums/response/messageCode.enum');
 module.exports = {
     getAllMessages: async (req, res, next) => {
         try {
-            const userId = req.user.data;
+            const userId = req.user._id;
             const conversation_id = req.params.id;
             const message = await Message.find({
                 conversation: conversation_id,
@@ -27,13 +27,13 @@ module.exports = {
             if (!message) {
                 return res.status(200).json({
                     message: 'Get message was successfully',
-                    messageCode: 'sent_successfully',
+                    messageCode: 'get_message_successfully',
                     data: [],
                 });
             }
             return res.status(200).json({
                 message: 'Get message was successfully',
-                messageCode: 'sent_successfully',
+                messageCode: 'get_message_successfully',
                 data: message,
             });
         } catch (error) {
@@ -108,8 +108,8 @@ module.exports = {
         }
     },
     deleteMessage: async (req, res, next) => {
-        const messageId = req.query.messageId;
-        const userId = req.user.data;
+        const messageId = req.query.id;
+        const userId = req.user._id;
         try {
             console.log('messageId: ', messageId);
             console.log('userId: ', userId);
@@ -128,7 +128,7 @@ module.exports = {
         }
     },
     deleteAllMessage: async (req, res, next) => {
-        const userId = req.user.data;
+        const userId = req.user._id;
         try {
             const messageUpdate = await Message.updateMany({}, { status: 'deleted' });
             return res.status(200).json({
@@ -141,7 +141,7 @@ module.exports = {
     },
     recallMessage: async (req, res, next) => {
         const messageId = req.query.id;
-        const userId = req.user.data;
+        const userId = req.user._id;
         try {
             const message = Message.findOne(messageId);
             if (message.sender !== userId) {
@@ -162,8 +162,8 @@ module.exports = {
     },
     addEmojiMessage: async (req, res, next) => {
         const { emoji } = req.body;
-        const messageId = req.query.messageId;
-        const userId = req.user.data;
+        const messageId = req.query.id;
+        const userId = req.user._id;
         if (!mongodb.ObjectId.isValid(messageId)) {
             return res.status(400).json({
                 message: 'The id is invalid',
@@ -176,9 +176,13 @@ module.exports = {
                 emoji: emoji,
                 status: 'active',
             });
-            const addEmojiMessage = await Message.findByIdAndUpdate(messageId, {
-                $push: { emojiBy: addEmoji._id },
-            }).populate({
+            const addEmojiMessage = await Message.findByIdAndUpdate(
+                messageId,
+                {
+                    $push: { emojiBy: addEmoji._id },
+                },
+                { new: true, useFindAndModify: false },
+            ).populate({
                 path: 'emojiBy',
                 populate: {
                     path: 'sender',
@@ -196,7 +200,7 @@ module.exports = {
     updateEmojiMessage: async (req, res, next) => {
         const { newEmoji } = req.body;
         const { id } = req.query;
-        const userId = req.user.data;
+        const userId = req.user._id;
         if (!mongodb.ObjectId.isValid(id)) {
             return res.status(400).json({
                 message: 'The id is invalid',
@@ -223,6 +227,7 @@ module.exports = {
                 {
                     emoji: newEmoji,
                 },
+                { new: true, useFindAndModify: false },
             );
             return res.status(200).json({
                 message: MESSAGE.UPDATE_EMOJI_MESSAGE_SUCCESS,
@@ -234,8 +239,8 @@ module.exports = {
     },
     removeEmojiMessage: async (req, res, next) => {
         const { emoji } = req.body;
-        const { emojiId, messageId } = req.query;
-        const userId = req.user.data;
+        const { emojiId, id } = req.query;
+        const userId = req.user._id;
         if (!mongodb.ObjectId.isValid(emojiId)) {
             return res.status(400).json({
                 message: 'The id is invalid',
@@ -256,7 +261,7 @@ module.exports = {
                     status: MESSAGE_CODE.NOT_YOUR_EMOJI,
                 });
             }
-            const updateMessage = await Message.findByIdAndUpdate(messageId, {
+            const updateMessage = await Message.findByIdAndUpdate(id, {
                 $pull: { emojiBy: emoji._id },
             });
             const updateEmoji = await Emoji.findOneAndDelete({ _id: emojiId });

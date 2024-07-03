@@ -7,14 +7,14 @@ const MESSAGE_CODE = require('@/enums/response/messageCode.enum');
 module.exports = {
     getFriendList: async (req, res, next) => {
         try {
-            const userId = req.user.data;
+            const userId = req.user._id;
             if (!mongodb.ObjectId.isValid(userId)) {
                 return res.status(400).json({
                     message: 'The user id is invalid',
                     messageCode: 'invalid_userId',
                 });
             }
-            // const senderId = req.user.data;
+            // const senderId = req.user._id;
             console.log('userId: ', userId);
             var friendList = await FriendShip.find({
                 users: userId,
@@ -64,7 +64,7 @@ module.exports = {
     },
     getAddFriendRequestHasBeenSent: async (req, res, next) => {
         try {
-            const user_id = req.user.data;
+            const user_id = req.user._id;
             if (!mongodb.ObjectId.isValid(user_id)) {
                 return res.status(400).json({
                     message: 'The user id is invalid',
@@ -94,24 +94,17 @@ module.exports = {
     },
     createAddFriendRequest: async (req, res, next) => {
         try {
-            const { receiverId } = req.query;
-            const senderId = req.user.data;
+            const { id } = req.query;
+            const senderId = req.user._id;
 
-            console.log('receiverId: ', receiverId);
-            if (!mongodb.ObjectId.isValid(receiverId) || !mongodb.ObjectId.isValid(senderId)) {
-                return res.status(400).json({
-                    message: 'The user id is invalid',
-                    messageCode: 'invalid_userId',
-                });
-            }
-            if (String(senderId) === String(receiverId)) {
+            if (String(senderId) === String(id)) {
                 return res.status(400).json({
                     message: 'Can not add friend to yourself',
                     messageCode: 'can_not_add_friend_to_yourself',
                 });
             }
             //Trường hợp đã là bạn bè
-            const isFriend = await FriendShip.findOne({ users: { $all: [senderId, receiverId] }, status: 'active' });
+            const isFriend = await FriendShip.findOne({ users: { $all: [senderId, id] }, status: 'active' });
             if (isFriend) {
                 return res.status(409).json({
                     messageCode: 'friend_already',
@@ -121,10 +114,9 @@ module.exports = {
             //Trường hợp đã gửi request trước đó
             const isRequestExist = await FriendRequest.findOne({
                 sender: senderId,
-                receiver: receiverId,
+                receiver: id,
                 status: 'pending',
             });
-            console.log('isRequestExist: ', isRequestExist);
             if (isRequestExist) {
                 return res.status(409).json({
                     messageCode: 'add_friend_request_already_exist',
@@ -136,7 +128,7 @@ module.exports = {
             const request = await FriendRequest.findOne({
                 $or: [
                     {
-                        sender: receiverId,
+                        sender: id,
                         receiver: senderId,
                     },
                 ],
@@ -144,7 +136,7 @@ module.exports = {
             if (request?.status === 'pending') {
                 const updateRequest = await FriendRequest.findByIdAndUpdate(request?._id, { status: 'accepted' });
                 const friendShip = await FriendShip.create({
-                    users: [senderId, receiverId],
+                    users: [senderId, id],
                     friendRequest: request?._id,
                     status: 'active',
                 });
@@ -157,7 +149,7 @@ module.exports = {
             //Trường hợp chưa có ai gửi kết bạn thì sẽ tạo một request mới
             var addFriendRequest = await FriendRequest.create({
                 sender: senderId,
-                receiver: receiverId,
+                receiver: id,
                 status: 'pending',
             });
             addFriendRequest = await addFriendRequest.populate('sender', '-password');
@@ -173,10 +165,10 @@ module.exports = {
     },
     updateFriendRequest: async (req, res, next) => {
         try {
-            const { requestId, statusRequest } = req.query;
+            const { id, statusRequest } = req.query;
 
             const friendRequest = await FriendRequest.findOne({
-                requestId,
+                id,
             });
 
             const { status } = await FriendRequest.findOne({
@@ -194,7 +186,7 @@ module.exports = {
                 });
             }
 
-            const updateRequest = FriendRequest.findByIdAndUpdate(requestId, {
+            const updateRequest = FriendRequest.findByIdAndUpdate(id, {
                 status: statusRequest,
             });
             return res.status(201).json({
@@ -208,19 +200,18 @@ module.exports = {
     },
     acceptFriendRequest: async (req, res, next) => {
         try {
-            const { requestId } = req.query;
-            const receiverId = req.user.data;
+            const { id } = req.query;
+            const receiverId = req.user._id;
             const friendRequest = await FriendRequest.findOne({
-                _id: requestId,
+                _id: id,
             });
-            if (String(friendRequest.receiver) !== receiverId) {
+            if (String(friendRequest.receiver) !== String(receiverId)) {
                 return res.status(200).json({
                     message: MESSAGE.NO_PERMISSION_ACCEPT_REQUEST,
                     messageCode: 'no_permission_accept_request',
                     status: MESSAGE_CODE.NO_PERMISSION_ACCEPT_REQUEST,
                 });
             }
-            console.log('request: ', friendRequest);
             const isFriend = await FriendShip.findOne({
                 users: { $all: [friendRequest?.sender, friendRequest?.receiver] },
                 status: 'active',
@@ -228,7 +219,7 @@ module.exports = {
             console.log('isFriend: ', isFriend);
             if (isFriend) {
                 await FriendRequest.findByIdAndUpdate(
-                    { _id: requestId, status: 'pending' },
+                    { _id: id, status: 'pending' },
                     {
                         status: 'cancel',
                     },
@@ -238,13 +229,13 @@ module.exports = {
                     message: MESSAGE.ALREADY_FRIEND,
                 });
             }
-            const updateRequest = await FriendRequest.findByIdAndUpdate(requestId, {
+            const updateRequest = await FriendRequest.findByIdAndUpdate(id, {
                 status: 'accepted',
             });
             const updateFriendShip = await FriendShip.create({
                 users: [receiverId, friendRequest.sender],
                 status: 'active',
-                friendRequest: requestId,
+                friendRequest: id,
             });
 
             return res.status(201).json({
@@ -257,17 +248,17 @@ module.exports = {
         }
     },
     rejectFriendRequest: async (req, res, next) => {
-        const { requestId } = req.query;
-        const receiverId = req.user.data;
+        const { id } = req.query;
+        const receiverId = req.user._id;
 
-        if (!mongodb.ObjectId.isValid(receiverId) || !mongodb.ObjectId.isValid(requestId)) {
+        if (!mongodb.ObjectId.isValid(receiverId) || !mongodb.ObjectId.isValid(id)) {
             return res.status(400).json({
                 message: 'The id is invalid',
                 messageCode: 'invalid_id',
             });
         }
         const friendRequest = await FriendRequest.findOne({
-            _id: requestId,
+            _id: id,
         });
         if (String(friendRequest.receiver) !== receiverId) {
             return res.status(200).json({
@@ -282,7 +273,7 @@ module.exports = {
         });
         if (isFriend) {
             await FriendRequest.findByIdAndUpdate(
-                { _id: requestId, status: 'pending' },
+                { _id: id, status: 'pending' },
                 {
                     status: 'cancel',
                 },
@@ -292,7 +283,7 @@ module.exports = {
                 message: MESSAGE.ALREADY_FRIEND,
             });
         }
-        const updateRequest = await FriendRequest.findByIdAndUpdate(requestId, {
+        const updateRequest = await FriendRequest.findByIdAndUpdate(id, {
             status: 'rejected',
         });
 
@@ -304,17 +295,17 @@ module.exports = {
         });
     },
     removeFriendRequest: async (req, res, next) => {
-        const { requestId } = req.query;
-        const senderId = req.user.data;
+        const { id } = req.query;
+        const senderId = req.user._id;
 
-        if (!mongodb.ObjectId.isValid(senderId) || !mongodb.ObjectId.isValid(requestId)) {
+        if (!mongodb.ObjectId.isValid(senderId) || !mongodb.ObjectId.isValid(id)) {
             return res.status(400).json({
                 message: 'The id is invalid',
                 messageCode: 'invalid_id',
             });
         }
         const friendRequest = await FriendRequest.findOne({
-            _id: requestId,
+            _id: id,
         });
         if (String(friendRequest.sender) !== senderId) {
             return res.status(200).json({
@@ -329,7 +320,7 @@ module.exports = {
         });
         if (isFriend) {
             await FriendRequest.findByIdAndUpdate(
-                { _id: requestId, status: 'pending' },
+                { _id: id, status: 'pending' },
                 {
                     status: 'cancel',
                 },
@@ -339,7 +330,7 @@ module.exports = {
                 message: MESSAGE.ALREADY_FRIEND,
             });
         }
-        const updateRequest = await FriendRequest.findByIdAndUpdate(requestId, {
+        const updateRequest = await FriendRequest.findByIdAndUpdate(id, {
             status: 'cancel',
         });
 
@@ -351,9 +342,9 @@ module.exports = {
         });
     },
     removeFriend: async (req, res, next) => {
-        const userId = req.user.data;
-        const requestId = req.query.requestId;
-        if (!mongodb.ObjectId.isValid(userId) || !mongodb.ObjectId.isValid(requestId)) {
+        const userId = req.user._id;
+        const id = req.query.id;
+        if (!mongodb.ObjectId.isValid(userId) || !mongodb.ObjectId.isValid(id)) {
             return res.status(400).json({
                 message: 'The id is invalid',
                 messageCode: 'invalid_id',
@@ -361,7 +352,7 @@ module.exports = {
         }
 
         try {
-            const friendRequest = await FriendRequest.findByIdAndUpdate({ requestId }, { status: 'removed' });
+            const friendRequest = await FriendRequest.findByIdAndUpdate({ id }, { status: 'removed' });
             return res.status(202).json({
                 message: MESSAGE.REMOVE_FRIEND_SUCCESS,
                 data: friendRequest,
