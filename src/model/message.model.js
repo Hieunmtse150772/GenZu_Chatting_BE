@@ -15,6 +15,7 @@ const MessageSchema = mongoose.Schema(
         messageType: {
             type: String,
             enum: ['text', 'image', 'notification'],
+            default: 'text',
         },
         isSpoiled: {
             type: String,
@@ -25,6 +26,7 @@ const MessageSchema = mongoose.Schema(
         },
         status: {
             type: String,
+            default: 'active',
         },
         deleteBy: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
         readBy: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
@@ -32,15 +34,19 @@ const MessageSchema = mongoose.Schema(
         styles: {
             fontSize: {
                 type: Number,
+                default: false,
             },
             bold: {
                 type: Boolean,
+                default: false,
             },
             italic: {
                 type: Boolean,
+                default: false,
             },
             underline: {
                 type: Boolean,
+                default: false,
             },
         },
         invitedUser: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },

@@ -205,7 +205,7 @@ module.exports = {
             const friendRequest = await FriendRequest.findOne({
                 _id: id,
             });
-            if (String(friendRequest.receiver) !== receiverId) {
+            if (String(friendRequest.receiver) !== String(receiverId)) {
                 return res.status(200).json({
                     message: MESSAGE.NO_PERMISSION_ACCEPT_REQUEST,
                     messageCode: 'no_permission_accept_request',
