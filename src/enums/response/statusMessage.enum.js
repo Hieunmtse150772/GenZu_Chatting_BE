@@ -1,13 +1,35 @@
 const STATUS_MESSAGE = {
+    // General
+    CREATE_SUCCESS: 'Create successfully',
+    FORBIDDEN: 'Forbidden',
+    ACTION_FAILED: 'Action failed',
+    ACTION_SUCCESS: 'Action success',
+
     //Auth
-    CREATE_USER_SUCCESS: 'Create user successfully',
-    CREATE_USER_FAIL: 'Create user failed',
     USER_NOT_REGISTERED: 'The user is not registered',
     LOGIN_SUCCESS: 'Your login was successfully',
     LOGIN_FAIL: 'Your login failed',
-    LOGIN_GOOGLE_SUCCESS: 'Auth logged with google in successful;y',
+    LOGIN_GOOGLE_SUCCESS: 'Auth logged with google in successful',
     LOGIN_GOOGLE_FAIL: 'Auth logged with google in failed',
     REFRESH_TOKEN_SUCCESS: 'Your refresh token was successfully',
+
+    //Message
+    SEND_MESSAGE_SUCCESS: 'Send message successfully',
+    SEND_MESSAGE_FAIL: 'Send message failed',
+
+    // Group chat
+    CREATE_GROUP_SUCCESSFULLY: 'Create group successfully',
+    UPDATE_GROUP_SUCCESSFULLY: 'Update group successfully',
+    GROUP_NOT_FOUND: 'Group chat not found',
+    DELETE_GROUP_SUCCESS: 'Delete group successfully',
+    ADD_MEMBER_TO_GROUP_SUCCESS: 'Add member to group successfully',
+    MEMBER_ALREADY_EXIST_IN_GROUP: 'Member already exist in group',
+    DELETE_MEMBER_TO_GROUP_SUCCESS: 'Delete member from group successfully',
+
+    //User
+    CREATE_USER_SUCCESS: 'Create user successfully',
+    UPDATE_USER_SUCCESS: 'Update user successfully',
+    DELETE_USER_SUCCESS: 'Delete user successfully',
 
     //Message
     SEND_MESSAGE_SUCCESS: 'Send message successfully',
@@ -33,11 +55,6 @@ const STATUS_MESSAGE = {
     NO_PERMISSION_REMOVE_REQUEST: 'You have no permission to remove request',
     REMOVE_FRIEND_REQUEST_SUCCESS: 'Remove friend request success',
     REMOVE_FRIEND_SUCCESS: 'Remove friend success',
-
-    //User
-    CREATE_USER_SUCCESS: 'Create user successfully',
-    UPDATE_USER_SUCCESS: 'Update user successfully',
-    DELETE_USER_SUCCESS: 'Delete user successfully',
 
     //Emoji
     ADD_EMOJI_MESSAGE_SUCCESS: 'Add emoji success',

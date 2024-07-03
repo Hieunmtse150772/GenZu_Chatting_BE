@@ -17,6 +17,10 @@ const authSwagger = {
                                     description: 'Address of the user',
                                     type: 'string',
                                 },
+                                phone_number: {
+                                    description: 'Phone number of the user',
+                                    type: 'string',
+                                },
                                 gender: {
                                     description: 'Gender of the user',
                                     type: 'string',

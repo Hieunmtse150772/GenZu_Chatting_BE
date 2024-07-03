@@ -23,9 +23,10 @@ const ConversationSchema = mongoose.Schema(
     },
 );
 
-ConversationSchema.pre('remove', async function (next) {
+ConversationSchema.pre('deleteOne', async function (next) {
     try {
-        await Message.deleteMany({ conversation: this._id });
+        const query = this.getFilter();
+        await Message.deleteMany({ conversation: query._id });
         next();
     } catch (error) {
         next(error);

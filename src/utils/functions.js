@@ -40,14 +40,19 @@ const objectIdValidator = (value, helpers) => {
     return value;
 };
 
-const arrayUniqueValidator = (value, helpers) => {
+const arrayUniqueCreateGroupValidator = (value, helpers) => {
     const { _id } = helpers.prefs.context?.user;
     let newArray = [...value];
     if (_id) {
         newArray.push(String(_id));
     }
-    const uniqueIds = new Set(newArray);
-    if (uniqueIds.size !== newArray.length) {
+    return arrayUniqueValidator(value, helpers, newArray);
+};
+
+const arrayUniqueValidator = (value, helpers, newArray) => {
+    const data = newArray ? newArray : value;
+    const uniqueIds = new Set(data);
+    if (uniqueIds.size !== data.length) {
         return helpers.message('Array contains duplicate ObjectId');
     }
     return value;
@@ -100,6 +105,7 @@ module.exports = {
     generateToken,
     verifyToken,
     verifyRefreshToken,
+    arrayUniqueCreateGroupValidator,
     sendEmail,
     objectIdValidator,
     arrayUniqueValidator,

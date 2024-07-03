@@ -45,8 +45,8 @@ const groupSwagger = {
             },
         },
     },
-    '/conversations/group/add-member': {
-        post: {
+    '/conversations/add-member/group/{id}': {
+        patch: {
             tags: ['Group'],
             security: [
                 {
@@ -54,21 +54,33 @@ const groupSwagger = {
                 },
             ],
             description: 'Add member to group chat',
-            content: {
-                'application/json': {
+            parameters: [
+                {
+                    name: 'id',
+                    in: 'path',
+                    description: 'Id of group chat',
                     schema: {
-                        type: 'object',
-                        properties: {
-                            groupId: {
-                                description: 'Id of group chat',
-                                type: 'string',
-                            },
-                            memberId: {
-                                description: 'id of member',
-                                type: 'string',
+                        type: 'string',
+                    },
+                    required: true,
+                },
+            ],
+            requestBody: {
+                content: {
+                    'application/json': {
+                        schema: {
+                            type: 'object',
+                            properties: {
+                                users: {
+                                    description: 'List user id you want to invate',
+                                    type: 'array',
+                                    items: {
+                                        type: 'string',
+                                        description: 'User id of user',
+                                    },
+                                },
                             },
                         },
-                        required: ['groupId', 'memberId'],
                     },
                 },
             },
@@ -82,30 +94,38 @@ const groupSwagger = {
             },
         },
     },
-    '/conversations/group/delete-member': {
-        post: {
+    '/conversations/delete-member/group/{id}': {
+        patch: {
             tags: ['Group'],
             security: [
                 {
                     accessToken: [],
                 },
             ],
-            description: 'Delete member to group chat',
-            content: {
-                'application/json': {
+            parameters: [
+                {
+                    name: 'id',
+                    in: 'path',
+                    description: 'Id of group chat',
                     schema: {
-                        type: 'object',
-                        properties: {
-                            groupId: {
-                                description: 'Id of group chat',
-                                type: 'string',
-                            },
-                            memberId: {
-                                description: 'id of member',
-                                type: 'string',
+                        type: 'string',
+                    },
+                    required: true,
+                },
+            ],
+            description: 'Delete member to group chat',
+            requestBody: {
+                content: {
+                    'application/json': {
+                        schema: {
+                            type: 'object',
+                            properties: {
+                                userId: {
+                                    description: 'User id of group chat',
+                                    type: 'string',
+                                },
                             },
                         },
-                        required: ['groupId', 'memberId'],
                     },
                 },
             },

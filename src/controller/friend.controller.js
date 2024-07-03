@@ -1,8 +1,8 @@
 const mongodb = require('mongodb');
-const MESSAGE = require('@/enums/message.enum');
+const MESSAGE = require('@/enums/response/statusMessage.enum');
 const FriendRequest = require('@/model/friendRequest.model');
 const FriendShip = require('@/model/friendShip.model');
-const MESSAGE_CODE = require('@/enums/messageCode.enum');
+const MESSAGE_CODE = require('@/enums/response/messageCode.enum');
 
 module.exports = {
     getFriendList: async (req, res, next) => {
