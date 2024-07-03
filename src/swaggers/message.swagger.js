@@ -60,6 +60,15 @@ const messageSwagger = {
                     },
                 },
                 {
+                    name: 'messageId',
+                    in: 'query',
+                    description: 'Id of message',
+                    schema: {
+                        type: 'string',
+                        description: 'The id of message',
+                    },
+                },
+                {
                     name: 'search',
                     in: 'query',
                     description: 'search messages by keyword',
@@ -95,6 +104,54 @@ const messageSwagger = {
                         type: 'date',
                         description: 'Pagination page number (the default value is 1)',
                         example: '2024-06-26T07:00:00.000Z',
+                    },
+                },
+            ],
+            responses: {
+                200: {
+                    description: 'Get all message of conversation successfully',
+                    content: {
+                        'application/json': {},
+                    },
+                },
+            },
+        },
+    },
+    '/messages/searchMessage': {
+        get: {
+            tags: ['Message'],
+            description: 'Search message by keyword',
+            security: [
+                {
+                    accessToken: [],
+                },
+            ],
+            parameters: [
+                {
+                    name: 'id',
+                    in: 'query',
+                    description: 'Id of conversation',
+                    schema: {
+                        type: 'string',
+                        example: '6679c40ab0528a3618e7e646',
+                    },
+                },
+                {
+                    name: 'sender',
+                    in: 'query',
+                    description: 'Id of sender',
+                    schema: {
+                        type: 'string',
+                        description: 'The id of sender',
+                    },
+                },
+                {
+                    name: 'search',
+                    in: 'query',
+                    description: 'search messages by keyword',
+                    schema: {
+                        type: 'string',
+                        description: 'The numbers of items to return (the default value is 20)',
                     },
                 },
             ],
