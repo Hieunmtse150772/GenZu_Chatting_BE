@@ -199,7 +199,7 @@ const messageSwagger = {
             ],
             parameters: [
                 {
-                    name: 'messageId',
+                    name: 'id',
                     in: 'query',
                     description: 'Id of message',
                     schema: {
@@ -229,7 +229,7 @@ const messageSwagger = {
             ],
             parameters: [
                 {
-                    name: 'messageId',
+                    name: 'id',
                     in: 'query',
                     description: 'Id of message',
                     schema: {

@@ -80,7 +80,7 @@ module.exports = {
             const user = await User.findOne({ _id: user_id }, 'fullName email picture');
 
             const relationShip = await FriendShip.findOne({
-                users: { $all: [user_id, req.user.data] },
+                users: { $all: [user_id, req.user._id] },
                 status: 'active',
             });
 

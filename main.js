@@ -21,6 +21,7 @@ routes(app);
 
 app.use((err, req, res, next) => {
     const statusCode = err.status || 500;
+    console.log('err: ', err);
     res.status(statusCode).json({
         message: err.message || 'Internal Server Error',
         status: statusCode,

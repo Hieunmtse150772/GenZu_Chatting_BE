@@ -1,16 +1,13 @@
 const Joi = require('joi');
-const { validateIdMongodb } = require('.');
-const { objectIdValidator } = require('@/utils/functions');
 
-const getMessages = Joi.object({
-    id: Joi.string().required().custom(objectIdValidator, 'ObjectId validation'),
+const getFriend = Joi.object({
     limit: Joi.number(),
     search: Joi.string(),
     startDate: Joi.date(),
     endDate: Joi.date(),
 });
 
-const sendMessage = Joi.object({
+const sendAddFriendRequest = Joi.object({
     message: Joi.string().min(1).required(),
     isSpoiled: Joi.string(),
     messageType: Joi.string(),
@@ -25,15 +22,8 @@ const sendMessage = Joi.object({
     //   message_type: Joi.string().required(),
     //   status: Joi.string().required(),
 });
-const sendEmoji = Joi.object({
-    emoji: Joi.string().required(),
-});
-const updateEmoji = Joi.object({
-    newEmoji: Joi.string().required(),
-});
+
 module.exports = {
-    getMessages,
-    sendMessage,
-    sendEmoji,
-    updateEmoji,
+    getFriend,
+    sendAddFriendRequest,
 };

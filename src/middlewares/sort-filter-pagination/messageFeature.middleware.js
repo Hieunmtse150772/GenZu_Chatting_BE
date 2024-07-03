@@ -3,7 +3,7 @@ const Message = require('@/model/message.model');
 module.exports = async function (req, res, next) {
     try {
         const queryObject = { ...req.query };
-        const userId = req.user.data;
+        const userId = req.user._id;
         const conversation_id = req.query.id;
         const excludedFiled = ['sort', 'limit', 'page', 'field'];
         excludedFiled.forEach((ele) => delete queryObject[ele]);
