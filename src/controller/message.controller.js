@@ -78,6 +78,35 @@ module.exports = {
             });
         }
     },
+    searchMessages: async (req, res, next) => {
+        if (res?.paginatedResults) {
+            const { results, totalDocs, totalPages } = res.paginatedResults;
+            const responseObject = {
+                totalDocs: totalDocs || 0,
+                totalPages: totalPages || 0,
+                count: results?.length || 0,
+            };
+
+            responseObject.Messages = results?.map((Messages) => {
+                const { user, ...otherMessageInfo } = Messages._doc;
+                return {
+                    ...otherMessageInfo,
+                    request: {
+                        type: 'Get',
+                        description: '',
+                    },
+                };
+            });
+
+            return res.status(200).send({
+                success: true,
+                error: false,
+                message: 'Successful found message',
+                status: 200,
+                data: responseObject,
+            });
+        }
+    },
     sendSingleMessage: async (req, res, next) => {
         const { message, messageType, isSpoiled, styles } = req.body;
         const conversationId = req.query.id;
@@ -98,11 +127,19 @@ module.exports = {
                 path: 'conversation.users',
                 select: 'fullName picture email',
             });
-            await Conversation.findByIdAndUpdate(req.body.id, {
-                latestMessage: newMessage,
-            });
+            await Conversation.findByIdAndUpdate(
+                conversationId,
+                {
+                    latestMessage: newMessage._id,
+                },
+                { new: true },
+            );
 
-            return res.status(201).json(newMessage);
+            return res.status(201).json({
+                success: true,
+                message: 'Send message success',
+                newMessage,
+            });
         } catch (error) {
             next(error);
         }

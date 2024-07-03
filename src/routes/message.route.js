@@ -4,7 +4,16 @@ const MessageController = require('../controller/message.controller');
 const verifyToken = require('../middlewares/verifyToken.middleware');
 const { validateParams, validateBody, validateQuery } = require('@/middlewares/validator.middleware');
 const messageMiddleware = require('@/middlewares/sort-filter-pagination/messageFeature.middleware');
-const { validateIdMongodb, sendMessage, sendEmoji, getMessages, updateEmoji } = require('@/validations');
+const searchMessageMiddleware = require('@/middlewares/sort-filter-pagination/searchMessageFeature.middleware');
+
+const {
+    validateIdMongodb,
+    sendMessage,
+    sendEmoji,
+    getMessages,
+    updateEmoji,
+    searchMessages,
+} = require('@/validations');
 
 router.get(
     '/getMessagePagination',
@@ -13,6 +22,15 @@ router.get(
     messageMiddleware,
     MessageController.getAllMessagePagination,
 );
+
+router.get(
+    '/searchMessage',
+    verifyToken,
+    validateQuery(searchMessages),
+    searchMessageMiddleware,
+    MessageController.searchMessages,
+);
+
 router.get('/:id', verifyToken, validateParams(validateIdMongodb), MessageController.getAllMessages);
 
 router.post(
