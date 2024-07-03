@@ -32,7 +32,7 @@ const userSwagger = {
                                     type: 'string',
                                     example: 'string@gmail.com',
                                 },
-                                phoneNumber: {
+                                phone_number: {
                                     description: 'Phone of user',
                                     type: 'string',
                                 },

@@ -1,7 +1,7 @@
-const { default: STATUS_CODE } = require('@/enums/statusCode.enum');
 const Conversation = require('../model/conversation.model');
 const Message = require('../model/message.model');
-const { STATUS_MESSAGE_CODE, STATUS_MESSAGE } = require('@/enums/statusMessage.enum');
+const { STATUS_CODE, STATUS_MESSAGE, MESSAGE_CODE } = require('@/enums/response');
+const createResponse = require('@/utils/responseHelper');
 
 module.exports = {
     createGroupChat: async (req, res, next) => {
@@ -36,44 +36,52 @@ module.exports = {
                 .populate('users', 'picture fullName _id email')
                 .populate('groupAdmin', 'picture fullName _id email');
 
-            return res.status(201).json({
-                data: fullGroupChatInfo,
-                message: 'Create group chat successful',
-                messageCode: 'create_group_chat_successful',
-            });
+            return res
+                .status(STATUS_CODE.CREATED)
+                .json(
+                    createResponse(
+                        fullGroupChatInfo,
+                        STATUS_MESSAGE.CREATE_GROUP_SUCCESSFULLY,
+                        MESSAGE_CODE.CREATE_GROUP_SUCCESSFULLY,
+                        STATUS_CODE.CREATED,
+                        true,
+                    ),
+                );
         } catch (error) {
             return next(error);
         }
     },
     addMemberGroupChat: async (req, res, next) => {
-        // const userId = req.user._id;
-        // console.log('userId: ', userId);
+        const groupId = req.params.id;
+        const newUsers = req.body.users;
 
-        // if (!req.body.users || !req.body.name) {
-        //     return res.status(400).send({ message: 'Please Fill all the field!' });
-        // }
-        // var users = JSON.parse(req.body.users);
+        const group = await Conversation.findById(groupId);
 
-        // if (users.length < 2) {
-        //     return res.status(400).send({ message: 'Please add more than 1 user to create a group chat!' });
-        // }
+        if (!group) {
+            return res
+                .status(STATUS_CODE.NOT_FOUND)
+                .json(
+                    createResponse(
+                        null,
+                        STATUS_MESSAGE.GROUP_NOT_FOUND,
+                        MESSAGE_CODE.GROUP_NOT_FOUND,
+                        STATUS_CODE.NOT_FOUND,
+                        false,
+                    ),
+                );
+        }
 
-        // users.push(userId);
+        const currentUsersSet = new Set(group.users.map((user) => user.toString()));
+        const duplicateUsers = newUsers.filter((user) => currentUsersSet.has(user.toString()));
+
+        console.log(currentUsersSet, duplicateUsers);
+
+        if (duplicateUsers.length > 0) {
+            return res.status(STATUS_CODE.CONFLICT).json(createRes);
+        }
 
         try {
-            // const groupChat = await Conversation.create({
-            //     chatName: req.body.name,
-            //     isGroupChat: true,
-            //     users: users,
-            //     groupAdmin: userId,
-            // });
-            // const fullGroupChatInfo = await Conversation.findOne({
-            //     _id: groupChat._id,
-            // })
-            //     .populate('users', 'picture fullName _id email')
-            //     .populate('groupAdmin', 'picture fullName _id email');
             return res.status(201).json({
-                data: fullGroupChatInfo,
                 message: 'Create group chat successful',
                 messageCode: 'create_group_chat_successful',
             });
@@ -82,34 +90,8 @@ module.exports = {
         }
     },
     deleteMemberGroupChat: async (req, res, next) => {
-        // const userId = req.user._id;
-        // console.log('userId: ', userId);
-
-        // if (!req.body.users || !req.body.name) {
-        //     return res.status(400).send({ message: 'Please Fill all the field!' });
-        // }
-        // var users = JSON.parse(req.body.users);
-
-        // if (users.length < 2) {
-        //     return res.status(400).send({ message: 'Please add more than 1 user to create a group chat!' });
-        // }
-
-        // users.push(userId);
-
         try {
-            // const groupChat = await Conversation.create({
-            //     chatName: req.body.name,
-            //     isGroupChat: true,
-            //     users: users,
-            //     groupAdmin: userId,
-            // });
-            // const fullGroupChatInfo = await Conversation.findOne({
-            //     _id: groupChat._id,
-            // })
-            //     .populate('users', 'picture fullName _id email')
-            //     .populate('groupAdmin', 'picture fullName _id email');
             return res.status(201).json({
-                data: fullGroupChatInfo,
                 message: 'Create group chat successful',
                 messageCode: 'create_group_chat_successful',
             });
@@ -163,11 +145,17 @@ module.exports = {
 
             const newGroup = await group.save();
 
-            return res.status(200).json({
-                data: newGroup,
-                message: 'Update group chat successful',
-                messageCode: 'update_group_chat_successful',
-            });
+            return res
+                .status(STATUS_CODE.OK)
+                .json(
+                    createResponse(
+                        newGroup,
+                        STATUS_MESSAGE.UPDATE_GROUP_SUCCESSFULLY,
+                        MESSAGE_CODE.UPDATE_GROUP_SUCCESSFULLY,
+                        STATUS_CODE.OK,
+                        true,
+                    ),
+                );
         } catch (error) {
             return next(error);
         }
@@ -180,29 +168,36 @@ module.exports = {
             const group = await Conversation.findById(groupId);
 
             if (!group) {
-                res.status(400).json({
-                    message: STATUS_MESSAGE.GROUP_NOT_FOUND,
-                    messageCode: STATUS_MESSAGE_CODE.GROUP_NOT_FOUND,
-                    status: STATUS_CODE.NOT_FOUND,
-                });
+                return res
+                    .status(STATUS_CODE.NOT_FOUND)
+                    .json(
+                        createResponse(
+                            null,
+                            STATUS_MESSAGE.GROUP_NOT_FOUND,
+                            MESSAGE_CODE.GROUP_NOT_FOUND,
+                            STATUS_CODE.NOT_FOUND,
+                            false,
+                        ),
+                    );
             }
 
             if (!userId.equals(group.groupAdmin)) {
-                res.status(403).json({
-                    message: STATUS_CODE.FORBIDDEN,
-                    messageCode: STATUS_MESSAGE_CODE.FORBIDDEN,
-                    status: STATUS_CODE.FORBIDDEN,
-                });
+                return res
+                    .status(STATUS_CODE.FORBIDDEN)
+                    .json(
+                        createResponse(
+                            null,
+                            STATUS_MESSAGE.FORBIDDEN,
+                            STATUS_CODE.FORBIDDEN,
+                            STATUS_CODE.FORBIDDEN,
+                            false,
+                        ),
+                    );
             }
 
-            const result = await Conversation.deleteOne({ _id: group._id });
+            await Conversation.deleteOne({ _id: group._id });
 
-            console.log(result);
-
-            return res.status(200).json({
-                message: STATUS_MESSAGE.DELETE_GROUP_SUCCESS,
-                messageCode: STATUS_MESSAGE_CODE.DELETE_GROUP_SUCCESS,
-            });
+            return res.status(STATUS_CODE.NO_CONTENT).json();
         } catch (error) {
             return next(error);
         }

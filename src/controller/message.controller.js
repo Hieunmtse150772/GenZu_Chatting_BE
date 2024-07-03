@@ -1,10 +1,10 @@
 const mongodb = require('mongodb');
-const MESSAGE = require('@/enums/message.enum.js');
+const MESSAGE = require('@/enums/response/statusMessage.enum');
 const Conversation = require('../model/conversation.model');
 const Message = require('@/model/message.model');
 const User = require('@/model/user.model');
 const Emoji = require('@/model/emoji.model');
-const MESSAGE_CODE = require('@/enums/messageCode.enum');
+const MESSAGE_CODE = require('@/enums/response/messageCode.enum');
 module.exports = {
     getAllMessages: async (req, res, next) => {
         try {

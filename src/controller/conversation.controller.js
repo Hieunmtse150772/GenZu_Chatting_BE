@@ -4,8 +4,8 @@ const Conversation = require('../model/conversation.model');
 const FriendShip = require('../model/friendShip.model');
 const Message = require('../model/message.model');
 const User = require('../model/user.model');
-const MESSAGE_CODE = require('@/enums/messageCode.enum');
-const STATUS_MESSAGE = require('@/enums/message.enum');
+const MESSAGE_CODE = require('@/enums/response/messageCode.enum');
+const STATUS_MESSAGE = require('@/enums/response/statusMessage.enum');
 
 module.exports = {
     accessConversation: async (req, res, next) => {

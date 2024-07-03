@@ -1,6 +1,6 @@
 const Joi = require('joi');
 
-const { objectIdValidator, arrayUniqueValidator } = require('@/utils/functions');
+const { objectIdValidator, arrayUniqueValidator, arrayUniqueCreateGroupValidator } = require('@/utils/functions');
 
 const createGroupBody = Joi.object({
     chatName: Joi.string().min(1).required(),
@@ -9,7 +9,7 @@ const createGroupBody = Joi.object({
     users: Joi.array()
         .min(2)
         .items(Joi.string().custom(objectIdValidator, 'ObjectId validation'))
-        .custom(arrayUniqueValidator, 'Array unique validation'),
+        .custom(arrayUniqueCreateGroupValidator, 'Array unique validation'),
 });
 
 const addMemberGroupBody = Joi.object({
