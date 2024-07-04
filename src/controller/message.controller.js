@@ -187,10 +187,6 @@ module.exports = {
                         STATUS_CODE.OK,
                         true,
                     ),
-                    {
-                        message: STATUS_MESSAGE.DELETE_MESSAGE_SUCCESS,
-                        data: messageUpdate,
-                    },
                 );
         } catch (error) {
             next(error);
