@@ -32,7 +32,7 @@ io.on('connection', (socket) => {
     //Check user online
     socket.on('friend request', async (newRequest) => {
         console.log('object: ', newRequest);
-        socket.to(newRequest.receiver._id).emit('send request', newRequest);
+        socket.to(newRequest.receiver._id).emit('received request', newRequest);
     });
 
     const cookies = cookie.parse(socket?.handshake?.headers?.cookie ? socket?.handshake?.headers?.cookie : '');
