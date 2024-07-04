@@ -5,6 +5,7 @@ const cookie = require('cookie');
 
 const User = require('@/model/user.model');
 const jwt = require('jsonwebtoken');
+const FriendRequest = require('@/model/friendRequest.model');
 
 const app = express();
 const server = http.createServer(app);
@@ -33,6 +34,14 @@ io.on('connection', (socket) => {
     socket.on('friend request', async (newRequest) => {
         console.log('object: ', newRequest);
         socket.to(newRequest.receiver._id).emit('received request', newRequest);
+    });
+
+    //Check is read friend request
+    socket.on('read request', async (newRequest) => {
+        const newRequestId = newRequest._id;
+        const sender = newRequest.sender._id;
+        const updateRequest = await FriendRequest.findByIdAndUpdate(newRequestId, { isRead: true });
+        socket.to(sender).emit('isRead', true);
     });
 
     const cookies = cookie.parse(socket?.handshake?.headers?.cookie ? socket?.handshake?.headers?.cookie : '');

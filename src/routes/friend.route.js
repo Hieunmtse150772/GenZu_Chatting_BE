@@ -18,6 +18,8 @@ router.post(
 
 router.get('/addFriendRequest', verifyToken, FriendController.getAddFriendRequest);
 
+router.get('/addFriendRequestNotification', verifyToken, FriendController.getAddFriendRequestNotification);
+
 router.put(
     '/acceptFriendRequest',
     validateQuery(validations.validateIdMongodb),

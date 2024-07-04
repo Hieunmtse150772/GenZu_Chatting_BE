@@ -62,6 +62,41 @@ module.exports = {
             next(error);
         }
     },
+    getAddFriendRequestNotification: async (req, res, next) => {
+        try {
+            const user_id = req.user._id;
+            if (!mongodb.ObjectId.isValid(user_id)) {
+                return res.status(400).json({
+                    message: 'The user id is invalid',
+                    messageCode: 'invalid_userId',
+                });
+            }
+            const friendRequestList = await FriendRequest.find({
+                $or: [{ receiver: user_id, status: 'pending' }, { status: 'accepted' }],
+            })
+                .populate('sender', 'fullName picture _id')
+                .populate('receiver', 'fullName picture _id');
+
+            const notification = friendRequestList.map((friendRequest) => {
+                return {
+                    id: friendRequest._id,
+                    sender: friendRequest.sender,
+                    receiver: friendRequest.receiver,
+                    content:
+                        friendRequest.status === 'pending'
+                            ? `Lời mời kết bạn từ ${friendRequest.sender.fullName}`
+                            : `${friendRequest.receiver.fullName} và ${friendRequest.sender.fullName} đã trở thành bạn bè`,
+                };
+            });
+            return res.status(200).json({
+                message: 'Get friend request notification list was successfully',
+                messageCode: 'get_friend_request_notification_list_successfully',
+                data: notification,
+            });
+        } catch (error) {
+            next(error);
+        }
+    },
     getAddFriendRequestHasBeenSent: async (req, res, next) => {
         try {
             const user_id = req.user._id;
