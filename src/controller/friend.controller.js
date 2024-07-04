@@ -82,6 +82,8 @@ module.exports = {
                     id: friendRequest._id,
                     sender: friendRequest.sender,
                     receiver: friendRequest.receiver,
+                    status: friendRequest.status,
+                    isRead: friendRequest.isRead,
                     content:
                         friendRequest.status === 'pending'
                             ? `Lời mời kết bạn từ ${friendRequest.sender.fullName}`
