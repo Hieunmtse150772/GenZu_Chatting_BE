@@ -6,6 +6,7 @@ const FriendRequestSchema = new mongoose.Schema(
     {
         sender: { type: mongoose.Schema.ObjectId, ref: 'User', required: true },
         receiver: { type: mongoose.Schema.ObjectId, ref: 'User', required: true },
+        isRead: { type: Boolean, default: false },
         status: { type: String, required: true },
     },
     {

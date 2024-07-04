@@ -102,6 +102,25 @@ const friendSwagger = {
             },
         },
     },
+    '/friends/addFriendRequestNotification': {
+        get: {
+            tags: ['Friend'],
+            security: [
+                {
+                    accessToken: [],
+                },
+            ],
+            description: 'Get all friend request notification (Lấy danh sách thông báo lời mời kết bạn của người dùng)',
+            responses: {
+                200: {
+                    description: 'Get all friend request notification successfully.',
+                    content: {
+                        'application/json': {},
+                    },
+                },
+            },
+        },
+    },
     '/friends/acceptFriendRequest': {
         put: {
             tags: ['Friend'],
