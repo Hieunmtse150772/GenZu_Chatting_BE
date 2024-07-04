@@ -14,7 +14,7 @@ const MessageSchema = mongoose.Schema(
         },
         messageType: {
             type: String,
-            enum: ['text', 'image', 'notification', 'video'],
+            enum: ['text', 'image', 'notification', 'video', 'file'],
             default: 'text',
         },
         isSpoiled: {

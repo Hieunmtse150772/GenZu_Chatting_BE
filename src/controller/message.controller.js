@@ -1,10 +1,12 @@
 const mongodb = require('mongodb');
-const MESSAGE = require('@/enums/response/statusMessage.enum');
 const Conversation = require('../model/conversation.model');
 const Message = require('@/model/message.model');
 const User = require('@/model/user.model');
 const Emoji = require('@/model/emoji.model');
 const MESSAGE_CODE = require('@/enums/response/messageCode.enum');
+const createResponse = require('@/utils/responseHelper');
+const STATUS_MESSAGE = require('@/enums/response/statusMessage.enum');
+const { STATUS_CODE } = require('@/enums/response');
 module.exports = {
     getAllMessages: async (req, res, next) => {
         try {
@@ -120,6 +122,19 @@ module.exports = {
             styles: styles,
         };
         try {
+            const conversation = Conversation.findOne({ _id: conversationId });
+            if (!conversation) {
+                return res
+                    .status(404)
+                    .json(
+                        createResponse(
+                            null,
+                            STATUS_MESSAGE.CONVERSATION_NOT_FOUND,
+                            MESSAGE_CODE.CONVERSATION_NOT_FOUND,
+                            false,
+                        ),
+                    );
+            }
             var newMessage = await Message.create(messageCreated);
             newMessage = await newMessage.populate('sender', 'fullName picture email');
             newMessage = await newMessage.populate('conversation');
@@ -135,11 +150,17 @@ module.exports = {
                 { new: true },
             );
 
-            return res.status(201).json({
-                success: true,
-                message: 'Send message success',
-                newMessage,
-            });
+            return res
+                .status(201)
+                .json(
+                    createResponse(
+                        newMessage,
+                        STATUS_MESSAGE.SEND_MESSAGE_SUCCESS,
+                        MESSAGE_CODE.SEND_MESSAGE_SUCCESS,
+                        STATUS_CODE.CREATED,
+                        true,
+                    ),
+                );
         } catch (error) {
             next(error);
         }
@@ -156,10 +177,21 @@ module.exports = {
                 { $push: { deleteBy: userId } },
                 { new: true, useFindAndModify: false },
             );
-            return res.status(200).json({
-                message: MESSAGE.DELETE_MESSAGE_SUCCESS,
-                data: messageUpdate,
-            });
+            return res
+                .status(200)
+                .json(
+                    createResponse(
+                        messageUpdate,
+                        STATUS_MESSAGE.DELETE_MESSAGE_SUCCESS,
+                        MESSAGE_CODE.DELETE_MESSAGE_SUCCESS,
+                        STATUS_CODE.OK,
+                        true,
+                    ),
+                    {
+                        message: STATUS_MESSAGE.DELETE_MESSAGE_SUCCESS,
+                        data: messageUpdate,
+                    },
+                );
         } catch (error) {
             next(error);
         }
@@ -168,10 +200,69 @@ module.exports = {
         const userId = req.user._id;
         try {
             const messageUpdate = await Message.updateMany({}, { status: 'deleted' });
-            return res.status(200).json({
-                message: MESSAGE.DELETE_MESSAGE_SUCCESS,
-                data: messageUpdate,
+            return res
+                .status(200)
+                .json(
+                    createResponse(
+                        messageUpdate,
+                        STATUS_MESSAGE.DELETE_MESSAGE_SUCCESS,
+                        MESSAGE_CODE.DELETE_MESSAGE_SUCCESS,
+                        STATUS_CODE.OK,
+                        true,
+                    ),
+                );
+        } catch (error) {
+            next(error);
+        }
+    },
+    editMessage: async (req, res, next) => {
+        const messageId = req.query.id;
+        const userId = req.user._id;
+        const { content } = req.body;
+        const message = Message.findOne(messageId);
+        if (!message) {
+            return res.status(404).json({
+                message: STATUS_MESSAGE.MESSAGE_NOT_FOUND,
+                messageCode: 'message_not_found',
+                status: MESSAGE_CODE.MESSAGE_NOT_FOUND,
             });
+        }
+        try {
+            if (String(message.sender) !== String(userId)) {
+                return res.status(400).json({
+                    message: STATUS_MESSAGE.NO_PERMISSION_EDIT_MESSAGE,
+                    messageCode: 'no_permission_edit_message',
+                    status: MESSAGE_CODE.NO_PERMISSION_RECALL_MESSAGE,
+                    success: false,
+                });
+            }
+            const createdAt = message.createdAt;
+            const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
+            if (createdAt < thirtyMinutesAgo) {
+                return res
+                    .status(400)
+                    .json(
+                        createResponse(
+                            null,
+                            STATUS_MESSAGE.MESSAGE_TOO_OLD_TO_EDIT,
+                            MESSAGE_CODE.MESSAGE_TOO_OLD_TO_EDIT,
+                            STATUS_CODE.OK,
+                            false,
+                        ),
+                    );
+            }
+            const messageUpdated = Message.findByIdAndUpdate(messageId, { message: content });
+            return res
+                .status(200)
+                .json(
+                    createResponse(
+                        messageUpdated,
+                        STATUS_MESSAGE.EDIT_MESSAGE_SUCCESS,
+                        MESSAGE_CODE.EDIT_MESSAGE_SUCCESS,
+                        STATUS_CODE.OK,
+                        true,
+                    ),
+                );
         } catch (error) {
             next(error);
         }
@@ -182,15 +273,21 @@ module.exports = {
         try {
             const message = Message.findOne(messageId);
             if (message.sender !== userId) {
-                return res.status(200).json({
-                    message: MESSAGE.NO_PERMISSION_RECALL_MESSAGE,
-                    messageCode: 'no_permission_recall_message',
-                    status: MESSAGE_CODE.NO_PERMISSION_RECALL_MESSAGE,
-                });
+                return res
+                    .status(400)
+                    .json(
+                        createResponse(
+                            messageUpdate,
+                            STATUS_MESSAGE.NO_PERMISSION_RECALL_MESSAGE,
+                            MESSAGE_CODE.NO_PERMISSION_RECALL_MESSAGE,
+                            STATUS_CODE.BAD_REQUEST,
+                            false,
+                        ),
+                    );
             }
             const messageUpdate = Message.findByIdAndUpdate(messageId, { status: 'recalled' });
             return res.status(200).json({
-                message: MESSAGE.RECALL_MESSAGE_SUCCESS,
+                message: STATUS_MESSAGE.RECALL_MESSAGE_SUCCESS,
                 data: messageUpdate,
             });
         } catch (error) {
@@ -227,8 +324,9 @@ module.exports = {
                 },
             });
             return res.status(201).json({
-                message: MESSAGE.ADD_EMOJI_MESSAGE_SUCCESS,
+                message: STATUS_MESSAGE.ADD_EMOJI_MESSAGE_SUCCESS,
                 data: addEmojiMessage,
+                success: true,
             });
         } catch (error) {
             return next(error);
@@ -255,8 +353,9 @@ module.exports = {
             }
             if (String(userId) !== String(emoji.sender)) {
                 return res.status(409).json({
-                    message: MESSAGE.NOT_YOUR_EMOJI,
+                    message: STATUS_MESSAGE.NOT_YOUR_EMOJI,
                     status: MESSAGE_CODE.NOT_YOUR_EMOJI,
+                    success: false,
                 });
             }
             const updateEmoji = await Emoji.findByIdAndUpdate(
@@ -267,8 +366,9 @@ module.exports = {
                 { new: true, useFindAndModify: false },
             );
             return res.status(200).json({
-                message: MESSAGE.UPDATE_EMOJI_MESSAGE_SUCCESS,
+                message: STATUS_MESSAGE.UPDATE_EMOJI_MESSAGE_SUCCESS,
                 data: updateEmoji,
+                success: true,
             });
         } catch (error) {
             return next(error);
@@ -287,14 +387,15 @@ module.exports = {
         try {
             const emoji = await Emoji.findOne({ _id: emojiId });
             if (!emoji) {
-                return res.status(200).json({
+                return res.status(400).json({
                     message: 'Emoji has been remove',
-                    status: 200,
+                    status: STATUS_CODE.BAD_REQUEST,
+                    success: false,
                 });
             }
             if (String(userId) !== String(emoji.sender)) {
                 return res.status(409).json({
-                    message: MESSAGE.NOT_YOUR_EMOJI,
+                    message: STATUS_MESSAGE.NOT_YOUR_EMOJI,
                     status: MESSAGE_CODE.NOT_YOUR_EMOJI,
                 });
             }
@@ -303,8 +404,9 @@ module.exports = {
             });
             const updateEmoji = await Emoji.findOneAndDelete({ _id: emojiId });
             return res.status(200).json({
-                message: MESSAGE.REMOVE_EMOJI_MESSAGE_SUCCESS,
+                message: STATUS_MESSAGE.REMOVE_EMOJI_MESSAGE_SUCCESS,
                 data: updateMessage,
+                success: true,
             });
         } catch (error) {
             return next(error);

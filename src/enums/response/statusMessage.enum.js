@@ -36,10 +36,14 @@ const STATUS_MESSAGE = {
     SEND_MESSAGE_FAIL: 'Send message failed',
     DELETE_MESSAGE_SUCCESS: 'Delete message successfully',
     RECALL_MESSAGE_SUCCESS: 'Recall message successfully',
-    NO_PERMISSION_RECALL_MESSAGE: 'You have no permission to reject request',
-
+    NO_PERMISSION_RECALL_MESSAGE: 'You have no permission to recall this message',
+    NO_PERMISSION_EDIT_MESSAGE: 'You have no permission to edit this message',
+    EDIT_MESSAGE_SUCCESS: 'Edit message successfully',
+    MESSAGE_NOT_FOUND: 'Message not found',
+    MESSAGE_TOO_OLD_TO_EDIT: 'Message too old to edit (More than 30p)',
     //Conversation
     REMOVE_CONVERSATION_SUCCESS: 'Remove conversation success',
+    CONVERSATION_NOT_FOUND: 'Conversation not found',
 
     //Friend
     FRIEND_REQUEST_SENT_SUCCESS: 'Friend request sent',
