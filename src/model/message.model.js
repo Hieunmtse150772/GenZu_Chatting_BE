@@ -18,7 +18,8 @@ const MessageSchema = mongoose.Schema(
             default: 'text',
         },
         isSpoiled: {
-            type: String,
+            type: Boolean,
+            default: true,
         },
         message: {
             type: String,
