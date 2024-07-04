@@ -30,10 +30,16 @@ io.on('connection', (socket) => {
         socket.emit('connected');
     });
 
-    //Check user online
+    //Send request add friend
     socket.on('friend request', async (newRequest) => {
         console.log('object: ', newRequest);
         socket.to(newRequest.receiver._id).emit('received request', newRequest);
+    });
+
+    //Accept request friend
+    socket.on('accept request', async (newRequest) => {
+        console.log('object: ', newRequest);
+        socket.to(newRequest.sender._id).emit('received request', newRequest);
     });
 
     //Check is read friend request
