@@ -21,7 +21,7 @@ const searchMessages = Joi.object({
 const sendMessage = Joi.object({
     message: Joi.string().min(1).required(),
     isSpoiled: Joi.boolean(),
-    messageType: Joi.string(),
+    messageType: Joi.string().valid('text', 'image', 'video', 'notification'),
     styles: Joi.object({
         fontSize: Joi.number(),
         bold: Joi.boolean(),
