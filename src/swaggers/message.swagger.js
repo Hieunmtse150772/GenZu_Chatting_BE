@@ -197,7 +197,8 @@ const messageSwagger = {
                                 },
                                 isSpoiled: {
                                     description: 'Spoiler',
-                                    type: 'string',
+                                    type: 'boolean',
+                                    example: true,
                                 },
                                 messageType: {
                                     description: 'Type of message',
