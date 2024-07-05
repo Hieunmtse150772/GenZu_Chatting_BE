@@ -187,10 +187,10 @@ io.on('connection', (socket) => {
             console.log(error);
         }
     });
-    socket.off('setup', (userData) => {
-        console.log('USER DISCONNECTED');
-        socket.leave(userData._id);
-    });
+    // socket.off('setup', (userData) => {
+    //     console.log('USER DISCONNECTED');
+    //     socket.leave(userData._id);
+    // });
 });
 
 module.exports = { app, io, server };
