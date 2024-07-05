@@ -17,6 +17,7 @@ const io = require('socket.io')(server, {
             process.env.URL_CLIENT,
             process.env.URL_CLIENT_LOCAL,
             process.env.URL_CLIENT_TEST,
+            process.env.URL_CLIENT_DEPLOY,
             'http://localhost:5173',
         ],
         // credentials: true,
