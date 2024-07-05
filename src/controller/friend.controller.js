@@ -3,6 +3,9 @@ const MESSAGE = require('@/enums/response/statusMessage.enum');
 const FriendRequest = require('@/model/friendRequest.model');
 const FriendShip = require('@/model/friendShip.model');
 const MESSAGE_CODE = require('@/enums/response/messageCode.enum');
+const createResponse = require('@/utils/responseHelper');
+const STATUS_MESSAGE = require('@/enums/response/statusMessage.enum');
+const { STATUS_CODE } = require('@/enums/response');
 
 module.exports = {
     getFriendList: async (req, res, next) => {
@@ -20,9 +23,18 @@ module.exports = {
                 users: userId,
                 status: 'active',
             }).populate('users', 'fullName picture email');
-            friendList = friendList.map(
-                (friend) => friend.users.filter((user) => user._id.toString() !== userId.toString())[0],
-            );
+            console.log('friendList: ', friendList);
+            friendList = friendList.map((friend) => {
+                return {
+                    friend: {
+                        info: friend.users.filter((user) => user._id.toString() !== userId.toString())[0],
+                    },
+                    friendRequest: friend.friendRequest,
+                    status: friend.status,
+                    createdAt: friend.createdAt,
+                    updatedAt: friend.updatedAt,
+                };
+            });
             if (!friendList) {
                 return res.status(200).json({
                     message: 'Get friend list was successfully.',
@@ -189,8 +201,8 @@ module.exports = {
                 receiver: id,
                 status: 'pending',
             });
-            addFriendRequest = await addFriendRequest.populate('sender', '-password');
-            addFriendRequest = await addFriendRequest.populate('receiver', '-password');
+            addFriendRequest = await addFriendRequest.populate('sender', 'fullName email picture');
+            addFriendRequest = await addFriendRequest.populate('receiver', 'fullName email picture');
             return res.status(201).json({
                 message: 'Send add friend request successfully',
                 messageCode: 'sent_add_friend_successfully',
@@ -266,9 +278,15 @@ module.exports = {
                     message: MESSAGE.ALREADY_FRIEND,
                 });
             }
-            const updateRequest = await FriendRequest.findByIdAndUpdate(id, {
-                status: 'accepted',
-            });
+            const updateRequest = await FriendRequest.findByIdAndUpdate(
+                id,
+                {
+                    status: 'accepted',
+                },
+                { new: true },
+            )
+                .populate('sender', 'fullName email picture')
+                .populate('receiver', 'fullName email picture');
             const updateFriendShip = await FriendShip.create({
                 users: [receiverId, friendRequest.sender],
                 status: 'active',
@@ -278,7 +296,7 @@ module.exports = {
             return res.status(201).json({
                 message: MESSAGE.ACCEPT_FRIEND_SUCCESS,
                 messageCode: 'accept_friend_successfully',
-                data: updateFriendShip,
+                data: updateRequest,
             });
         } catch (error) {
             next(error);
@@ -389,13 +407,18 @@ module.exports = {
         }
 
         try {
-            const friendRequest = await FriendRequest.findByIdAndUpdate({ id }, { status: 'removed' });
-            return res.status(202).json({
-                message: MESSAGE.REMOVE_FRIEND_SUCCESS,
-                data: friendRequest,
-                messageCode: 'remove_friend_successfully',
-                status: MESSAGE_CODE.REMOVE_FRIEND_SUCCESS,
-            });
+            const friendRequest = await FriendRequest.findByIdAndUpdate(id, { status: 'removed' });
+            return res
+                .status(200)
+                .json(
+                    createResponse(
+                        friendRequest,
+                        STATUS_MESSAGE.REMOVE_FRIEND_SUCCESS,
+                        MESSAGE_CODE.REMOVE_FRIEND_SUCCESS,
+                        STATUS_CODE.OK,
+                        true,
+                    ),
+                );
         } catch (error) {}
     },
 };
