@@ -4,7 +4,13 @@ const ConversationController = require('../controller/conversation.controller');
 const GroupChatController = require('@/controller/group_chat.controller');
 const verifyToken = require('../middlewares/verifyToken.middleware');
 const { validateBody, validateParams } = require('@/middlewares/validator.middleware');
-const { createGroupBody, updateGroupBody, validateIdMongodb, addMemberGroupBody } = require('@/validations');
+const {
+    createGroupBody,
+    updateGroupBody,
+    validateIdMongodb,
+    addMemberGroupBody,
+    deleteMemberGroupBody,
+} = require('@/validations');
 
 router.get('/', verifyToken, ConversationController.fetchConversation);
 router.post('/', verifyToken, ConversationController.accessConversation);
@@ -20,8 +26,8 @@ router.patch(
     '/delete-member/group/:id',
     verifyToken,
     validateParams(validateIdMongodb),
-    validateBody(validateIdMongodb),
-    GroupChatController.deleteGroupChat,
+    validateBody(deleteMemberGroupBody),
+    GroupChatController.deleteMemberGroupChat,
 );
 router.patch(
     '/group/:id',

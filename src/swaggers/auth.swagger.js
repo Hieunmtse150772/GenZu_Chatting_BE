@@ -118,6 +118,25 @@ const authSwagger = {
             },
         },
     },
+    '/auth/profile': {
+        get: {
+            tags: ['Auth'],
+            description: 'Get profile successfully',
+            security: [
+                {
+                    accessToken: [],
+                },
+            ],
+            responses: {
+                200: {
+                    description: 'Get profile successfully',
+                    content: {
+                        'application/json': {},
+                    },
+                },
+            },
+        },
+    },
     '/auth/resend-verify-email': {
         post: {
             tags: ['Auth'],
