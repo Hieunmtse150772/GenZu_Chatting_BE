@@ -5,15 +5,23 @@ const { objectIdValidator } = require('@/utils/functions');
 const getMessages = Joi.object({
     id: Joi.string().required().custom(objectIdValidator, 'ObjectId validation'),
     limit: Joi.number(),
+    messageId: Joi.string(),
     search: Joi.string(),
+    page: Joi.number(),
     startDate: Joi.date(),
     endDate: Joi.date(),
 });
 
+const searchMessages = Joi.object({
+    id: Joi.string().required().custom(objectIdValidator, 'ObjectId validation'),
+    sender: Joi.string().custom(objectIdValidator, 'ObjectId validation'),
+    search: Joi.string(),
+});
+
 const sendMessage = Joi.object({
     message: Joi.string().min(1).required(),
-    isSpoiled: Joi.string(),
-    messageType: Joi.string(),
+    isSpoiled: Joi.boolean(),
+    messageType: Joi.string().valid('text', 'image', 'video', 'notification', 'file', 'audio'),
     styles: Joi.object({
         fontSize: Joi.number(),
         bold: Joi.boolean(),
@@ -36,4 +44,5 @@ module.exports = {
     sendMessage,
     sendEmoji,
     updateEmoji,
+    searchMessages,
 };

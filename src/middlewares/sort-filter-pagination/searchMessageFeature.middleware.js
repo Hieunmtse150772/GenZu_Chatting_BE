@@ -11,10 +11,7 @@ module.exports = async function (req, res, next) {
         const reg = /\bgte|gt|lte|lt\b/g;
         queryString = queryString.replace(reg, (matchString) => `$${matchString}`);
         // Search
-        console.log('queryString: ', queryString);
-
         let searchQuery;
-        console.log('conversation_id: ', conversation_id);
         if (req.query.search) {
             const searchText = req.query.search.toLowerCase();
             searchQuery = {
@@ -32,9 +29,8 @@ module.exports = async function (req, res, next) {
         if (req.query.startDate || req.query.endDate) {
             searchQuery = { createdAt: dateQuery };
         }
-        if (req.query.messageId) {
-            console.log('messageId: ', req.query.messageId);
-            searchQuery = { ...searchQuery, _id: { $gte: req.query.messageId } };
+        if (req.query.sender) {
+            searchQuery = { sender: req.query.sender, ...searchQuery };
         }
         console.log('searchQuery: ', searchQuery);
         let query = Message.find({
@@ -42,7 +38,7 @@ module.exports = async function (req, res, next) {
             status: 'active',
             deleteBy: { $nin: userId },
         })
-            .find(searchQuery ? searchQuery : {})
+            .find(req.query.search ? searchQuery : {})
             .populate('sender', '_id fullName picture')
             .populate('conversation')
             .populate({
@@ -53,48 +49,13 @@ module.exports = async function (req, res, next) {
                 },
             });
 
-        // Pagination
-        const page = Number(req.query.page) || 1;
-        const limit = Number(req.query.limit) || 20;
-        const startIndex = (page - 1) * limit;
-        const endIndex = page * limit;
-
         const results = {
-            currentPage: {
-                page,
-                limit,
-            },
             totalDocs: 0,
         };
-        if (!req.query.messageId) {
-            const totalCount = await Message.countDocuments().exec();
-            results.totalDocs = totalCount;
 
-            if (endIndex < totalCount) {
-                results.next = {
-                    page: page + 1,
-                    limit,
-                };
-            }
+        const totalCount = await Message.countDocuments().exec();
 
-            if (startIndex > 0) {
-                results.previous = {
-                    page: page - 1,
-                    limit,
-                };
-            }
-
-            results.totalPages = Math.ceil(totalCount / limit);
-            results.lastPage = Math.ceil(totalCount / limit);
-
-            // If requested page don't exist
-            if (req.query.page && Number(req.query.page) > Math.ceil(totalCount / limit)) {
-                // throw new Error(`This page don't exist`);
-            }
-
-            // Final pagination query
-            query = query.limit(limit).skip(startIndex);
-        }
+        results.totalDocs = totalCount;
 
         query = query.sort('-createdAt');
 

@@ -6,6 +6,7 @@ const moment = require('moment');
 
 const User = require('@/model/user.model');
 const jwt = require('jsonwebtoken');
+const FriendRequest = require('@/model/friendRequest.model');
 
 const app = express();
 const server = http.createServer(app);
@@ -24,13 +25,36 @@ const io = require('socket.io')(server, {
 
 io.on('connection', (socket) => {
     console.log(socket.id + ' connect');
-    socket.on('friend request', async (userId) => {
-        const user = await User.findOne({ _id: userId });
-        const { socket } = user;
-
-        socket.to(socket).emit('send request');
+    //Set up id user to sent message
+    socket.on('setup', (userData) => {
+        socket.join(userData._id);
+        console.log('userr connect: ', userData._id);
+        socket.emit('connected');
     });
-    const cookies = cookie.parse(socket.handshake.headers?.cookie ? socket.handshake.headers?.cookie : '');
+
+    //Send request add friend
+    socket.on('friend request', async (newRequest) => {
+        console.log('object: ', newRequest);
+        const receiverId = newRequest.receiver._id;
+        socket.to(receiverId).emit('received request', newRequest);
+    });
+
+    //Accept request friend
+    socket.on('accept request', async (newRequest) => {
+        console.log('newRequest: ', newRequest);
+        const senderId = newRequest.sender._id;
+        socket.to(senderId).emit('received reply', newRequest);
+    });
+
+    //Check is read friend request
+    socket.on('read request', async (newRequest) => {
+        const newRequestId = newRequest._id;
+        const sender = newRequest.sender._id;
+        const updateRequest = await FriendRequest.findByIdAndUpdate(newRequestId, { isRead: true });
+        socket.to(sender).emit('isRead', true);
+    });
+
+    const cookies = cookie.parse(socket?.handshake?.headers?.cookie ? socket?.handshake?.headers?.cookie : '');
     if (cookies && cookies.accessToken) {
         jwt.verify(cookies.accessToken, process.env.ACCESS_TOKEN_KEY, async function (err, decoded) {
             if (!err) {
@@ -93,24 +117,38 @@ io.on('connection', (socket) => {
         }
     });
 
-    socket.on('setup', (userData) => {
-        socket.join(userData._id);
-        socket.emit('connected');
-    });
-
+    //Set up room with conversation id for user who was join to chat
     socket.on('join chat', (room) => {
         socket.join(room);
         console.log('User Joined Room: ' + room);
     });
+
+    //Out room chat with conversation id when user leave chat or not focus on chat room
     socket.on('leave chat', (room) => {
         socket.leave(room);
         console.log('user leave room: ', room);
     });
 
+    //Listening the action type of user when they are typing
     socket.on('typing', (room) => {
         socket.in(room).emit('typing');
     });
+
+    //Listening the action stop type of user when they was stopped typing
     socket.on('stop_typing', (room) => socket.in(room).emit('stop_typing'));
+
+    //Listening the action reacting message with emoji
+    socket.on('react message', (emojiAdded) => {
+        if (!emojiAdded.conversation._id) {
+            console.log('Invalid conversation id');
+            return;
+        }
+        const chatRoom = emojiAdded.conversation._id;
+
+        socket.to(chatRoom).emit('react message', emojiAdded);
+    });
+
+    // Gửi thông báo tin nhắn đã bị thu hồi đến tất cả socket trong phòng, ngoại trừ socket của người gửi
     socket.on('recall', (messageRecalled) => {
         if (!messageRecalled || !messageRecalled.conversation || !messageRecalled.conversation._id) {
             console.error('Invalid newMessageReceived data');
@@ -121,8 +159,8 @@ io.on('connection', (socket) => {
 
         socket.to(chatRoom).emit('recall', messageRecalled);
     });
-    // Gửi tin nhắn đã bị thu hồi đến tất cả socket trong phòng, ngoại trừ socket của người gửi
 
+    // Gửi tin nhắn đến tất cả socket trong phòng, ngoại trừ socket của người gửi
     socket.on('new message', (newMessageReceived) => {
         if (!newMessageReceived || !newMessageReceived.conversation || !newMessageReceived.conversation._id) {
             console.error('Invalid newMessageReceived data');
@@ -131,14 +169,15 @@ io.on('connection', (socket) => {
 
         const chatRoom = newMessageReceived.conversation._id;
 
-        // Gửi tin nhắn đến tất cả socket trong phòng, ngoại trừ socket của người gửi
         socket.to(chatRoom).emit('message received', newMessageReceived);
+
         console.log('Message sent to room: ' + chatRoom);
     });
-    socket.off('setup', (userData) => {
-        console.log('USER DISCONNECTED');
-        socket.leave(userData._id);
-    });
+
+    // socket.off('setup', (userData) => {
+    //     console.log('USER DISCONNECTED');
+    //     socket.leave(userData._id);
+    // });
 
     socket.on('disconnect', async () => {
         try {

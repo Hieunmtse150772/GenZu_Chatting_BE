@@ -60,6 +60,15 @@ const messageSwagger = {
                     },
                 },
                 {
+                    name: 'messageId',
+                    in: 'query',
+                    description: 'Id of message',
+                    schema: {
+                        type: 'string',
+                        description: 'The id of message',
+                    },
+                },
+                {
                     name: 'search',
                     in: 'query',
                     description: 'search messages by keyword',
@@ -108,6 +117,54 @@ const messageSwagger = {
             },
         },
     },
+    '/messages/searchMessage': {
+        get: {
+            tags: ['Message'],
+            description: 'Search message by keyword',
+            security: [
+                {
+                    accessToken: [],
+                },
+            ],
+            parameters: [
+                {
+                    name: 'id',
+                    in: 'query',
+                    description: 'Id of conversation',
+                    schema: {
+                        type: 'string',
+                        example: '6679c40ab0528a3618e7e646',
+                    },
+                },
+                {
+                    name: 'sender',
+                    in: 'query',
+                    description: 'Id of sender',
+                    schema: {
+                        type: 'string',
+                        description: 'The id of sender',
+                    },
+                },
+                {
+                    name: 'search',
+                    in: 'query',
+                    description: 'search messages by keyword',
+                    schema: {
+                        type: 'string',
+                        description: 'The numbers of items to return (the default value is 20)',
+                    },
+                },
+            ],
+            responses: {
+                200: {
+                    description: 'Get all message of conversation successfully',
+                    content: {
+                        'application/json': {},
+                    },
+                },
+            },
+        },
+    },
     '/messages/send': {
         post: {
             tags: ['Message'],
@@ -140,7 +197,8 @@ const messageSwagger = {
                                 },
                                 isSpoiled: {
                                     description: 'Spoiler',
-                                    type: 'string',
+                                    type: 'boolean',
+                                    example: true,
                                 },
                                 messageType: {
                                     description: 'Type of message',

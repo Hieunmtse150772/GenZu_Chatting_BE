@@ -18,6 +18,8 @@ router.post(
 
 router.get('/addFriendRequest', verifyToken, FriendController.getAddFriendRequest);
 
+router.get('/addFriendRequestNotification', verifyToken, FriendController.getAddFriendRequestNotification);
+
 router.put(
     '/acceptFriendRequest',
     validateQuery(validations.validateIdMongodb),
@@ -38,7 +40,7 @@ router.delete('/friendRequestHasBeenSent', verifyToken, FriendController.removeF
 
 router.delete(
     '/deleteFriend',
-    validateQuery(validations.validateIdMongodb),
+    // validateQuery(validations.validateIdMongodb),
     verifyToken,
     FriendController.removeFriend,
 );
