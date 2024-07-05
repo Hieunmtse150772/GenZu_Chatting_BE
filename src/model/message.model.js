@@ -49,7 +49,7 @@ const MessageSchema = mongoose.Schema(
                 default: false,
             },
         },
-        invitedUser: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+        affected_user_id: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
     },
     {
         timestamps: true,

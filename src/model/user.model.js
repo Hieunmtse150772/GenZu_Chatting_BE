@@ -3,12 +3,13 @@ const bcrypt = require('bcrypt');
 
 const connection = require('../connections/mongodb');
 const { hashText } = require('../utils/functions');
+const { languageCode, gender } = require('@/enums/validate');
 
 const UserSchema = new mongoose.Schema(
     {
         fullName: { type: String, required: true, default: null },
         address: { type: String, default: null },
-        gender: { type: String, enum: ['male', 'female', 'other'], default: null },
+        gender: { type: String, enum: gender, default: null },
         email: {
             type: String,
             require: true,
@@ -30,7 +31,8 @@ const UserSchema = new mongoose.Schema(
         phone_number: { type: String, default: null },
         role_id: { type: String, ref: 'role', default: null },
         picture: { type: String, require: true, default: null },
-        language: { type: String, default: 'vn' },
+        language: { type: String, default: 'vn', enum: languageCode },
+        offline_at: { type: Date, default: null },
         is_active: { type: Boolean, default: false },
         is_online: { type: Boolean, default: false },
     },

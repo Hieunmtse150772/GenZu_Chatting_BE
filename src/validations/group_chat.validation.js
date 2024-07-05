@@ -24,8 +24,14 @@ const updateGroupBody = Joi.object({
     background: Joi.string(),
 });
 
+const deleteMemberGroupBody = Joi.object({
+    memberId: Joi.string().required().custom(objectIdValidator, 'ObjectId validation'),
+    exchangeAdmin: Joi.string().custom(objectIdValidator, 'ObjectId validation'),
+});
+
 module.exports = {
     createGroupBody,
     addMemberGroupBody,
     updateGroupBody,
+    deleteMemberGroupBody,
 };

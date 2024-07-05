@@ -2,9 +2,10 @@ const Joi = require('joi');
 
 const signUpBody = Joi.object({
     fullName: Joi.string().min(2).required(),
-    address: Joi.string().min(2).required(),
-    gender: Joi.string().valid('male', 'female', 'other').required(),
-    picture: Joi.string().required(),
+    address: Joi.string().min(2),
+    phone_number: Joi.string().min(2),
+    gender: Joi.string().valid('male', 'female', 'other'),
+    picture: Joi.string(),
     email: Joi.string().pattern(new RegExp('gmail.com$')).email().required(),
     password: Joi.string().min(6).max(30).required(),
 });
@@ -17,6 +18,10 @@ const signInBody = Joi.object({
 const changePasswordBody = Joi.object({
     oldPassword: Joi.string().min(6).max(30).required(),
     newPassword: Joi.string().min(6).max(30).required(),
+});
+
+const changeLanguageBody = Joi.object({
+    language: Joi.string().valid('vn', 'en', 'cn').required(),
 });
 
 const forgotPasswordBody = Joi.object({
@@ -33,5 +38,6 @@ module.exports = {
     signInBody,
     changePasswordBody,
     forgotPasswordBody,
+    changeLanguageBody,
     verifyForgotPasswordBody,
 };

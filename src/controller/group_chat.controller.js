@@ -1,3 +1,5 @@
+const { ObjectId } = require('mongodb');
+
 const Conversation = require('../model/conversation.model');
 const Message = require('../model/message.model');
 const { STATUS_CODE, STATUS_MESSAGE, MESSAGE_CODE } = require('@/enums/response');
@@ -27,7 +29,7 @@ module.exports = {
                     message: 'add_to_group',
                     conversation: groupChat,
                     status: 'active',
-                    invitedUser: item,
+                    affected_user_id: item,
                     message_type: 'notification',
                 });
             });
@@ -110,13 +112,202 @@ module.exports = {
     },
     deleteMemberGroupChat: async (req, res, next) => {
         const groupId = req.params.id;
-        const memberId = req.body.id;
-        console.log(groupId, memberId);
+        const userId = req.user._id;
+        const exchangeAdminId = new ObjectId(req.body.exchangeAdmin);
+        const memberId = new ObjectId(req.body.memberId);
+
         try {
-            return res.status(201).json({
-                message: 'Create group chat successful',
-                messageCode: 'create_group_chat_successful',
+            const group = await Conversation.findById(groupId);
+            let userDeleteInGroup;
+            let memberIsExis;
+
+            if (!group) {
+                return res
+                    .status(STATUS_CODE.NOT_FOUND)
+                    .json(
+                        createResponse(
+                            null,
+                            STATUS_MESSAGE.GROUP_NOT_FOUND,
+                            MESSAGE_CODE.GROUP_NOT_FOUND,
+                            STATUS_CODE.NOT_FOUND,
+                            false,
+                        ),
+                    );
+            }
+
+            group.users.forEach((item) => {
+                if (item.equals(memberId)) {
+                    memberIsExis = item;
+                }
+                if (item.equals(userId)) {
+                    userDeleteInGroup = item;
+                }
             });
+
+            if (!userDeleteInGroup) {
+                return res
+                    .status(STATUS_CODE.FORBIDDEN)
+                    .json(
+                        createResponse(
+                            null,
+                            STATUS_MESSAGE.USER_NOT_IN_GROUP,
+                            MESSAGE_CODE.USER_NOT_IN_GROUP,
+                            STATUS_CODE.FORBIDDEN,
+                            false,
+                        ),
+                    );
+            }
+
+            if (!memberIsExis) {
+                return res
+                    .status(STATUS_CODE.NOT_FOUND)
+                    .json(
+                        createResponse(
+                            null,
+                            STATUS_MESSAGE.MEMBER_NOT_FOUND,
+                            MESSAGE_CODE.MEMBER_NOT_FOUND,
+                            STATUS_CODE.NOT_FOUND,
+                            false,
+                        ),
+                    );
+            }
+
+            if (!userId.equals(group.groupAdmin)) {
+                // not admin and delete others
+                if (!userId.equals(memberId)) {
+                    return res
+                        .status(STATUS_CODE.FORBIDDEN)
+                        .json(createResponse(null, STATUS_MESSAGE.FORBIDDEN, null, STATUS_CODE.FORBIDDEN, false));
+                    // not admin and delete self
+                } else {
+                    group.users = group.users.filter((item) => !item.equals(userId));
+                    const latestMessage = await Message.create({
+                        sender: userId,
+                        message: MESSAGE_CODE.USER_LEAVE_IN_GROUP,
+                        conversation: group._id,
+                        status: 'active',
+                        affected_user_id: userId,
+                        message_type: 'notification',
+                    });
+
+                    group.latestMessage = latestMessage;
+                    const newGroup = await group.save();
+                    return res
+                        .status(STATUS_CODE.OK)
+                        .json(
+                            createResponse(
+                                newGroup,
+                                STATUS_MESSAGE.DELETE_MEMBER_SUCCESS,
+                                MESSAGE_CODE.DELETE_MEMBER_SUCCESSFULLY,
+                                STATUS_CODE.OK,
+                                true,
+                            ),
+                        );
+                }
+            } else {
+                // la admin xoa nguoi khac
+                if (!userId.equals(memberId)) {
+                    group.users = group.users.filter((item) => !item.equals(memberId));
+                    const latestMessage = await Message.create({
+                        sender: userId,
+                        message: MESSAGE_CODE.DELETE_USER_IN_GROUP,
+                        conversation: group._id,
+                        status: 'active',
+                        affected_user_id: memberId,
+                        message_type: 'notification',
+                    });
+
+                    group.latestMessage = latestMessage;
+                    const newGroup = await group.save();
+                    return res
+                        .status(STATUS_CODE.OK)
+                        .json(
+                            createResponse(
+                                newGroup,
+                                STATUS_MESSAGE.DELETE_MEMBER_SUCCESS,
+                                MESSAGE_CODE.DELETE_MEMBER_SUCCESSFULLY,
+                                STATUS_CODE.OK,
+                                true,
+                            ),
+                        );
+                } else {
+                    // la admin xoa chinh minh
+                    if (!req.body.exchangeAdmin) {
+                        return res
+                            .status(STATUS_CODE.BAD_REQUEST)
+                            .json(
+                                createResponse(
+                                    null,
+                                    STATUS_MESSAGE.EXCHANGE_ADMIN_ID_REQUIRED,
+                                    MESSAGE_CODE.EXCHANGE_ADMIN_ID_REQUIRED,
+                                    STATUS_CODE.BAD_REQUEST,
+                                    false,
+                                ),
+                            );
+                    }
+
+                    const userExist = group.users.find((item) => item.equals(exchangeAdminId));
+
+                    if (!userExist) {
+                        return res
+                            .status(STATUS_CODE.NOT_FOUND)
+                            .json(
+                                createResponse(
+                                    null,
+                                    STATUS_MESSAGE.MEMBER_NOT_FOUND,
+                                    MESSAGE_CODE.MEMBER_NOT_FOUND,
+                                    STATUS_CODE.NOT_FOUND,
+                                    false,
+                                ),
+                            );
+                    }
+
+                    // if users have more than 2 members
+                    if (group.users.length > 1) {
+                        // update groupAdmin to new user
+                        group.groupAdmin = exchangeAdminId;
+                        await Message.create({
+                            sender: userId,
+                            message: MESSAGE_CODE.TRANSFER_GROUP_LEADER,
+                            conversation: group._id,
+                            status: 'active',
+                            affected_user_id: exchangeAdminId,
+                            message_type: 'notification',
+                        });
+
+                        // delete self from the group
+                        group.users.pull(memberId);
+                        const latestMessage = await Message.create({
+                            sender: userId,
+                            message: MESSAGE_CODE.USER_LEAVE_IN_GROUP,
+                            conversation: group._id,
+                            status: 'active',
+                            affected_user_id: userId,
+                            message_type: 'notification',
+                        });
+
+                        group.latestMessage = latestMessage;
+                        const newGroup = await group.save();
+                        return res
+                            .status(STATUS_CODE.OK)
+                            .json(
+                                createResponse(
+                                    newGroup,
+                                    STATUS_MESSAGE.DELETE_MEMBER_SUCCESS,
+                                    MESSAGE_CODE.DELETE_MEMBER_SUCCESSFULLY,
+                                    STATUS_CODE.OK,
+                                    true,
+                                ),
+                            );
+
+                        // if users have less than 2 members
+                    } else {
+                        // delete group
+                        await Conversation.deleteOne({ _id: group._id });
+                        return res.status(STATUS_CODE.NO_CONTENT).json();
+                    }
+                }
+            }
         } catch (error) {
             return next(error);
         }

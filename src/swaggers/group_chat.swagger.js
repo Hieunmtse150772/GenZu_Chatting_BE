@@ -120,7 +120,11 @@ const groupSwagger = {
                         schema: {
                             type: 'object',
                             properties: {
-                                id: {
+                                memberId: {
+                                    description: 'User id of group chat',
+                                    type: 'string',
+                                },
+                                exchangeAdmin: {
                                     description: 'User id of group chat',
                                     type: 'string',
                                 },

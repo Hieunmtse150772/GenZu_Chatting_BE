@@ -2,6 +2,7 @@ const express = require('express');
 const http = require('http'); // cần một máy chủ HTTP để Socket.IO có thể làm việc đúng cách
 const mongodb = require('mongodb');
 const cookie = require('cookie');
+const moment = require('moment');
 
 const User = require('@/model/user.model');
 const jwt = require('jsonwebtoken');
@@ -29,7 +30,7 @@ io.on('connection', (socket) => {
 
         socket.to(socket).emit('send request');
     });
-    const cookies = cookie.parse(socket?.handshake?.headers?.cookie ? socket?.handshake?.headers?.cookie : '');
+    const cookies = cookie.parse(socket.handshake.headers?.cookie ? socket.handshake.headers?.cookie : '');
     if (cookies && cookies.accessToken) {
         jwt.verify(cookies.accessToken, process.env.ACCESS_TOKEN_KEY, async function (err, decoded) {
             if (!err) {
@@ -78,6 +79,7 @@ io.on('connection', (socket) => {
                 user.socketId = user.socketId.filter((item) => item !== socket.id);
 
                 if (user.socketId.length) {
+                    user.offline_at = moment();
                     user.is_online = false;
                 }
 
@@ -144,6 +146,7 @@ io.on('connection', (socket) => {
             if (user) {
                 user.socketId = user.socketId.filter((item) => item !== socket.id);
                 if (!user.socketId.length) {
+                    user.offline_at = moment();
                     user.is_online = false;
                 }
                 await user.save();

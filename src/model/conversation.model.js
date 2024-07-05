@@ -9,7 +9,7 @@ const ConversationSchema = mongoose.Schema(
         avatar: { type: String, default: null },
         background: { type: String, default: null },
         isGroupChat: { type: Boolean, default: false },
-        users: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+        users: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User', default: [] }],
         latestMessage: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Message',
