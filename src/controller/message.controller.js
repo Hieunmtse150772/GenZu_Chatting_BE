@@ -120,6 +120,7 @@ module.exports = {
             status: 'active',
             messageType: messageType,
             styles: styles,
+            emojiBy: [],
         };
         try {
             const conversation = Conversation.findOne({ _id: conversationId });
