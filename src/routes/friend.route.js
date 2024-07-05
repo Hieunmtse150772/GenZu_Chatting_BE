@@ -40,7 +40,7 @@ router.delete('/friendRequestHasBeenSent', verifyToken, FriendController.removeF
 
 router.delete(
     '/deleteFriend',
-    validateQuery(validations.validateIdMongodb),
+    // validateQuery(validations.validateIdMongodb),
     verifyToken,
     FriendController.removeFriend,
 );

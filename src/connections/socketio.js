@@ -27,19 +27,22 @@ io.on('connection', (socket) => {
     //Set up id user to sent message
     socket.on('setup', (userData) => {
         socket.join(userData._id);
+        console.log('userr connect: ', userData._id);
         socket.emit('connected');
     });
 
     //Send request add friend
     socket.on('friend request', async (newRequest) => {
         console.log('object: ', newRequest);
-        socket.to(newRequest.receiver._id).emit('received request', newRequest);
+        const receiverId = newRequest.receiver._id;
+        socket.to(receiverId).emit('received request', newRequest);
     });
 
     //Accept request friend
     socket.on('accept request', async (newRequest) => {
-        console.log('object: ', newRequest);
-        socket.to(newRequest.sender._id).emit('received request', newRequest);
+        console.log('newRequest: ', newRequest);
+        const senderId = newRequest.sender._id;
+        socket.to(senderId).emit('received reply', newRequest);
     });
 
     //Check is read friend request
@@ -169,10 +172,10 @@ io.on('connection', (socket) => {
         console.log('Message sent to room: ' + chatRoom);
     });
 
-    socket.off('setup', (userData) => {
-        console.log('USER DISCONNECTED');
-        socket.leave(userData._id);
-    });
+    // socket.off('setup', (userData) => {
+    //     console.log('USER DISCONNECTED');
+    //     socket.leave(userData._id);
+    // });
 
     socket.on('disconnect', async () => {
         try {
