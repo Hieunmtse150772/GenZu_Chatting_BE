@@ -6,6 +6,7 @@ const MESSAGE_CODE = require('@/enums/response/messageCode.enum');
 const createResponse = require('@/utils/responseHelper');
 const STATUS_MESSAGE = require('@/enums/response/statusMessage.enum');
 const { STATUS_CODE } = require('@/enums/response');
+const Conversation = require('@/model/conversation.model');
 
 module.exports = {
     getFriendList: async (req, res, next) => {
@@ -23,7 +24,14 @@ module.exports = {
                 users: userId,
                 status: 'active',
             }).populate('users', 'fullName picture email');
-            console.log('friendList: ', friendList);
+
+            var isChat = await Conversation.find({
+                isGroupChat: false,
+                $and: [{ users: { $elemMatch: { $eq: req.user._id } } }, { users: { $elemMatch: { $eq: userId } } }],
+            })
+                .populate('users', 'fullName email picture')
+                .populate('latestMessage');
+
             friendList = friendList.map((friend) => {
                 return {
                     friend: {
@@ -32,6 +40,8 @@ module.exports = {
                     friendRequest: friend.friendRequest,
                     friendShip: friend._id,
                     status: friend.status,
+                    isChat: Boolean(isChat),
+                    conversation: isChat,
                     createdAt: friend.createdAt,
                     updatedAt: friend.updatedAt,
                 };
