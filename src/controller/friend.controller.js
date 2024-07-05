@@ -30,6 +30,7 @@ module.exports = {
                         info: friend.users.filter((user) => user._id.toString() !== userId.toString())[0],
                     },
                     friendRequest: friend.friendRequest,
+                    friendShip: friend._id,
                     status: friend.status,
                     createdAt: friend.createdAt,
                     updatedAt: friend.updatedAt,
@@ -407,7 +408,15 @@ module.exports = {
         }
 
         try {
-            const friendRequest = await FriendRequest.findByIdAndUpdate(id, { status: 'removed' });
+            const friendShip = await FriendShip.findByIdAndDelete({ _id: id });
+            const friendRequest = await FriendRequest.findByIdAndUpdate(
+                friendShip.friendRequest,
+                {
+                    status: 'removed',
+                },
+                { new: true },
+            );
+
             return res
                 .status(200)
                 .json(
