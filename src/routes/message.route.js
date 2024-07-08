@@ -43,7 +43,7 @@ router.post(
 
 router.patch('/deleteMessageByOneSide', validateQuery(validateIdMongodb), verifyToken, MessageController.deleteMessage);
 
-router.delete('/recall', verifyToken, validateParams(validateIdMongodb), MessageController.recallMessage);
+router.delete('/recall', verifyToken, validateQuery(validateIdMongodb), MessageController.recallMessage);
 
 router.post('/emoji', verifyToken, validateBody(sendEmoji), MessageController.addEmojiMessage);
 

@@ -266,15 +266,16 @@ module.exports = {
     },
     recallMessage: async (req, res, next) => {
         const messageId = req.query.id;
+        console.log('messageId: ', messageId);
         const userId = req.user._id;
         try {
-            const message = Message.findOne(messageId);
-            if (message.sender !== userId) {
+            const message = await Message.findOne({ _id: messageId });
+            if (String(message.sender) !== String(userId)) {
                 return res
                     .status(400)
                     .json(
                         createResponse(
-                            messageUpdate,
+                            message,
                             STATUS_MESSAGE.NO_PERMISSION_RECALL_MESSAGE,
                             MESSAGE_CODE.NO_PERMISSION_RECALL_MESSAGE,
                             STATUS_CODE.BAD_REQUEST,
@@ -282,11 +283,18 @@ module.exports = {
                         ),
                     );
             }
-            const messageUpdate = Message.findByIdAndUpdate(messageId, { status: 'recalled' });
-            return res.status(200).json({
-                message: STATUS_MESSAGE.RECALL_MESSAGE_SUCCESS,
-                data: messageUpdate,
-            });
+            const messageUpdate = await Message.findByIdAndUpdate({ _id: messageId }, { status: 'recalled' });
+            return res
+                .status(200)
+                .json(
+                    createResponse(
+                        messageUpdate,
+                        STATUS_MESSAGE.RECALL_MESSAGE_SUCCESS,
+                        MESSAGE_CODE.RECALL_MESSAGE_SUCCESS,
+                        STATUS_CODE.OK,
+                        true,
+                    ),
+                );
         } catch (error) {
             next(error);
         }
