@@ -8,6 +8,7 @@ const {
     changePasswordBody,
     forgotPasswordBody,
     verifyForgotPasswordBody,
+    changeLanguageBody,
 } = require('@/validations');
 const verifyToken = require('@/middlewares/verifyToken.middleware');
 
@@ -20,8 +21,9 @@ router.post('/refresh-token', AuthController.refreshToken);
 router.delete('/logout', AuthController.logout);
 router.post('/resend-verify-email', AuthController.resendVerifyEmail);
 router.post('/verify-email', AuthController.verifyEmail);
-router.post('/change-password', validateBody(changePasswordBody), verifyToken, AuthController.changePassword);
+router.post('/change-password', verifyToken, validateBody(changePasswordBody), AuthController.changePassword);
 router.post('/forgot-password', validateBody(forgotPasswordBody), AuthController.forgotPassword);
 router.post('/verify-forgot-password', validateBody(verifyForgotPasswordBody), AuthController.verifyForgotPassword);
+router.patch('/update-language', verifyToken, validateBody(changeLanguageBody), AuthController.changeLanguage);
 
 module.exports = router;

@@ -6,10 +6,9 @@ const cookieParser = require('cookie-parser');
 
 const routes = require('@/routes');
 require('@/connections/mongodb');
-const { app, server, io } = require('@/connections/socketio');
+const { app, server } = require('@/connections/socketio');
 
 const port = process.env.PORT || 3000;
-global._io = io;
 
 // middleware
 app.use(express.json()); // for parsing application/json
