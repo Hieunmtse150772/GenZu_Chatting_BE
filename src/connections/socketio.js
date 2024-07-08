@@ -138,7 +138,6 @@ io.on('connection', (socket) => {
 
     //Listening the action reacting message with emoji
     socket.on('add emoji', (emojiAdded) => {
-        console.log('emojiAdded: ', emojiAdded);
         if (!emojiAdded.conversation) {
             console.log('Invalid conversation id');
             return;
@@ -150,11 +149,11 @@ io.on('connection', (socket) => {
 
     //Listening the action edit emoji
     socket.on('edit emoji', (emojiAdded) => {
-        if (!emojiAdded.conversation._id) {
+        if (!emojiAdded.conversation) {
             console.log('Invalid conversation id');
             return;
         }
-        const chatRoom = emojiAdded.conversation._id;
+        const chatRoom = emojiAdded.conversation;
 
         socket.to(chatRoom).emit('emoji received', emojiAdded);
     });
