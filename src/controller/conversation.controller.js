@@ -107,7 +107,7 @@ module.exports = {
         try {
             console.log('userId: ', req.user._id);
             Conversation.find({ users: { $elemMatch: { $eq: req.user._id } } })
-                .populate('users', 'email fullName picture is_online')
+                .populate('users', 'email fullName picture is_online offline_at')
                 .populate('groupAdmin', '-password')
                 .populate('latestMessage')
                 .sort({ updatedAt: -1 })
@@ -202,6 +202,30 @@ module.exports = {
                         STATUS_MESSAGE.DELETE_CONVERSATION_HISTORY_SUCCESS,
                         MESSAGE_CODE.DELETE_CONVERSATION_HISTORY_SUCCESS,
                         STATUS_CODE.OK,
+                        true,
+                    ),
+                );
+        } catch (error) {
+            next(error);
+        }
+    },
+    updateConversationBackground: async (req, res, next) => {
+        const conversationId = req.query.id;
+        const background = req.body.url;
+        const userId = req.user._id;
+        try {
+            const conversationUpdate = await Conversation.findByIdAndUpdate(
+                { _id: conversationId },
+                { background: background },
+            );
+            return res
+                .status(201)
+                .json(
+                    createResponse(
+                        conversationUpdate,
+                        STATUS_MESSAGE.UPDATE_EMOJI_MESSAGE_SUCCESS,
+                        MESSAGE_CODE.UPDATE_CONVERSATION_BACKGROUND_SUCCESS,
+                        STATUS_CODE.CREATED,
                         true,
                     ),
                 );
