@@ -376,7 +376,7 @@ module.exports = {
     },
     removeEmojiMessage: async (req, res, next) => {
         const { emoji } = req.body;
-        const { emojiId, id } = req.query;
+        const { emojiId, messageId } = req.query;
         const userId = req.user._id;
         if (!mongodb.ObjectId.isValid(emojiId)) {
             return res.status(400).json({
@@ -399,9 +399,13 @@ module.exports = {
                     status: MESSAGE_CODE.NOT_YOUR_EMOJI,
                 });
             }
-            const updateMessage = await Message.findByIdAndUpdate(id, {
-                $pull: { emojiBy: emoji._id },
-            });
+            const updateMessage = await Message.findByIdAndUpdate(
+                messageId,
+                {
+                    $pull: { emojiBy: emoji._id },
+                },
+                { new: true, useFindAndModify: false },
+            );
             const updateEmoji = await Emoji.findOneAndDelete({ _id: emojiId });
             return res.status(200).json({
                 message: STATUS_MESSAGE.REMOVE_EMOJI_MESSAGE_SUCCESS,

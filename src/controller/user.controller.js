@@ -4,6 +4,8 @@ const User = require('../model/user.model');
 
 const FriendShip = require('../model/friendShip.model');
 
+const Conversation = require('../model/conversation.model');
+
 module.exports = {
     updateProfile: async (req, res, next) => {
         try {
@@ -70,24 +72,29 @@ module.exports = {
     },
     getUserById: async (req, res, next) => {
         try {
-            const user_id = req.query.userId;
-            if (!mongodb.ObjectId.isValid(user_id)) {
+            const userId = req.user._id;
+            const id = req.query.userId;
+            if (!mongodb.ObjectId.isValid(id)) {
                 return res.status(400).json({
                     message: 'The user id is invalid',
                     messageCode: 'invalid_userId',
                 });
             }
-            const user = await User.findOne({ _id: user_id }, 'fullName email picture');
+            const user = await User.findOne({ _id: id }, 'fullName email picture');
 
             const relationShip = await FriendShip.findOne({
-                users: { $all: [user_id, req.user._id] },
+                users: { $all: [id, req.user._id] },
                 status: 'active',
+            });
+            const conversation = Conversation.find({
+                $and: [{ users: { $elemMatch: { $eq: id } } }, { users: { $elemMatch: { $eq: userId } } }],
             });
 
             res.status(200).json({
                 message: 'Search user successfully',
                 messageCode: 'search_user_successfully',
                 user,
+                conversation: conversation,
                 relationShip: relationShip ? relationShip : 'Not a friend yet',
             });
         } catch (error) {
