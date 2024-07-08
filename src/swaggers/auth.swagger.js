@@ -1,3 +1,5 @@
+const { languageCode } = require('@/enums/validate');
+
 const authSwagger = {
     '/auth/sign-up': {
         post: {
@@ -218,6 +220,42 @@ const authSwagger = {
                                 newPassword: {
                                     description: 'New password',
                                     type: 'string',
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+            responses: {
+                200: {
+                    description: 'Change password successfully',
+                    content: {
+                        'application/json': {},
+                    },
+                },
+            },
+        },
+    },
+    '/auth/update-language': {
+        patch: {
+            tags: ['Auth'],
+            description: 'Change language of user',
+            security: [
+                {
+                    accessToken: [],
+                },
+            ],
+            requestBody: {
+                content: {
+                    'multipart/form-data': {
+                        schema: {
+                            type: 'object',
+                            properties: {
+                                language: {
+                                    description: 'Language code',
+                                    type: 'string',
+                                    enum: languageCode,
+                                    default: 'vn',
                                 },
                             },
                         },

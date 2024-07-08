@@ -22,8 +22,8 @@ module.exports = {
                     .json(
                         createResponse(
                             null,
-                            STATUS_MESSAGE.EMAIL_NOT_FOUND,
-                            MESSAGE_CODE.EMAIL_NOT_FOUND,
+                            STATUS_MESSAGE.EMAIL_ALREADY_EXISTED,
+                            MESSAGE_CODE.EMAIL_ALREADY_EXISTED,
                             STATUS_CODE.BAD_REQUEST,
                             false,
                         ),
@@ -179,9 +179,44 @@ module.exports = {
                 // Store the credentials given by google into a jsonwebtoken in a cookie called 'jwt'
 
                 const userInfo = jwt.decode(token.id_token);
-                const user = await UserModel.findOne({ googleId: userInfo.sub });
+                const user = await UserModel.findOne({ $or: [{ email: userInfo.email }, { googleId: userInfo.sub }] });
 
-                if (user) {
+                if (user?.email) {
+                    user.email_verified = userInfo.email_verified;
+                    user.is_active = userInfo.email_verified;
+                    user.googleId = userInfo.sub;
+                    user.tokenGoogle = token;
+
+                    const newUser = await user.save();
+                    const accessToken = generateToken(
+                        newUser._id,
+                        process.env.ACCESS_TOKEN_KEY,
+                        process.env.EXPIRE_ACCESS_TOKEN,
+                    );
+                    const refreshToken = generateToken(
+                        newUser._id,
+                        process.env.REFRESH_TOKEN_KEY,
+                        process.env.EXPIRE_REFRESH_TOKEN,
+                    );
+                    await client.set(String(newUser._id), refreshToken, {
+                        PX: Number(process.env.EXPIRE_REFRESH_TOKEN_COOKIE),
+                    });
+
+                    return res
+                        .cookie('refreshToken', refreshToken, {
+                            maxAge: Number(process.env.EXPIRE_REFRESH_TOKEN_COOKIE),
+                            httpOnly: true, // không thể được truy cập bởi JavaScript
+                            secure: true, // đảm bảo rằng cookies chỉ được gửi qua các kết nối an toàn (HTTPS)
+                        })
+                        .cookie('accessToken', accessToken, {
+                            maxAge: Number(process.env.EXPIRE_ACCESS_TOKEN_COOKIE),
+                            httpOnly: true, // không thể được truy cập bởi JavaScript
+                            secure: true, // đảm bảo rằng cookies chỉ được gửi qua các kết nối an toàn (HTTPS)
+                        })
+                        .redirect(
+                            `${process.env.URL_CLIENT}/verify-login-google?err=${err}&at=${accessToken}&rt=${refreshToken}&maxAgeAt=${process.env.EXPIRE_ACCESS_TOKEN_COOKIE}&maxAgeRt${process.env.EXPIRE_REFRESH_TOKEN_COOKIE}&success=true`,
+                        );
+                } else if (user?.googleId) {
                     const accessToken = generateToken(
                         user._id,
                         process.env.ACCESS_TOKEN_KEY,

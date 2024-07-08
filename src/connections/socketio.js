@@ -1,12 +1,23 @@
 const express = require('express');
 const http = require('http'); // cần một máy chủ HTTP để Socket.IO có thể làm việc đúng cách
 const mongodb = require('mongodb');
-const cookie = require('cookie');
+const cookies = require('cookie');
 const moment = require('moment');
 
 const User = require('@/model/user.model');
-const jwt = require('jsonwebtoken');
 const FriendRequest = require('@/model/friendRequest.model');
+const {
+    createGroupChat,
+    addMemberGroupChat,
+    deleteMemberGroupChat,
+    updateGroupChat,
+    deleteGroupChat,
+} = require('@/controller/group_chat.controller');
+
+const createResponse = require('@/utils/responseHelper');
+const { MESSAGE_CODE, STATUS_CODE } = require('@/enums/response');
+const { eventValidators } = require('@/enums/validate');
+const verifyTokenSocketMiddleware = require('@/middlewares/verifyTokenSocket.middleware');
 
 const app = express();
 const server = http.createServer(app);
@@ -26,6 +37,31 @@ const io = require('socket.io')(server, {
 });
 
 io.on('connection', (socket) => {
+    socket.use(async (packet, next) => {
+        const cookie = socket.handshake.headers.cookie;
+        const [event, data] = packet;
+
+        // verify user
+        const cookieParse = cookies.parse(cookie ? cookie : '');
+        const error = await verifyTokenSocketMiddleware(cookieParse, socket);
+
+        if (error) {
+            return error;
+        }
+
+        // validate event
+        if (eventValidators[event]) {
+            const { error } = eventValidators[event].validate(data);
+            if (error) {
+                return socket.emit(
+                    'validation',
+                    createResponse({ event, ...error }, error, null, STATUS_CODE.BAD_REQUEST, false),
+                );
+            }
+        }
+
+        next();
+    });
     console.log(socket.id + ' connect');
     //Set up id user to sent message
     socket.on('setup', (userData) => {
@@ -45,6 +81,17 @@ io.on('connection', (socket) => {
         socket.to(senderId).emit('received reply', newRequest);
     });
 
+    // group chat
+    socket.on('create group', (data) => {
+        createGroupChat(data, socket.user);
+    });
+    socket.on('add member', (data) => {
+        addMemberGroupChat(data, socket);
+    });
+    socket.on('delete member', deleteMemberGroupChat);
+    socket.on('update group', updateGroupChat);
+    socket.on('delete group', deleteGroupChat);
+
     //Check is read friend request
     socket.on('read request', async (newRequest) => {
         const newRequestId = newRequest._id;
@@ -52,26 +99,6 @@ io.on('connection', (socket) => {
         const updateRequest = await FriendRequest.findByIdAndUpdate(newRequestId, { isRead: true });
         socket.to(sender).emit('isRead', true);
     });
-
-    const cookies = cookie.parse(socket?.handshake?.headers?.cookie ? socket?.handshake?.headers?.cookie : '');
-    if (cookies && cookies.accessToken) {
-        jwt.verify(cookies.accessToken, process.env.ACCESS_TOKEN_KEY, async function (err, decoded) {
-            if (!err) {
-                const user = await User.findByIdAndUpdate(
-                    { _id: decoded.data },
-                    { $push: { socketId: socket.id }, is_online: true },
-                    { new: true },
-                ).select('-password');
-                if (user) {
-                    console.log('The user is online');
-                } else {
-                    console.log('The user not found');
-                }
-            } else {
-                console.log('Unauthorized');
-            }
-        });
-    }
 
     socket.on('login', async (userId) => {
         try {
