@@ -204,6 +204,14 @@ const messageSwagger = {
                                     description: 'Type of message',
                                     type: 'string',
                                 },
+                                emojiBy: {
+                                    description: 'Emoji by users',
+                                    type: 'array',
+                                    items: {
+                                        type: 'string',
+                                        description: 'User id of user',
+                                    },
+                                },
                                 styles: {
                                     description: 'Styles of message',
                                     type: 'object',

@@ -33,13 +33,13 @@ io.on('connection', (socket) => {
     });
 
     //Send request add friend
-    socket.on('friend request', async (newRequest) => {
+    socket.on('friend request', (newRequest) => {
         const receiverId = newRequest.receiver._id;
         socket.to(receiverId).emit('received request', newRequest);
     });
 
     //Accept request friend
-    socket.on('accept request', async (newRequest) => {
+    socket.on('accept request', (newRequest) => {
         const senderId = newRequest.sender._id;
         socket.to(senderId).emit('received reply', newRequest);
     });
@@ -136,14 +136,36 @@ io.on('connection', (socket) => {
     socket.on('stop_typing', (room) => socket.in(room).emit('stop_typing'));
 
     //Listening the action reacting message with emoji
-    socket.on('react message', (emojiAdded) => {
+    socket.on('add emoji', (emojiAdded) => {
         if (!emojiAdded.conversation._id) {
             console.log('Invalid conversation id');
             return;
         }
         const chatRoom = emojiAdded.conversation._id;
 
-        socket.to(chatRoom).emit('react message', emojiAdded);
+        socket.to(chatRoom).emit('emoji received', emojiAdded);
+    });
+
+    //Listening the action edit emoji
+    socket.on('edit emoji', (emojiAdded) => {
+        if (!emojiAdded.conversation._id) {
+            console.log('Invalid conversation id');
+            return;
+        }
+        const chatRoom = emojiAdded.conversation._id;
+
+        socket.to(chatRoom).emit('emoji received', emojiAdded);
+    });
+
+    //Listening the action delete emoji
+    socket.on('delete emoji', (emojiAdded) => {
+        if (!emojiAdded.conversation._id) {
+            console.log('Invalid conversation id');
+            return;
+        }
+        const chatRoom = emojiAdded.conversation._id;
+
+        socket.to(chatRoom).emit('emoji received', emojiAdded);
     });
 
     // Gửi thông báo tin nhắn đã bị thu hồi đến tất cả socket trong phòng, ngoại trừ socket của người gửi

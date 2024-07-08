@@ -24,24 +24,26 @@ module.exports = {
                 users: userId,
                 status: 'active',
             }).populate('users', 'fullName picture email');
-
-            var isChat = await Conversation.find({
+            console.log('req.user._id: ', req.user._id);
+            var conversations = await Conversation.find({
                 isGroupChat: false,
-                $and: [{ users: { $elemMatch: { $eq: req.user._id } } }, { users: { $elemMatch: { $eq: userId } } }],
+                $and: [{ users: { $elemMatch: { $eq: userId } } }],
             })
-                .populate('users', 'fullName email picture')
+                .populate('users', '_id fullName email picture')
                 .populate('latestMessage');
 
             friendList = friendList.map((friend) => {
+                friendInfo = friend.users.filter((user) => user._id.toString() !== userId.toString())[0];
                 return {
-                    friend: {
-                        info: friend.users.filter((user) => user._id.toString() !== userId.toString())[0],
-                    },
+                    info: friendInfo,
                     friendRequest: friend.friendRequest,
                     friendShip: friend._id,
                     status: friend.status,
-                    isChat: Boolean(isChat),
-                    conversation: isChat,
+                    isChat: Boolean(conversations),
+                    conversation: conversations.filter((conversation) => {
+                        const userIds = conversation.users.map((user) => String(user._id));
+                        return userIds.includes(String(userId)) && userIds.includes(String(friendInfo._id));
+                    }),
                     createdAt: friend.createdAt,
                     updatedAt: friend.updatedAt,
                 };
