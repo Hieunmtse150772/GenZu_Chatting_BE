@@ -195,13 +195,13 @@ module.exports = {
                 { $push: { deleteBy: userId } },
             );
             return res
-                .status(204)
+                .status(200)
                 .json(
                     createResponse(
                         messageUpdate,
                         STATUS_MESSAGE.DELETE_CONVERSATION_HISTORY_SUCCESS,
                         MESSAGE_CODE.DELETE_CONVERSATION_HISTORY_SUCCESS,
-                        STATUS_CODE.NO_CONTENT,
+                        STATUS_CODE.OK,
                         true,
                     ),
                 );

@@ -70,8 +70,8 @@ const conversationSwagger = {
                 },
             ],
             responses: {
-                204: {
-                    description: 'Delete message successfully',
+                200: {
+                    description: 'Delete history conversation successfully',
                     content: {
                         'application/json': {},
                     },
