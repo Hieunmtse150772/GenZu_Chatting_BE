@@ -6,6 +6,7 @@ const Message = require('../model/message.model');
 const User = require('../model/user.model');
 const MESSAGE_CODE = require('@/enums/response/messageCode.enum');
 const STATUS_MESSAGE = require('@/enums/response/statusMessage.enum');
+const createResponse = require('@/utils/responseHelper');
 
 module.exports = {
     accessConversation: async (req, res, next) => {
@@ -50,13 +51,20 @@ module.exports = {
                 isGroupChat: false,
                 users: [req.user._id, userId],
             };
-            console.log('chatData: ', chatData);
             try {
                 const createdChat = await Conversation.create(chatData);
                 const FullChat = await Conversation.findOne({
                     _id: createdChat._id,
                 }).populate('users', '-password');
-                res.status(200).json(FullChat);
+                res.status(200).json(
+                    createResponse(
+                        FullChat,
+                        STATUS_MESSAGE.CONVERSATION_ACCESS_SUCCESS,
+                        MESSAGE_CODE.CONVERSATION_ACCESS_SUCCESS,
+                        STATUS_CODE.OK,
+                        true,
+                    ),
+                );
             } catch (error) {
                 res.status(400);
                 throw new Error(error.message);
@@ -98,7 +106,7 @@ module.exports = {
         try {
             console.log('userId: ', req.user._id);
             Conversation.find({ users: { $elemMatch: { $eq: req.user._id } } })
-                .populate('users', 'email fullName picture')
+                .populate('users', 'email fullName picture is_online')
                 .populate('groupAdmin', '-password')
                 .populate('latestMessage')
                 .sort({ updatedAt: -1 })

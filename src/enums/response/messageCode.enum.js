@@ -78,6 +78,7 @@ const MESSAGE_CODE = {
     NOT_YOUR_EMOJI: 6001,
     //Conversation 7000
     CONVERSATION_NOT_FOUND: 7001,
+    CONVERSATION_ACCESS_SUCCESS: 7002,
 };
 
 module.exports = MESSAGE_CODE;

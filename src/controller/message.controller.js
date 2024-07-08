@@ -110,7 +110,7 @@ module.exports = {
         }
     },
     sendSingleMessage: async (req, res, next) => {
-        const { message, messageType, isSpoiled, styles } = req.body;
+        const { message, messageType, isSpoiled, styles, emojiBy } = req.body;
         const conversationId = req.query.id;
         var messageCreated = {
             sender: req.user._id,
@@ -120,6 +120,7 @@ module.exports = {
             status: 'active',
             messageType: messageType,
             styles: styles,
+            emojiBy: emojiBy,
         };
         try {
             const conversation = Conversation.findOne({ _id: conversationId });
@@ -322,6 +323,8 @@ module.exports = {
             return res.status(201).json({
                 message: STATUS_MESSAGE.ADD_EMOJI_MESSAGE_SUCCESS,
                 data: addEmojiMessage,
+                conversation: addEmojiMessage.conversation,
+                action: 'add',
                 success: true,
             });
         } catch (error) {
@@ -364,6 +367,7 @@ module.exports = {
             return res.status(200).json({
                 message: STATUS_MESSAGE.UPDATE_EMOJI_MESSAGE_SUCCESS,
                 data: updateEmoji,
+                action: 'edit',
                 success: true,
             });
         } catch (error) {
@@ -372,7 +376,7 @@ module.exports = {
     },
     removeEmojiMessage: async (req, res, next) => {
         const { emoji } = req.body;
-        const { emojiId, id } = req.query;
+        const { emojiId, messageId } = req.query;
         const userId = req.user._id;
         if (!mongodb.ObjectId.isValid(emojiId)) {
             return res.status(400).json({
@@ -395,13 +399,19 @@ module.exports = {
                     status: MESSAGE_CODE.NOT_YOUR_EMOJI,
                 });
             }
-            const updateMessage = await Message.findByIdAndUpdate(id, {
-                $pull: { emojiBy: emoji._id },
-            });
+            const updateMessage = await Message.findByIdAndUpdate(
+                messageId,
+                {
+                    $pull: { emojiBy: emoji._id },
+                },
+                { new: true, useFindAndModify: false },
+            );
             const updateEmoji = await Emoji.findOneAndDelete({ _id: emojiId });
             return res.status(200).json({
                 message: STATUS_MESSAGE.REMOVE_EMOJI_MESSAGE_SUCCESS,
-                data: updateMessage,
+                data: updateEmoji,
+                conversation: updateMessage.conversation,
+                action: 'delete',
                 success: true,
             });
         } catch (error) {

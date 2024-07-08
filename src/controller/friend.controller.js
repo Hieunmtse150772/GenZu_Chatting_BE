@@ -6,6 +6,7 @@ const MESSAGE_CODE = require('@/enums/response/messageCode.enum');
 const createResponse = require('@/utils/responseHelper');
 const STATUS_MESSAGE = require('@/enums/response/statusMessage.enum');
 const { STATUS_CODE } = require('@/enums/response');
+const Conversation = require('@/model/conversation.model');
 
 module.exports = {
     getFriendList: async (req, res, next) => {
@@ -23,14 +24,26 @@ module.exports = {
                 users: userId,
                 status: 'active',
             }).populate('users', 'fullName picture email');
-            console.log('friendList: ', friendList);
+            console.log('req.user._id: ', req.user._id);
+            var conversations = await Conversation.find({
+                isGroupChat: false,
+                $and: [{ users: { $elemMatch: { $eq: userId } } }],
+            })
+                .populate('users', '_id fullName email picture')
+                .populate('latestMessage');
+
             friendList = friendList.map((friend) => {
+                friendInfo = friend.users.filter((user) => user._id.toString() !== userId.toString())[0];
                 return {
-                    friend: {
-                        info: friend.users.filter((user) => user._id.toString() !== userId.toString())[0],
-                    },
+                    info: friendInfo,
                     friendRequest: friend.friendRequest,
+                    friendShip: friend._id,
                     status: friend.status,
+                    isChat: Boolean(conversations),
+                    conversation: conversations.filter((conversation) => {
+                        const userIds = conversation.users.map((user) => String(user._id));
+                        return userIds.includes(String(userId)) && userIds.includes(String(friendInfo._id));
+                    }),
                     createdAt: friend.createdAt,
                     updatedAt: friend.updatedAt,
                 };
@@ -407,7 +420,15 @@ module.exports = {
         }
 
         try {
-            const friendRequest = await FriendRequest.findByIdAndUpdate(id, { status: 'removed' });
+            const friendShip = await FriendShip.findByIdAndDelete({ _id: id });
+            const friendRequest = await FriendRequest.findByIdAndUpdate(
+                friendShip.friendRequest,
+                {
+                    status: 'removed',
+                },
+                { new: true },
+            );
+
             return res
                 .status(200)
                 .json(

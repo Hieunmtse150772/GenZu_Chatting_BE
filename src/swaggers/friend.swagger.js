@@ -239,7 +239,7 @@ const friendSwagger = {
                 {
                     name: 'id',
                     in: 'query',
-                    description: 'Id user (Id của user)',
+                    description: 'Id friend ship (Id của friend ship)',
                     schema: {
                         type: 'string',
                     },

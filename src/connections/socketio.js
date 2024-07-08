@@ -28,7 +28,9 @@ const io = require('socket.io')(server, {
             process.env.URL_CLIENT,
             process.env.URL_CLIENT_LOCAL,
             process.env.URL_CLIENT_TEST,
+            process.env.URL_CLIENT_DEPLOY,
             'http://localhost:5173',
+            'http://127.0.0.1:5173',
         ],
         // credentials: true,
     },
@@ -64,20 +66,17 @@ io.on('connection', (socket) => {
     //Set up id user to sent message
     socket.on('setup', (userData) => {
         socket.join(userData._id);
-        console.log('userr connect: ', userData._id);
         socket.emit('connected');
     });
 
     //Send request add friend
-    socket.on('friend request', async (newRequest) => {
-        console.log('object: ', newRequest);
+    socket.on('friend request', (newRequest) => {
         const receiverId = newRequest.receiver._id;
         socket.to(receiverId).emit('received request', newRequest);
     });
 
     //Accept request friend
-    socket.on('accept request', async (newRequest) => {
-        console.log('newRequest: ', newRequest);
+    socket.on('accept request', (newRequest) => {
         const senderId = newRequest.sender._id;
         socket.to(senderId).emit('received reply', newRequest);
     });
@@ -165,14 +164,36 @@ io.on('connection', (socket) => {
     socket.on('stop_typing', (room) => socket.in(room).emit('stop_typing'));
 
     //Listening the action reacting message with emoji
-    socket.on('react message', (emojiAdded) => {
-        if (!emojiAdded.conversation._id) {
+    socket.on('add emoji', (emojiAdded) => {
+        if (!emojiAdded.conversation) {
             console.log('Invalid conversation id');
             return;
         }
-        const chatRoom = emojiAdded.conversation._id;
+        const chatRoom = emojiAdded.conversation;
 
-        socket.to(chatRoom).emit('react message', emojiAdded);
+        socket.to(chatRoom).emit('emoji received', emojiAdded);
+    });
+
+    //Listening the action edit emoji
+    socket.on('edit emoji', (emojiAdded) => {
+        if (!emojiAdded.conversation) {
+            console.log('Invalid conversation id');
+            return;
+        }
+        const chatRoom = emojiAdded.conversation;
+
+        socket.to(chatRoom).emit('emoji received', emojiAdded);
+    });
+
+    //Listening the action delete emoji
+    socket.on('delete emoji', (emojiAdded) => {
+        if (!emojiAdded.conversation) {
+            console.log('Invalid conversation id');
+            return;
+        }
+        const chatRoom = emojiAdded.conversation;
+
+        socket.to(chatRoom).emit('emoji received', emojiAdded);
     });
 
     // Gửi thông báo tin nhắn đã bị thu hồi đến tất cả socket trong phòng, ngoại trừ socket của người gửi
@@ -201,11 +222,6 @@ io.on('connection', (socket) => {
         console.log('Message sent to room: ' + chatRoom);
     });
 
-    // socket.off('setup', (userData) => {
-    //     console.log('USER DISCONNECTED');
-    //     socket.leave(userData._id);
-    // });
-
     socket.on('disconnect', async () => {
         try {
             const user = await User.findOne({ socketId: socket.id }).select('-password');
@@ -222,6 +238,10 @@ io.on('connection', (socket) => {
             console.log(error);
         }
     });
+    // socket.off('setup', (userData) => {
+    //     console.log('USER DISCONNECTED');
+    //     socket.leave(userData._id);
+    // });
 });
 
 module.exports = { app, io, server };
