@@ -28,6 +28,7 @@ const sendMessage = Joi.object({
         italic: Joi.boolean(),
         underline: Joi.boolean(),
     }),
+    emojiBy: Joi.array(),
     //   sender_id: Joi.string().required(),
     //   conversation_id: Joi.string().required(),
     //   message_type: Joi.string().required(),

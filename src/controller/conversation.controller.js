@@ -98,7 +98,7 @@ module.exports = {
         try {
             console.log('userId: ', req.user._id);
             Conversation.find({ users: { $elemMatch: { $eq: req.user._id } } })
-                .populate('users', 'email fullName picture')
+                .populate('users', 'email fullName picture is_online')
                 .populate('groupAdmin', '-password')
                 .populate('latestMessage')
                 .sort({ updatedAt: -1 })
