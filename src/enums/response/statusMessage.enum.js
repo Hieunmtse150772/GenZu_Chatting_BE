@@ -63,6 +63,7 @@ const STATUS_MESSAGE = {
     REMOVE_CONVERSATION_SUCCESS: 'Remove conversation success',
     CONVERSATION_NOT_FOUND: 'Conversation not found',
     CONVERSATION_ACCESS_SUCCESS: 'Conversation access success',
+    DELETE_CONVERSATION_HISTORY_SUCCESS: 'Delete conversation history success',
 
     //Friend
     FRIEND_REQUEST_SENT_SUCCESS: 'Friend request sent',

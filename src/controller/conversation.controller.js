@@ -7,6 +7,7 @@ const User = require('../model/user.model');
 const MESSAGE_CODE = require('@/enums/response/messageCode.enum');
 const STATUS_MESSAGE = require('@/enums/response/statusMessage.enum');
 const createResponse = require('@/utils/responseHelper');
+const { STATUS_CODE } = require('@/enums/response');
 
 module.exports = {
     accessConversation: async (req, res, next) => {
@@ -183,6 +184,29 @@ module.exports = {
             });
         } catch (error) {
             return next(error);
+        }
+    },
+    removeHistoryConversation: async (req, res, next) => {
+        const conversationId = req.query.id;
+        const userId = req.user._id;
+        try {
+            const messageUpdate = await Message.updateMany(
+                { conversation: conversationId },
+                { $push: { deleteBy: userId } },
+            );
+            return res
+                .status(200)
+                .json(
+                    createResponse(
+                        messageUpdate,
+                        STATUS_MESSAGE.DELETE_CONVERSATION_HISTORY_SUCCESS,
+                        MESSAGE_CODE.DELETE_CONVERSATION_HISTORY_SUCCESS,
+                        STATUS_CODE.OK,
+                        true,
+                    ),
+                );
+        } catch (error) {
+            next(error);
         }
     },
     // sendMessage: async (req, res, next) => {

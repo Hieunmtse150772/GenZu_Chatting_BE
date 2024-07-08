@@ -193,25 +193,6 @@ module.exports = {
             next(error);
         }
     },
-    deleteAllMessage: async (req, res, next) => {
-        const userId = req.user._id;
-        try {
-            const messageUpdate = await Message.updateMany({}, { status: 'deleted' });
-            return res
-                .status(200)
-                .json(
-                    createResponse(
-                        messageUpdate,
-                        STATUS_MESSAGE.DELETE_MESSAGE_SUCCESS,
-                        MESSAGE_CODE.DELETE_MESSAGE_SUCCESS,
-                        STATUS_CODE.OK,
-                        true,
-                    ),
-                );
-        } catch (error) {
-            next(error);
-        }
-    },
     editMessage: async (req, res, next) => {
         const messageId = req.query.id;
         const userId = req.user._id;
