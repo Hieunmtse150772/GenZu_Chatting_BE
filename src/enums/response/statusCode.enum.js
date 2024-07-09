@@ -6,7 +6,7 @@ const STATUS_CODE = {
 
     // failed
     BAD_REQUEST: 400,
-    UNAUTHORIED: 401,
+    UNAUTHORIZED: 401,
     FORBIDDEN: 403,
     NOT_FOUND: 404,
     CONFLICT: 409,

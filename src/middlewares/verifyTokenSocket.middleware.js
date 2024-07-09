@@ -14,7 +14,6 @@ module.exports = async function (token, socket) {
         }
 
         const accessToken = token.split(' ')[1];
-        co;
         const decoded = jwt.verify(accessToken, process.env.ACCESS_TOKEN_KEY);
 
         if (!decoded) {
@@ -64,15 +63,6 @@ module.exports = async function (token, socket) {
         socket.user = newUser;
         return false;
     } catch (err) {
-        return socket.emit(
-            'validation',
-            createResponse(
-                err,
-                STATUS_MESSAGE.INTERNAL_SERVER_ERROR,
-                MESSAGE_CODE.INTERNAL_SERVER_ERROR,
-                STATUS_CODE.UNAUTHORIED,
-                false,
-            ),
-        );
+        return socket.emit('validation', createResponse(err, null, null, STATUS_CODE.UNAUTHORIZED, false));
     }
 };

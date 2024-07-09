@@ -7,6 +7,7 @@ const User = require('../model/user.model');
 const MESSAGE_CODE = require('@/enums/response/messageCode.enum');
 const STATUS_MESSAGE = require('@/enums/response/statusMessage.enum');
 const createResponse = require('@/utils/responseHelper');
+const { STATUS_CODE } = require('@/enums/response');
 
 module.exports = {
     accessConversation: async (req, res, next) => {
@@ -106,7 +107,7 @@ module.exports = {
         try {
             console.log('userId: ', req.user._id);
             Conversation.find({ users: { $elemMatch: { $eq: req.user._id } } })
-                .populate('users', 'email fullName picture is_online')
+                .populate('users', 'email fullName picture is_online offline_at')
                 .populate('groupAdmin', '-password')
                 .populate('latestMessage')
                 .sort({ updatedAt: -1 })
@@ -183,6 +184,76 @@ module.exports = {
             });
         } catch (error) {
             return next(error);
+        }
+    },
+    removeHistoryConversation: async (req, res, next) => {
+        const conversationId = req.query.id;
+        const userId = req.user._id;
+        try {
+            const messageUpdate = await Message.updateMany(
+                { conversation: conversationId },
+                { $push: { deleteBy: userId } },
+            );
+            return res
+                .status(200)
+                .json(
+                    createResponse(
+                        messageUpdate,
+                        STATUS_MESSAGE.DELETE_CONVERSATION_HISTORY_SUCCESS,
+                        MESSAGE_CODE.DELETE_CONVERSATION_HISTORY_SUCCESS,
+                        STATUS_CODE.OK,
+                        true,
+                    ),
+                );
+        } catch (error) {
+            next(error);
+        }
+    },
+    redoHistoryConversation: async (req, res, next) => {
+        const conversationId = req.query.id;
+        const userId = req.user._id;
+        try {
+            const messageUpdate = await Message.updateMany(
+                { conversation: conversationId },
+                { $pull: { deleteBy: userId } },
+            );
+            return res
+                .status(200)
+                .json(
+                    createResponse(
+                        messageUpdate,
+                        STATUS_MESSAGE.REDO_CONVERSATION_HISTORY_SUCCESS,
+                        MESSAGE_CODE.REDO_CONVERSATION_HISTORY_SUCCESS,
+                        STATUS_CODE.OK,
+                        true,
+                    ),
+                );
+        } catch (error) {
+            next(error);
+        }
+    },
+    updateConversationBackground: async (req, res, next) => {
+        const conversationId = req.query.id;
+        const background = req.body.url;
+        const userId = req.user._id;
+        try {
+            const conversationUpdate = await Conversation.findByIdAndUpdate(
+                { _id: conversationId },
+                { background: background },
+            );
+            return res
+                .status(201)
+                .json(
+                    createResponse(
+                        conversationUpdate,
+                        STATUS_MESSAGE.UPDATE_EMOJI_MESSAGE_SUCCESS,
+                        MESSAGE_CODE.UPDATE_CONVERSATION_BACKGROUND_SUCCESS,
+                        STATUS_CODE.CREATED,
+                        true,
+                    ),
+                );
+        } catch (error) {
+            next(error);
         }
     },
     // sendMessage: async (req, res, next) => {
