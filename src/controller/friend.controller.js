@@ -23,7 +23,7 @@ module.exports = {
             var friendList = await FriendShip.find({
                 users: userId,
                 status: 'active',
-            }).populate('users', 'fullName picture email');
+            }).populate('users', 'fullName picture email is_online offline_at');
             console.log('req.user._id: ', req.user._id);
             var conversations = await Conversation.find({
                 isGroupChat: false,

@@ -11,7 +11,7 @@ module.exports = async function (cookie, socket) {
                 createResponse(null, STATUS_MESSAGE.UNAUTHORIED, MESSAGE_CODE.UNAUTHORIED, STATUS_CODE.UNAUTHORIED),
             );
         }
-
+        console.log('cookie: ', cookie.accessToken);
         const decoded = jwt.verify(cookie.accessToken, process.env.ACCESS_TOKEN_KEY);
 
         if (!decoded) {
@@ -60,6 +60,6 @@ module.exports = async function (cookie, socket) {
         socket.user = newUser;
         return false;
     } catch (err) {
-        return socket.emit('validation', createResponse(err, null, null, STATUS_CODE.UNAUTHORIED, false));
+        return socket.emit('validation', createResponse(err, null, null, STATUS_CODE.UNAUTHORIZED, false));
     }
 };
