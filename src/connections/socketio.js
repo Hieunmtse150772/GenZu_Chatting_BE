@@ -59,10 +59,9 @@ io.on('connection', (socket) => {
                 );
             }
         }
-
         next();
     });
-    console.log(socket.id + ' connect');
+
     //Set up id user to sent message
     socket.on('setup', (userData) => {
         socket.join(userData._id);
