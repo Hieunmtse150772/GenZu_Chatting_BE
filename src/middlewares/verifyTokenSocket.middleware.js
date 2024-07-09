@@ -23,7 +23,7 @@ module.exports = async function (token, socket) {
                     null,
                     STATUS_MESSAGE.TOKEN_INVALID,
                     MESSAGE_CODE.TOKEN_INVALID,
-                    STATUS_CODE.UNAUTHORIED,
+                    STATUS_CODE.UNAUTHORIZED,
                     false,
                 ),
             );
