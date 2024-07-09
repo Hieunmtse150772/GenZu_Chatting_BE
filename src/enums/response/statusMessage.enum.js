@@ -66,6 +66,7 @@ const STATUS_MESSAGE = {
     CONVERSATION_NOT_FOUND: 'Conversation not found',
     CONVERSATION_ACCESS_SUCCESS: 'Conversation access success',
     DELETE_CONVERSATION_HISTORY_SUCCESS: 'Delete conversation history success',
+    REDO_CONVERSATION_HISTORY_SUCCESS: 'Redo conversation history success',
     UPDATE_CONVERSATION_BACKGROUND_SUCCESS: 'Update conversation background success',
     UPDATE_CONVERSATION_AVATAR_SUCCESS: 'Update conversation avatar success',
 

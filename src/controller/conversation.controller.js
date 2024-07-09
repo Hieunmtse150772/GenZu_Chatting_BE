@@ -209,6 +209,29 @@ module.exports = {
             next(error);
         }
     },
+    redoHistoryConversation: async (req, res, next) => {
+        const conversationId = req.query.id;
+        const userId = req.user._id;
+        try {
+            const messageUpdate = await Message.updateMany(
+                { conversation: conversationId },
+                { $pull: { deleteBy: userId } },
+            );
+            return res
+                .status(200)
+                .json(
+                    createResponse(
+                        messageUpdate,
+                        STATUS_MESSAGE.REDO_CONVERSATION_HISTORY_SUCCESS,
+                        MESSAGE_CODE.REDO_CONVERSATION_HISTORY_SUCCESS,
+                        STATUS_CODE.OK,
+                        true,
+                    ),
+                );
+        } catch (error) {
+            next(error);
+        }
+    },
     updateConversationBackground: async (req, res, next) => {
         const conversationId = req.query.id;
         const background = req.body.url;

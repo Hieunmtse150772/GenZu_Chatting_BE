@@ -50,6 +50,34 @@ const conversationSwagger = {
                 },
             },
         },
+        patch: {
+            tags: ['Conversation'],
+            description: 'Redo history conversation',
+            security: [
+                {
+                    accessToken: [],
+                },
+            ],
+            parameters: [
+                {
+                    name: 'id',
+                    in: 'query',
+                    description: 'Id of conversation',
+                    schema: {
+                        type: 'string',
+                        example: '6679c40ab0528a3618e7e646',
+                    },
+                },
+            ],
+            responses: {
+                200: {
+                    description: 'Redo history conversation successfully',
+                    content: {
+                        'application/json': {},
+                    },
+                },
+            },
+        },
         delete: {
             tags: ['Conversation'],
             description: 'Delete history conversation by one side',

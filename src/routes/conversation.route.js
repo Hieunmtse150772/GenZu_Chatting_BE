@@ -14,6 +14,7 @@ const {
 
 router.get('/', verifyToken, ConversationController.fetchConversation);
 router.post('/', verifyToken, ConversationController.accessConversation);
+router.patch('/', verifyToken, validateQuery(validateIdMongodb), ConversationController.redoHistoryConversation);
 router.delete('/', verifyToken, validateQuery(validateIdMongodb), ConversationController.removeHistoryConversation);
 
 router.post('/group', verifyToken, validateBody(createGroupBody), GroupChatController.createGroupChat);
