@@ -511,19 +511,32 @@ module.exports = {
         user.is_active = true;
         user.email_verified = true;
 
-        await user.save();
+        const newUser = await user.save();
 
-        return res
-            .status(STATUS_CODE.OK)
-            .json(
-                createResponse(
-                    null,
-                    STATUS_MESSAGE.VERIFY_EMAIL_SUCCESSFULLY,
-                    MESSAGE_CODE.VERIFY_EMAIL_SUCCESSFULLY,
-                    STATUS_CODE.OK,
-                    false,
-                ),
-            );
+        const accessToken = generateToken(newUser._id, process.env.ACCESS_TOKEN_KEY, process.env.EXPIRE_ACCESS_TOKEN);
+        const refreshToken = generateToken(
+            newUser._id,
+            process.env.REFRESH_TOKEN_KEY,
+            process.env.EXPIRE_REFRESH_TOKEN,
+        );
+        await client.set(String(newUser._id), refreshToken, {
+            PX: Number(process.env.EXPIRE_REFRESH_TOKEN_COOKIE),
+        });
+
+        return res.status(STATUS_CODE.OK).json(
+            createResponse(
+                {
+                    accessToken,
+                    refreshToken,
+                    maxAgeAt: Number(process.env.EXPIRE_ACCESS_TOKEN_COOKIE),
+                    maxAgeRt: Number(process.env.EXPIRE_REFRESH_TOKEN_COOKIE),
+                },
+                STATUS_MESSAGE.VERIFY_EMAIL_SUCCESSFULLY,
+                MESSAGE_CODE.VERIFY_EMAIL_SUCCESSFULLY,
+                STATUS_CODE.OK,
+                false,
+            ),
+        );
     },
     changePassword: async (req, res) => {
         const isValid = user.checkPassword(req.body.oldPassword);
