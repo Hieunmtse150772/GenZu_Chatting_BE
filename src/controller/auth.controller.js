@@ -88,7 +88,7 @@ module.exports = {
 
             if (!user.is_active) {
                 return res
-                    .status(STATUS_CODE.OK)
+                    .status(STATUS_CODE.FORBIDDEN)
                     .json(
                         createResponse(
                             null,

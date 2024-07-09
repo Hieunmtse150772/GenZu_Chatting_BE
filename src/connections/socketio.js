@@ -1,7 +1,6 @@
 const express = require('express');
 const http = require('http'); // cần một máy chủ HTTP để Socket.IO có thể làm việc đúng cách
 const mongodb = require('mongodb');
-const cookies = require('cookie');
 const moment = require('moment');
 
 const User = require('@/model/user.model');
@@ -36,18 +35,17 @@ const io = require('socket.io')(server, {
     },
 });
 
-io.on('connection', (socket) => {
-    socket.use(async (packet, next) => {
-        const cookie = socket.handshake.headers.cookie;
+io.on('connection', async (socket) => {
+    // verify user
+    const token = socket.handshake.headers['authorization'];
+    const error = await verifyTokenSocketMiddleware(token, socket);
+
+    if (error) {
+        return error;
+    }
+
+    socket.use((packet, next) => {
         const [event, data] = packet;
-
-        // verify user
-        const cookieParse = cookies.parse(cookie ? cookie : '');
-        const error = await verifyTokenSocketMiddleware(cookieParse, socket);
-
-        if (error) {
-            return error;
-        }
 
         // validate event
         if (eventValidators[event]) {
@@ -83,14 +81,20 @@ io.on('connection', (socket) => {
 
     // group chat
     socket.on('create group', (data) => {
-        createGroupChat(data, socket.user);
+        createGroupChat(data, socket);
     });
     socket.on('add member', (data) => {
         addMemberGroupChat(data, socket);
     });
-    socket.on('delete member', deleteMemberGroupChat);
-    socket.on('update group', updateGroupChat);
-    socket.on('delete group', deleteGroupChat);
+    socket.on('delete member', (data) => {
+        deleteMemberGroupChat(data, socket);
+    });
+    socket.on('update group', (data) => {
+        updateGroupChat(data, socket);
+    });
+    socket.on('delete group', (data) => {
+        deleteGroupChat(data, socket);
+    });
 
     //Check is read friend request
     socket.on('read request', async (newRequest) => {
@@ -103,19 +107,32 @@ io.on('connection', (socket) => {
     socket.on('login', async (userId) => {
         try {
             if (!mongodb.ObjectId.isValid(userId)) {
-                return console.log('The user id is invalid');
+                return socket.emit(
+                    'validation',
+                    createResponse(
+                        null,
+                        STATUS_MESSAGE.ACCOUNT_INACTIVE,
+                        MESSAGE_CODE.ACCOUNT_INACTIVE,
+                        STATUS_CODE.FORBIDDEN,
+                        false,
+                    ),
+                );
             }
 
-            const user = await User.findByIdAndUpdate(
-                { _id: userId },
-                { $push: { socketId: socket.id }, is_online: true },
-                { new: true },
-            ).select('-password');
+            const user = await User.findById(userId);
 
-            if (user) {
-                console.log('The user is online');
+            const isDuplicate = user.socketId.some((item) => item === socket.id);
+            if (isDuplicate) {
+                console.log('The user id duplicate');
             } else {
-                console.log('The user not found');
+                user.socketId.push = socket.id;
+                is_online = true;
+
+                const newUser = await user.save();
+
+                if (newUser) {
+                    console.log('The user is online');
+                }
             }
         } catch (error) {
             console.log(error);
