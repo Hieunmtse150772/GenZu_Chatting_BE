@@ -1,18 +1,21 @@
+const jwt = require('jsonwebtoken');
+
 const createResponse = require('@/utils/responseHelper');
 const User = require('@/model/user.model');
 const { STATUS_MESSAGE, MESSAGE_CODE, STATUS_CODE } = require('@/enums/response');
-const jwt = require('jsonwebtoken');
 
-module.exports = async function (cookie, socket) {
+module.exports = async function (token, socket) {
     try {
-        if (!cookie) {
+        if (!token) {
             return socket.emit(
                 'validation',
                 createResponse(null, STATUS_MESSAGE.UNAUTHORIED, MESSAGE_CODE.UNAUTHORIED, STATUS_CODE.UNAUTHORIED),
             );
         }
 
-        const decoded = jwt.verify(cookie.accessToken, process.env.ACCESS_TOKEN_KEY);
+        const accessToken = token.split(' ')[1];
+        co;
+        const decoded = jwt.verify(accessToken, process.env.ACCESS_TOKEN_KEY);
 
         if (!decoded) {
             return socket.emit(
@@ -53,6 +56,7 @@ module.exports = async function (cookie, socket) {
                 ),
             );
         }
+
         user.socketId.push(socket.id);
         user.is_online = true;
         const newUser = await user.save();
@@ -60,6 +64,15 @@ module.exports = async function (cookie, socket) {
         socket.user = newUser;
         return false;
     } catch (err) {
-        return socket.emit('validation', createResponse(err, null, null, STATUS_CODE.UNAUTHORIED, false));
+        return socket.emit(
+            'validation',
+            createResponse(
+                err,
+                STATUS_MESSAGE.INTERNAL_SERVER_ERROR,
+                MESSAGE_CODE.INTERNAL_SERVER_ERROR,
+                STATUS_CODE.UNAUTHORIED,
+                false,
+            ),
+        );
     }
 };

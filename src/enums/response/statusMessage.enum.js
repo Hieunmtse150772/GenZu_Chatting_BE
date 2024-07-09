@@ -4,6 +4,7 @@ const STATUS_MESSAGE = {
     FORBIDDEN: 'Forbidden',
     ACTION_FAILED: 'Action failed',
     ACTION_SUCCESS: 'Action success',
+    INTERNAL_SERVER_ERROR: 'Internal server error',
 
     //Auth
     USER_NOT_REGISTERED: 'The user is not registered',
