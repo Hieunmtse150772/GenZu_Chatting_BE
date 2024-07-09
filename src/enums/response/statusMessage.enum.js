@@ -27,6 +27,8 @@ const STATUS_MESSAGE = {
     CHANGE_PASSWORD_SUCCESSFULLY: 'Change password succcessfully',
     FORGOT_PASSWORD_SUCCESSFULLY: 'Forgot password successfully',
     LOGOUT_SUCCESSFULLY: 'Logout successfully',
+    UNAUTHORIED: 'Unauthoried',
+    EMAIL_ALREADY_EXISTED: 'Email already existed',
 
     //Message
     SEND_MESSAGE_SUCCESS: 'Send message successfully',
