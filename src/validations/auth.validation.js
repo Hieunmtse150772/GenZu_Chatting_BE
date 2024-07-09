@@ -28,6 +28,10 @@ const forgotPasswordBody = Joi.object({
     email: Joi.string().pattern(new RegExp('gmail.com$')).email().required(),
 });
 
+const verifyEmail = Joi.object({
+    token: Joi.string().required(),
+});
+
 const verifyForgotPasswordBody = Joi.object({
     token: Joi.string(),
     newPassword: Joi.string().min(6).max(30).required(),
@@ -40,4 +44,5 @@ module.exports = {
     forgotPasswordBody,
     changeLanguageBody,
     verifyForgotPasswordBody,
+    verifyEmail,
 };
