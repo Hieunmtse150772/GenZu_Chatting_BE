@@ -117,13 +117,6 @@ module.exports = async function (req, res, next) {
         }
 
         results.results = await query.exec();
-        results.results = results.results.map((result) => {
-            // Thay đổi giá trị của message dựa trên điều kiện
-            return {
-                ...result,
-                message: result.status === 'recalled' ? 'Message has been recalled' : result.message,
-            };
-        });
         // Add paginated Results to the request
         res.paginatedResults = results;
         next();
