@@ -36,7 +36,6 @@ module.exports = {
         })
             .populate('users', '-password')
             .populate('latestMessage');
-
         isChat = await User.populate(isChat, {
             path: 'latestMessage.sender',
             select: 'fullName picture email',

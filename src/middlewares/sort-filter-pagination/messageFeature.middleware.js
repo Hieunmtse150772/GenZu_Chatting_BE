@@ -39,7 +39,7 @@ module.exports = async function (req, res, next) {
         console.log('searchQuery: ', searchQuery);
         let query = Message.find({
             conversation: conversation_id,
-            status: 'active',
+            status: { $in: ['active', 'recalled'] },
             deleteBy: { $nin: userId },
         })
             .find(searchQuery ? searchQuery : {})
@@ -52,7 +52,10 @@ module.exports = async function (req, res, next) {
                     select: 'fullName _id',
                 },
             });
-
+        // console.log('query: ', query);
+        // query = query.map((list) => {
+        //     list, (list.message = list.message.replace(/<br>/g, '\n'));
+        // });
         // Pagination
         const page = Number(req.query.page) || 1;
         const limit = Number(req.query.limit) || 20;
@@ -72,6 +75,7 @@ module.exports = async function (req, res, next) {
                 status: 'active',
                 deleteBy: { $nin: userId },
             }).exec();
+
             results.totalDocs = totalCount;
 
             if (endIndex < totalCount) {
@@ -113,7 +117,13 @@ module.exports = async function (req, res, next) {
         }
 
         results.results = await query.exec();
-
+        results.results = results.results.map((result) => {
+            // Thay đổi giá trị của message dựa trên điều kiện
+            return {
+                ...result,
+                message: result.status === 'recalled' ? 'Message has been recalled' : result.message,
+            };
+        });
         // Add paginated Results to the request
         res.paginatedResults = results;
         next();
