@@ -212,14 +212,14 @@ io.on('connection', async (socket) => {
 
     // Gửi thông báo tin nhắn đã bị thu hồi đến tất cả socket trong phòng, ngoại trừ socket của người gửi
     socket.on('recall', (messageRecalled) => {
-        console.log('socket recall: ', messageRecalled);
-        if (!messageRecalled || !messageRecalled.conversation || !messageRecalled.conversation._id) {
+        console.log('socket recall: ', messageRecalled.data.data);
+        if (!messageRecalled || !messageRecalled.data.data.conversation) {
             console.error('Invalid newMessageReceived data');
             return;
         }
 
-        const chatRoom = messageRecalled.conversation._id;
-
+        const chatRoom = messageRecalled.data.data.conversation;
+        console.log('chat room: ', chatRoom);
         socket.to(chatRoom).emit('recall received', messageRecalled);
     });
 
