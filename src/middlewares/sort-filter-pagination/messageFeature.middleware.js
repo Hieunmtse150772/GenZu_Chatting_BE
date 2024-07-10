@@ -72,7 +72,7 @@ module.exports = async function (req, res, next) {
         if (!req.query.messageId) {
             const totalCount = await Message.countDocuments({
                 conversation: conversation_id,
-                status: 'active',
+                status: { $in: ['active', 'recalled'] },
                 deleteBy: { $nin: userId },
             }).exec();
 
