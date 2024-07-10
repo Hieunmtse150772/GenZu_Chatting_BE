@@ -38,11 +38,8 @@ const io = require('socket.io')(server, {
 io.on('connection', async (socket) => {
     // verify user
     const token = socket.handshake.headers['authorization'];
-    const error = await verifyTokenSocketMiddleware(token, socket);
-
-    if (error) {
-        return error;
-    }
+    const error = verifyTokenSocketMiddleware(token, socket);
+    if (error) return;
 
     socket.use((packet, next) => {
         const [event, data] = packet;
@@ -51,10 +48,11 @@ io.on('connection', async (socket) => {
         if (eventValidators[event]) {
             const { error } = eventValidators[event].validate(data);
             if (error) {
-                return socket.emit(
+                socket.emit(
                     'validation',
                     createResponse({ event, ...error }, error, null, STATUS_CODE.BAD_REQUEST, false),
                 );
+                return;
             }
         }
         next();
@@ -234,8 +232,6 @@ io.on('connection', async (socket) => {
         const chatRoom = newMessageReceived.conversation._id;
 
         socket.to(chatRoom).emit('message received', newMessageReceived);
-
-        console.log('Message sent to room: ' + chatRoom);
     });
 
     socket.on('disconnect', async () => {
