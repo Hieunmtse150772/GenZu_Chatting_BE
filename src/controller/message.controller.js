@@ -64,12 +64,14 @@ module.exports = {
                 const { user, ...otherMessageInfo } = Messages._doc;
                 return {
                     ...otherMessageInfo,
+                    message: Messages._doc.status === 'recalled' ? 'Message has been recalled' : Messages._doc.message,
                     request: {
                         type: 'Get',
                         description: '',
                     },
                 };
             });
+            console.log('resultss: ', responseObject);
 
             return res.status(200).send({
                 success: true,
