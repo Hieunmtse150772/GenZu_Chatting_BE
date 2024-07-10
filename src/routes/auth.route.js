@@ -1,4 +1,5 @@
 const router = require('express').Router();
+const upload = require('multer')();
 
 const AuthController = require('../controller/auth.controller');
 const { validateBody } = require('@/middlewares/validator.middleware');
@@ -25,6 +26,12 @@ router.post('/verify-email', validateBody(verifyEmail), AuthController.verifyEma
 router.post('/change-password', verifyToken, validateBody(changePasswordBody), AuthController.changePassword);
 router.post('/forgot-password', validateBody(forgotPasswordBody), AuthController.forgotPassword);
 router.post('/verify-forgot-password', validateBody(verifyForgotPasswordBody), AuthController.verifyForgotPassword);
-router.patch('/update-language', verifyToken, validateBody(changeLanguageBody), AuthController.changeLanguage);
+router.patch(
+    '/update-language',
+    verifyToken,
+    upload.single(),
+    validateBody(changeLanguageBody),
+    AuthController.changeLanguage,
+);
 
 module.exports = router;

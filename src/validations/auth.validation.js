@@ -21,7 +21,7 @@ const changePasswordBody = Joi.object({
 });
 
 const changeLanguageBody = Joi.object({
-    language: Joi.string().valid('vn', 'en', 'cn').required(),
+    language: Joi.string().valid('vn', 'en', 'jp').required(),
 });
 
 const forgotPasswordBody = Joi.object({

@@ -23,7 +23,7 @@ module.exports = {
             });
 
             groupChat.users.forEach((item) => {
-                socket.in(item).emit('create group successfully', groupChat.id);
+                socket.in(item).emit('request join group', groupChat.id);
             });
             users.forEach(async (item) => {
                 latestMessage = await Message.create({

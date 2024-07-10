@@ -363,7 +363,7 @@ module.exports = {
     },
     changeLanguage: async (req, res, next) => {
         const user = req.user;
-        const languageCode = req.body.languageCode;
+        const languageCode = req.body.language;
 
         try {
             if (user.language === languageCode) {
@@ -377,6 +377,7 @@ module.exports = {
                     ),
                 );
             }
+
             user.language = languageCode;
 
             const newUser = await user.save();
