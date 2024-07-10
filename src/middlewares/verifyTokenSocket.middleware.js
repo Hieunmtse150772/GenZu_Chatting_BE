@@ -77,7 +77,7 @@ module.exports = function (token, socket) {
                 });
             });
     } catch (error) {
-        socket.emit('validation', createResponse(err, null, null, STATUS_CODE.UNAUTHORIZED, false));
+        socket.emit('validation', createResponse(error, null, null, STATUS_CODE.UNAUTHORIZED, false));
         return isError;
     }
 };
