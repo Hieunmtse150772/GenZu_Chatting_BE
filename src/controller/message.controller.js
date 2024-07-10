@@ -125,7 +125,7 @@ module.exports = {
             emojiBy: emojiBy,
         };
         try {
-            const conversation = Conversation.findOne({ _id: conversationId });
+            const conversation = await Conversation.findOne({ _id: conversationId });
             if (!conversation) {
                 return res
                     .status(404)
@@ -266,7 +266,14 @@ module.exports = {
                         ),
                     );
             }
-            const messageUpdate = await Message.findByIdAndUpdate({ _id: messageId }, { status: 'recalled' });
+            let messageUpdate = await Message.findByIdAndUpdate(
+                { _id: messageId },
+                { status: 'recalled' },
+                { new: true },
+            );
+            if (messageUpdate.status === 'recalled') {
+                messageUpdate.message = 'Message has been recalled';
+            }
             return res
                 .status(200)
                 .json(

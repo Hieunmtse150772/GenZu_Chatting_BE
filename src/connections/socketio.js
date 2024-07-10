@@ -212,6 +212,7 @@ io.on('connection', async (socket) => {
 
     // Gửi thông báo tin nhắn đã bị thu hồi đến tất cả socket trong phòng, ngoại trừ socket của người gửi
     socket.on('recall', (messageRecalled) => {
+        console.log('socket recall: ', messageRecalled);
         if (!messageRecalled || !messageRecalled.conversation || !messageRecalled.conversation._id) {
             console.error('Invalid newMessageReceived data');
             return;

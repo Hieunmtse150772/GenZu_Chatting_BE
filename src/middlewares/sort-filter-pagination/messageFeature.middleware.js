@@ -33,10 +33,8 @@ module.exports = async function (req, res, next) {
             searchQuery = { createdAt: dateQuery };
         }
         if (req.query.messageId) {
-            console.log('messageId: ', req.query.messageId);
             searchQuery = { ...searchQuery, _id: { $gte: req.query.messageId } };
         }
-        console.log('searchQuery: ', searchQuery);
         let query = Message.find({
             conversation: conversation_id,
             status: { $in: ['active', 'recalled'] },
