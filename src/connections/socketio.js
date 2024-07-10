@@ -219,7 +219,7 @@ io.on('connection', async (socket) => {
 
         const chatRoom = messageRecalled.conversation._id;
 
-        socket.to(chatRoom).emit('recall', messageRecalled);
+        socket.to(chatRoom).emit('recall received', messageRecalled);
     });
 
     // Gửi tin nhắn đến tất cả socket trong phòng, ngoại trừ socket của người gửi
