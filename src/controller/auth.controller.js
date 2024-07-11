@@ -448,7 +448,7 @@ module.exports = {
         user.timeResendVerifyEmail = moment().unix();
         const newUser = await user.save();
 
-        const link = `${process.env.URL_CLIENT}/verify?user_id=${newUser._id}&token=${newUser.tokenEmailVerify}`;
+        const link = `${process.env.URL_CLIENT}/verify/${newUser.tokenEmailVerify}`;
 
         const result = await sendEmail(newUser.email, 'Verify email', link);
 
