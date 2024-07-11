@@ -34,11 +34,13 @@ const io = require('socket.io')(server, {
         // credentials: true,
     },
 });
+let userJoinRooms = {};
 
 io.on('connection', async (socket) => {
     // verify user
     const token = socket.handshake.headers['authorization'];
     const error = verifyTokenSocketMiddleware(token, socket);
+
     if (error) return;
 
     socket.use((packet, next) => {
@@ -116,7 +118,7 @@ io.on('connection', async (socket) => {
                 );
             }
 
-            const user = await User.findById(userId);
+            const user = await User.findById(userId).select('-password');
 
             const isDuplicate = user.socketId.some((item) => item === socket.id);
             if (isDuplicate) {
@@ -159,14 +161,23 @@ io.on('connection', async (socket) => {
 
     //Set up room with conversation id for user who was join to chat
     socket.on('join chat', (room) => {
-        socket.join(room);
-        console.log('User Joined Room: ' + room);
+        socket.join(room.conversation);
+        if (userJoinRooms[room.conversation]) {
+            userJoinRooms[room.conversation].push(room.user);
+        } else {
+            userJoinRooms[room.conversation] = [room.user];
+        }
+        console.log(userJoinRooms);
+        console.log('User Joined Room: ' + room?.user);
     });
 
     //Out room chat with conversation id when user leave chat or not focus on chat room
     socket.on('leave chat', (room) => {
-        socket.leave(room);
-        console.log('user leave room: ', room);
+        console.log('room pull: ', room.conversation);
+        console.log('user pull: ', room.user);
+        socket.leave(room.conversation);
+        // userJoinRooms[room.conversation].pull(room.user);
+        console.log('user leave room: ', room.user);
     });
 
     //Listening the action type of user when they are typing
