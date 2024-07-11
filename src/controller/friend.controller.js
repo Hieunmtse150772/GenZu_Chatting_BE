@@ -19,12 +19,10 @@ module.exports = {
                 });
             }
             // const senderId = req.user._id;
-            console.log('userId: ', userId);
             var friendList = await FriendShip.find({
                 users: userId,
                 status: 'active',
             }).populate('users', 'fullName picture email is_online offline_at');
-            console.log('req.user._id: ', req.user._id);
             var conversations = await Conversation.find({
                 isGroupChat: false,
                 $and: [{ users: { $elemMatch: { $eq: userId } } }],
@@ -33,7 +31,7 @@ module.exports = {
                 .populate('latestMessage');
 
             friendList = friendList.map((friend) => {
-                friendInfo = friend.users.filter((user) => user._id.toString() !== userId.toString())[0];
+                friendInfo = friend.users.filter((user) => user?._id.toString() !== userId.toString())[0];
                 return {
                     info: friendInfo,
                     friendRequest: friend.friendRequest,
@@ -41,8 +39,8 @@ module.exports = {
                     status: friend.status,
                     isChat: Boolean(conversations),
                     conversation: conversations.filter((conversation) => {
-                        const userIds = conversation.users.map((user) => String(user._id));
-                        return userIds.includes(String(userId)) && userIds.includes(String(friendInfo._id));
+                        const userIds = conversation.users.map((user) => String(user?._id));
+                        return userIds.includes(String(userId)) && userIds.includes(String(friendInfo?._id));
                     }),
                     createdAt: friend.createdAt,
                     updatedAt: friend.updatedAt,
@@ -97,7 +95,10 @@ module.exports = {
                 });
             }
             const friendRequestList = await FriendRequest.find({
-                $or: [{ receiver: user_id, status: 'pending' }, { status: 'accepted' }],
+                $or: [
+                    { receiver: user_id, status: 'pending' },
+                    { receiver: user_id, status: 'accepted' },
+                ],
             })
                 .populate('sender', 'fullName picture _id')
                 .populate('receiver', 'fullName picture _id');
@@ -111,8 +112,8 @@ module.exports = {
                     isRead: friendRequest.isRead,
                     content:
                         friendRequest.status === 'pending'
-                            ? `Lời mời kết bạn từ ${friendRequest.sender.fullName}`
-                            : `${friendRequest.receiver.fullName} và ${friendRequest.sender.fullName} đã trở thành bạn bè`,
+                            ? `Lời mời kết bạn từ ${friendRequest?.sender?.fullName}`
+                            : `${friendRequest?.receiver?.fullName} và ${friendRequest?.sender?.fullName} đã trở thành bạn bè`,
                 };
             });
             return res.status(200).json({
@@ -278,7 +279,6 @@ module.exports = {
                 users: { $all: [friendRequest?.sender, friendRequest?.receiver] },
                 status: 'active',
             });
-            console.log('isFriend: ', isFriend);
             if (isFriend) {
                 await FriendRequest.findByIdAndUpdate(
                     { _id: id, status: 'pending' },

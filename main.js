@@ -28,6 +28,24 @@ app.use((err, req, res, next) => {
     });
     next();
 });
+
 server.listen(port, () => {
     console.log(`Server listening on port ${port}`);
 });
+
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('Unhandled Rejection:', reason);
+    // Thực hiện các hành động cần thiết, ví dụ như:
+    // - Ghi log lỗi vào file
+    // - Gửi thông báo email
+    // - Khởi động lại server
+
+    // Ngăn chặn server sập hoàn toàn
+});
+// server.on('close', () => {
+//     console.log('Server closed');
+// });
+
+// server.on('error', (error) => {
+//     console.log('Server errored: ' + error);
+// });

@@ -2,7 +2,7 @@ const express = require('express');
 const http = require('http'); // cần một máy chủ HTTP để Socket.IO có thể làm việc đúng cách
 const mongodb = require('mongodb');
 const moment = require('moment');
-
+const Conversation = require('@/model/conversation.model');
 const User = require('@/model/user.model');
 const FriendRequest = require('@/model/friendRequest.model');
 const {
@@ -34,7 +34,7 @@ const io = require('socket.io')(server, {
         // credentials: true,
     },
 });
-let userJoinRooms = {};
+let userJoinRooms = new Map([]);
 
 io.on('connection', async (socket) => {
     // verify user
@@ -161,23 +161,41 @@ io.on('connection', async (socket) => {
 
     //Set up room with conversation id for user who was join to chat
     socket.on('join chat', (room) => {
-        socket.join(room.conversation);
-        if (userJoinRooms[room.conversation]) {
-            userJoinRooms[room.conversation].push(room.user);
+        if (room.conversation) {
+            socket.join(room.conversation);
+            const userIds = userJoinRooms.get(room.conversation);
+            if (userIds) {
+                userIds.add(room.user);
+                console.log(`Đã thêm userId ${room.user} vào conversationId ${room.conversation}`);
+            } else {
+                // Nếu không tồn tại, tạo mới cuộc trò chuyện
+                userJoinRooms.set(room.conversation, new Set([room.user]));
+            }
+            console.log(userJoinRooms);
         } else {
-            userJoinRooms[room.conversation] = [room.user];
+            console.log('room not found');
         }
-        console.log(userJoinRooms);
-        console.log('User Joined Room: ' + room?.user);
     });
 
     //Out room chat with conversation id when user leave chat or not focus on chat room
     socket.on('leave chat', (room) => {
-        console.log('room pull: ', room.conversation);
-        console.log('user pull: ', room.user);
-        socket.leave(room.conversation);
-        // userJoinRooms[room.conversation].pull(room.user);
-        console.log('user leave room: ', room.user);
+        if (room.conversation) {
+            socket.leave(room.conversation);
+            const userIds = userJoinRooms.get(room.conversation);
+            if (userIds) {
+                userIds.delete(room.user);
+                if (userIds.size === 0) {
+                    userJoinRooms.delete(room.conversation);
+                    console.log(`Room ${room.conversation} is now empty and has been deleted.`);
+                } else {
+                    userJoinRooms.set(room.conversation, userIds);
+                }
+            } else {
+                console.log(`Không tìm thấy conversationId ${room.conversation}`);
+            }
+        } else {
+            console.log('room not found');
+        }
     });
 
     //Listening the action type of user when they are typing
@@ -235,15 +253,29 @@ io.on('connection', async (socket) => {
     });
 
     // Gửi tin nhắn đến tất cả socket trong phòng, ngoại trừ socket của người gửi
-    socket.on('new message', (newMessageReceived) => {
+    socket.on('new message', async (newMessageReceived) => {
         if (!newMessageReceived || !newMessageReceived.conversation || !newMessageReceived.conversation._id) {
             console.error('Invalid newMessageReceived data');
             return;
         }
 
         const chatRoom = newMessageReceived.conversation._id;
+        const conversation = await Conversation.findById(chatRoom);
+        if (conversation) {
+            const users = conversation.users;
+            console.log('users: ', users);
+            const userInRooms = userJoinRooms.get(chatRoom);
+            console.log('userInRooms: ', userInRooms);
 
-        socket.to(chatRoom).emit('message received', newMessageReceived);
+            const userNotInRooms = users.filter((user) => !userInRooms.has(String(user._id)));
+            console.log('userNotInRooms: ', userNotInRooms);
+            if (userNotInRooms.length > 0) {
+                for (i = 0; i < userNotInRooms.length; i++) {
+                    socket.to(userNotInRooms[i]).emit('new message received', newMessageReceived);
+                }
+            }
+            socket.to(chatRoom).emit('message received', newMessageReceived);
+        }
     });
 
     socket.on('disconnect', async () => {
