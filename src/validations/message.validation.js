@@ -27,6 +27,7 @@ const sendMessage = Joi.object({
         italic: Joi.boolean(),
         underline: Joi.boolean(),
     }),
+    replyMessage: Joi.string().custom(objectIdValidator, 'ObjectId validation'),
     emojiBy: Joi.array(),
 });
 
