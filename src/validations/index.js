@@ -4,6 +4,7 @@ const authValidator = require('./auth.validation');
 const groupValidator = require('./group_chat.validation');
 const messageValidator = require('./message.validation');
 const userValidator = require('./user.validation');
+const conversationValidator = require('./conversation.validation');
 const { objectIdValidator } = require('@/utils/functions');
 
 const validateIdMongodb = Joi.object({
@@ -15,6 +16,7 @@ module.exports = {
     ...authValidator,
     ...groupValidator,
     ...messageValidator,
+    ...conversationValidator,
     ...userValidator,
     eventValidators: {
         'create group': groupValidator.createGroupBody,
