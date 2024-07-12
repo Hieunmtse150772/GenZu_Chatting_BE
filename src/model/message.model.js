@@ -25,6 +25,10 @@ const MessageSchema = mongoose.Schema(
             type: String,
             required: true,
         },
+        replyMessage: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Message',
+        },
         status: {
             type: String,
             default: 'active',
