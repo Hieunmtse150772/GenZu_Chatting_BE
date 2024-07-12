@@ -107,6 +107,51 @@ const conversationSwagger = {
             },
         },
     },
+    '/conversations/background': {
+        patch: {
+            tags: ['Conversation'],
+            description: 'Update background conversation',
+            security: [
+                {
+                    accessToken: [],
+                },
+            ],
+            parameters: [
+                {
+                    name: 'id',
+                    in: 'query',
+                    description: 'Id of conversation',
+                    schema: {
+                        type: 'string',
+                        example: '6679c40ab0528a3618e7e646',
+                    },
+                },
+            ],
+            requestBody: {
+                content: {
+                    'application/json': {
+                        schema: {
+                            type: 'object',
+                            properties: {
+                                background: {
+                                    description: 'Url của ảnh nền hội thoại',
+                                    type: 'string',
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+            responses: {
+                200: {
+                    description: 'Update background conversation successfully',
+                    content: {
+                        'application/json': {},
+                    },
+                },
+            },
+        },
+    },
 };
 
 module.exports = conversationSwagger;

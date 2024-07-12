@@ -263,21 +263,18 @@ io.on('connection', async (socket) => {
         }
 
         const chatRoom = newMessageReceived.conversation._id;
-        const conversation = await Conversation.findById(chatRoom);
-        if (conversation) {
-            const users = conversation.users;
-            console.log('users: ', users);
+        socket.to(chatRoom).emit('message received', newMessageReceived);
+        const users = await Conversation.findById(chatRoom).select('users');
+        if (users) {
             const userInRooms = userJoinRooms.get(chatRoom);
-            console.log('userInRooms: ', userInRooms);
 
-            const userNotInRooms = users.filter((user) => !userInRooms.has(String(user._id)));
-            console.log('userNotInRooms: ', userNotInRooms);
+            const userNotInRooms = users.users.filter((user) => !userInRooms.has(String(user._id)));
+
             if (userNotInRooms.length > 0) {
                 for (i = 0; i < userNotInRooms.length; i++) {
-                    socket.to(userNotInRooms[i]).emit('new message received', newMessageReceived);
+                    socket.to(String(userNotInRooms[i])).emit('new message received', newMessageReceived);
                 }
             }
-            socket.to(chatRoom).emit('message received', newMessageReceived);
         }
     });
 

@@ -12,8 +12,12 @@ const fetchConversation = Joi.object({
     //   message_type: Joi.string().required(),
     //   status: Joi.string().required(),
 });
+const updateBackgroundConversation = Joi.object({
+    background: Joi.string().min(1).required(),
+});
 
 module.exports = {
     accessConversation,
     fetchConversation,
+    updateBackgroundConversation,
 };
