@@ -11,6 +11,7 @@ const {
     addMemberGroupBody,
     deleteMemberGroupBody,
     updateBackgroundConversation,
+    updateAvatarConversation,
 } = require('@/validations');
 
 router.get('/', verifyToken, ConversationController.fetchConversation);
@@ -23,6 +24,13 @@ router.patch(
     validateQuery(validateIdMongodb),
     validateBody(updateBackgroundConversation),
     ConversationController.updateConversationBackground,
+);
+router.patch(
+    '/avatar',
+    verifyToken,
+    validateQuery(validateIdMongodb),
+    validateBody(updateAvatarConversation),
+    ConversationController.updateConversationAvatar,
 );
 
 router.post('/group', verifyToken, validateBody(createGroupBody), GroupChatController.createGroupChat);
