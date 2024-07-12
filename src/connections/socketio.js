@@ -124,16 +124,15 @@ io.on('connection', async (socket) => {
                     ),
                 );
             }
-
-            const user = await User.findById(userId).select('-password');
+            const user = await User.findById(userId).select('socketId');
 
             const isDuplicate = user.socketId.some((item) => item === socket.id);
+            console.log(1);
             if (isDuplicate) {
                 console.log('The socket id duplicate');
             } else {
                 user.socketId.push = socket.id;
                 is_online = true;
-
                 await user.save();
             }
         } catch (error) {
@@ -162,6 +161,16 @@ io.on('connection', async (socket) => {
         }
     });
 
+    //Create new conversation
+    socket.on('access chat', (conversation) => {
+        if (conversation) {
+            for (i = 0; i < conversation?.users.length; i++) {
+                if (conversation?.users[i] !== conversation?.userId) {
+                    socket.to(conversation?.users[i]).emit('accessed chat', conversation);
+                }
+            }
+        }
+    });
     //Set up room with conversation id for user who was join to chat
     socket.on('join chat', (room) => {
         if (room.conversation) {
@@ -169,7 +178,6 @@ io.on('connection', async (socket) => {
             const userIds = userJoinRooms.get(room.conversation);
             if (userIds) {
                 userIds.add(room.user);
-                console.log(`Đã thêm userId ${room.user} vào conversationId ${room.conversation}`);
             } else {
                 // Nếu không tồn tại, tạo mới cuộc trò chuyện
                 userJoinRooms.set(room.conversation, new Set([room.user]));

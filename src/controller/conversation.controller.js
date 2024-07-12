@@ -117,6 +117,13 @@ module.exports = {
                     //   messageCode: 'get_conversations_successfully',
                     //   data: results,
                     // });
+                    results = results.map((conversation) => {
+                        console.log('conversation: ', conversation);
+                        if (conversation.latestMessage && conversation.latestMessage.status === 'recalled') {
+                            conversation.latestMessage.message = 'This message has been recalled';
+                        }
+                        return conversation;
+                    });
                     res.status(200).send(results);
                 });
         } catch (error) {
