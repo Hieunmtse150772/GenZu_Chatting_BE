@@ -30,6 +30,7 @@ const STATUS_MESSAGE = {
     LOGOUT_SUCCESSFULLY: 'Logout successfully',
     UNAUTHORIED: 'Unauthoried',
     EMAIL_ALREADY_EXISTED: 'Email already existed',
+    SAME_OLD_PASSWORD: 'Same old password',
 
     //Message
     SEND_MESSAGE_SUCCESS: 'Send message successfully',
