@@ -142,7 +142,7 @@ io.on('connection', async (socket) => {
 
     socket.on('logout', async (userId) => {
         try {
-            const user = await User.findById(userId).select('-password');
+            const user = await User.findById(userId).select('socketId');
             if (user) {
                 user.socketId = user.socketId.filter((item) => item !== socket.id);
 
@@ -288,7 +288,7 @@ io.on('connection', async (socket) => {
 
     socket.on('disconnect', async () => {
         try {
-            const user = await User.findOne({ socketId: socket.id }).select('-password');
+            const user = await User.findOne({ socketId: socket.id }).select('socketId');
             if (user) {
                 user.socketId = user.socketId.filter((item) => item !== socket.id);
                 if (!user.socketId.length) {

@@ -150,15 +150,17 @@ module.exports = {
                 access_type: 'offline', // Indicates that we need to be able to access data continously without the user constantly giving us consent
                 scope: CONFIG.oauth2Credentials.scopes, // Using the access scopes from our config file
             });
-            res.status(STATUS_CODE.OK).json(
-                createResponse(
-                    loginLink,
-                    STATUS_MESSAGE.LOGIN_GOOGLE_SUCCESS,
-                    MESSAGE_CODE.LOGIN_GOOGLE_SUCCESS,
-                    STATUS_CODE.OK,
-                    true,
-                ),
-            );
+            return res
+                .status(STATUS_CODE.OK)
+                .json(
+                    createResponse(
+                        loginLink,
+                        STATUS_MESSAGE.LOGIN_GOOGLE_SUCCESS,
+                        MESSAGE_CODE.LOGIN_GOOGLE_SUCCESS,
+                        STATUS_CODE.OK,
+                        true,
+                    ),
+                );
         } catch (error) {
             return next(error);
         }
@@ -179,7 +181,9 @@ module.exports = {
                 // Store the credentials given by google into a jsonwebtoken in a cookie called 'jwt'
 
                 const userInfo = jwt.decode(token.id_token);
-                const user = await UserModel.findOne({ $or: [{ email: userInfo.email }, { googleId: userInfo.sub }] });
+                const user = await UserModel.findOne({
+                    $or: [{ email: userInfo.email }, { googleId: userInfo.sub }],
+                }).select('email_verified is_active googleId tokenGoogle _id');
 
                 if (user?.email) {
                     user.email_verified = userInfo.email_verified;
@@ -378,9 +382,12 @@ module.exports = {
                 );
             }
 
-            user.language = languageCode;
+            const newUser = await UserModel.findByIdAndUpdate(
+                user._id,
+                { language: languageCode },
+                { new: true },
+            ).select('-password');
 
-            const newUser = await user.save();
             return res
                 .status(STATUS_CODE.OK)
                 .json(
@@ -412,9 +419,13 @@ module.exports = {
                     ),
                 );
             }
-            user.languageTranslate = languageCode;
 
-            const newUser = await user.save();
+            const newUser = await UserModel.findByIdAndUpdate(
+                user._id,
+                { languageTranslate: languageCode },
+                { new: true },
+            ).select('-password');
+
             return res
                 .status(STATUS_CODE.OK)
                 .json(
@@ -431,284 +442,328 @@ module.exports = {
         }
     },
     resendVerifyEmail: async (req, res) => {
-        const user = await UserModel.findOne({ email: req.body.email }).select('-password');
+        try {
+            const user = await UserModel.findOne({ email: req.body.email }).select('-password');
 
-        if (!user) {
+            if (!user) {
+                return res
+                    .status(STATUS_CODE.BAD_REQUEST)
+                    .json(
+                        createResponse(
+                            null,
+                            STATUS_MESSAGE.USER_NOT_REGISTERED,
+                            MESSAGE_CODE.USER_NOT_REGISTERED,
+                            STATUS_CODE.BAD_REQUEST,
+                            false,
+                        ),
+                    );
+            }
+            const currentTimestamp = moment().unix();
+            const thresholdTimestamp = user.timeResendVerifyEmail + 120;
+            const remainingSeconds = thresholdTimestamp - currentTimestamp;
+
+            if (remainingSeconds > 0) {
+                return res
+                    .status(STATUS_CODE.BAD_REQUEST)
+                    .json(
+                        createResponse(
+                            remainingSeconds,
+                            'Please wait in ' + remainingSeconds,
+                            MESSAGE_CODE.PLEASE_WAIT,
+                            STATUS_CODE.BAD_REQUEST,
+                            false,
+                        ),
+                    );
+            }
+
+            if (user.email_verified) {
+                return res
+                    .status(STATUS_CODE.BAD_REQUEST)
+                    .json(
+                        createResponse(
+                            null,
+                            STATUS_MESSAGE.VERIFIED_EMAIL,
+                            MESSAGE_CODE.VERIFIED_EMAIL,
+                            STATUS_CODE.BAD_REQUEST,
+                            false,
+                        ),
+                    );
+            }
+
+            user.tokenEmailVerify = crypto.randomBytes(32).toString('hex');
+            user.timeResendVerifyEmail = moment().unix();
+            const newUser = await user.save();
+
+            const link = `${process.env.URL_CLIENT}/verify/${newUser.tokenEmailVerify}`;
+
+            const result = await sendEmail(newUser.email, 'Verify email', link);
+
+            if (!result) {
+                return res
+                    .status(STATUS_CODE.BAD_REQUEST)
+                    .json(
+                        createResponse(
+                            null,
+                            STATUS_MESSAGE.EMAIL_NOT_FOUND,
+                            MESSAGE_CODE.EMAIL_NOT_FOUND,
+                            STATUS_CODE.BAD_REQUEST,
+                            false,
+                        ),
+                    );
+            }
+
             return res
-                .status(STATUS_CODE.BAD_REQUEST)
+                .status(STATUS_CODE.OK)
                 .json(
                     createResponse(
                         null,
-                        STATUS_MESSAGE.USER_NOT_REGISTERED,
-                        MESSAGE_CODE.USER_NOT_REGISTERED,
-                        STATUS_CODE.BAD_REQUEST,
-                        false,
+                        STATUS_MESSAGE.RESEND_EMAIL_SUCCESSFULLY,
+                        MESSAGE_CODE.RESEND_EMAIL_SUCCESSFULLY,
+                        STATUS_CODE.OK,
+                        true,
                     ),
                 );
+        } catch (error) {
+            next(error);
         }
-        const currentTimestamp = moment().unix();
-        const thresholdTimestamp = user.timeResendVerifyEmail + 120;
-        const remainingSeconds = thresholdTimestamp - currentTimestamp;
-
-        if (remainingSeconds > 0) {
-            return res
-                .status(STATUS_CODE.BAD_REQUEST)
-                .json(
-                    createResponse(
-                        remainingSeconds,
-                        'Please wait in ' + remainingSeconds,
-                        MESSAGE_CODE.PLEASE_WAIT,
-                        STATUS_CODE.BAD_REQUEST,
-                        false,
-                    ),
-                );
-        }
-
-        if (user.email_verified) {
-            return res
-                .status(STATUS_CODE.BAD_REQUEST)
-                .json(
-                    createResponse(
-                        null,
-                        STATUS_MESSAGE.VERIFIED_EMAIL,
-                        MESSAGE_CODE.VERIFIED_EMAIL,
-                        STATUS_CODE.BAD_REQUEST,
-                        false,
-                    ),
-                );
-        }
-
-        user.tokenEmailVerify = crypto.randomBytes(32).toString('hex');
-        user.timeResendVerifyEmail = moment().unix();
-        const newUser = await user.save();
-
-        const link = `${process.env.URL_CLIENT}/verify/${newUser.tokenEmailVerify}`;
-
-        const result = await sendEmail(newUser.email, 'Verify email', link);
-
-        if (!result) {
-            return res
-                .status(STATUS_CODE.BAD_REQUEST)
-                .json(
-                    createResponse(
-                        null,
-                        STATUS_MESSAGE.EMAIL_NOT_FOUND,
-                        MESSAGE_CODE.EMAIL_NOT_FOUND,
-                        STATUS_CODE.BAD_REQUEST,
-                        false,
-                    ),
-                );
-        }
-
-        return res
-            .status(STATUS_CODE.OK)
-            .json(
-                createResponse(
-                    null,
-                    STATUS_MESSAGE.RESEND_EMAIL_SUCCESSFULLY,
-                    MESSAGE_CODE.RESEND_EMAIL_SUCCESSFULLY,
-                    STATUS_CODE.OK,
-                    true,
-                ),
-            );
     },
     verifyEmail: async (req, res) => {
-        const user = await UserModel.findOne({ tokenEmailVerify: req.body.token }).select('-password');
+        try {
+            const user = await UserModel.findOne({ tokenEmailVerify: req.body.token }).select('-password');
 
-        if (!user) {
-            return res
-                .status(STATUS_CODE.BAD_REQUEST)
-                .json(
-                    createResponse(
-                        null,
-                        STATUS_MESSAGE.TOKEN_INVALID,
-                        MESSAGE_CODE.TOKEN_INVALID,
-                        STATUS_CODE.BAD_REQUEST,
-                        false,
-                    ),
-                );
-        }
+            if (!user) {
+                return res
+                    .status(STATUS_CODE.BAD_REQUEST)
+                    .json(
+                        createResponse(
+                            null,
+                            STATUS_MESSAGE.TOKEN_INVALID,
+                            MESSAGE_CODE.TOKEN_INVALID,
+                            STATUS_CODE.BAD_REQUEST,
+                            false,
+                        ),
+                    );
+            }
 
-        if (user.email_verified) {
-            return res
-                .status(STATUS_CODE.BAD_REQUEST)
-                .json(
-                    createResponse(
-                        null,
-                        STATUS_MESSAGE.VERIFIED_EMAIL,
-                        MESSAGE_CODE.VERIFIED_EMAIL,
-                        STATUS_CODE.BAD_REQUEST,
-                        false,
-                    ),
-                );
-        }
+            if (user.email_verified) {
+                return res
+                    .status(STATUS_CODE.BAD_REQUEST)
+                    .json(
+                        createResponse(
+                            null,
+                            STATUS_MESSAGE.VERIFIED_EMAIL,
+                            MESSAGE_CODE.VERIFIED_EMAIL,
+                            STATUS_CODE.BAD_REQUEST,
+                            false,
+                        ),
+                    );
+            }
 
-        user.is_active = true;
-        user.email_verified = true;
-
-        const newUser = await user.save();
-
-        const accessToken = generateToken(newUser._id, process.env.ACCESS_TOKEN_KEY, process.env.EXPIRE_ACCESS_TOKEN);
-        const refreshToken = generateToken(
-            newUser._id,
-            process.env.REFRESH_TOKEN_KEY,
-            process.env.EXPIRE_REFRESH_TOKEN,
-        );
-        await client.set(String(newUser._id), refreshToken, {
-            PX: Number(process.env.EXPIRE_REFRESH_TOKEN_COOKIE),
-        });
-
-        return res.status(STATUS_CODE.OK).json(
-            createResponse(
-                {
-                    accessToken,
-                    refreshToken,
-                    maxAgeAt: Number(process.env.EXPIRE_ACCESS_TOKEN_COOKIE),
-                    maxAgeRt: Number(process.env.EXPIRE_REFRESH_TOKEN_COOKIE),
-                },
-                STATUS_MESSAGE.VERIFY_EMAIL_SUCCESSFULLY,
-                MESSAGE_CODE.VERIFY_EMAIL_SUCCESSFULLY,
-                STATUS_CODE.OK,
-                false,
-            ),
-        );
-    },
-    changePassword: async (req, res) => {
-        const isValid = user.checkPassword(req.body.oldPassword);
-        if (!isValid) {
-            return res
-                .status(STATUS_CODE.BAD_REQUEST)
-                .json(
-                    createResponse(
-                        null,
-                        STATUS_MESSAGE.INCORRECT_PASSWORD,
-                        MESSAGE_CODE.INCORRECT_PASSWORD,
-                        STATUS_CODE.BAD_REQUEST,
-                        false,
-                    ),
-                );
-        }
-
-        user.password = req.body.newPassword;
-        await user.save();
-
-        return res
-            .status(STATUS_CODE.OK)
-            .json(
-                createResponse(
-                    null,
-                    STATUS_MESSAGE.CHANGE_PASSWORD_SUCCESSFULLY,
-                    MESSAGE_CODE.CHANGE_PASSWORD_SUCCESSFULLY,
-                    STATUS_CODE.OK,
-                    true,
-                ),
-            );
-    },
-    forgotPassword: async (req, res) => {
-        const user = await UserModel.findOne({ email: req.body.email }).select('-password');
-        if (!user) {
-            return res
-                .status(STATUS_CODE.BAD_REQUEST)
-                .json(
-                    createResponse(
-                        null,
-                        STATUS_MESSAGE.USER_NOT_REGISTERED,
-                        MESSAGE_CODE.USER_NOT_REGISTERED,
-                        STATUS_CODE.BAD_REQUEST,
-                        false,
-                    ),
-                );
-        }
-
-        const currentTimestamp = moment().unix();
-        const thresholdTimestamp = user.timeResendForgotPassword + 120;
-        const remainingSeconds = thresholdTimestamp - currentTimestamp;
-
-        if (remainingSeconds > 0) {
-            return res
-                .status(STATUS_CODE.BAD_REQUEST)
-                .json(
-                    createResponse(
-                        remainingSeconds,
-                        'Please wait in ' + remainingSeconds,
-                        MESSAGE_CODE.PLEASE_WAIT,
-                        STATUS_CODE.BAD_REQUEST,
-                        false,
-                    ),
-                );
-        }
-
-        user.tokenVerifyForgotPassword = crypto.randomBytes(32).toString('hex');
-        user.timeResendForgotPassword = moment().unix();
-        const newUser = await user.save();
-
-        const link = `${process.env.URL_CLIENT}/login/forgot/${newUser.tokenVerifyForgotPassword}`;
-
-        const result = await sendEmail(newUser.email, 'Forgot password', link);
-
-        if (!result) {
-            return res
-                .status(STATUS_CODE.BAD_REQUEST)
-                .json(
-                    createResponse(
-                        null,
-                        STATUS_MESSAGE.EMAIL_NOT_FOUND,
-                        MESSAGE_CODE.EMAIL_NOT_FOUND,
-                        STATUS_CODE.BAD_REQUEST,
-                        false,
-                    ),
-                );
-        }
-
-        return res
-            .status(STATUS_CODE.OK)
-            .json(
-                createResponse(
-                    null,
-                    STATUS_MESSAGE.FORGOT_PASSWORD_SUCCESSFULLY,
-                    MESSAGE_CODE.FORGOT_PASSWORD_SUCCESSFULLY,
-                    STATUS_CODE.OK,
-                    true,
-                ),
-            );
-    },
-    verifyForgotPassword: async (req, res) => {
-        const user = await UserModel.findOne({ tokenVerifyForgotPassword: req.body.token });
-        if (!user) {
-            return res
-                .status(STATUS_CODE.BAD_REQUEST)
-                .json(
-                    createResponse(
-                        null,
-                        STATUS_MESSAGE.TOKEN_INVALID,
-                        MESSAGE_CODE.TOKEN_INVALID,
-                        STATUS_CODE.BAD_REQUEST,
-                        false,
-                    ),
-                );
-        }
-
-        user.password = req.body.newPassword;
-        user.tokenVerifyForgotPassword = null;
-
-        if (!user.email_verified) {
             user.is_active = true;
             user.email_verified = true;
-        }
 
-        await user.save();
+            const newUser = await user.save();
 
-        return res
-            .status(STATUS_CODE.OK)
-            .json(
+            const accessToken = generateToken(
+                newUser._id,
+                process.env.ACCESS_TOKEN_KEY,
+                process.env.EXPIRE_ACCESS_TOKEN,
+            );
+            const refreshToken = generateToken(
+                newUser._id,
+                process.env.REFRESH_TOKEN_KEY,
+                process.env.EXPIRE_REFRESH_TOKEN,
+            );
+            await client.set(String(newUser._id), refreshToken, {
+                PX: Number(process.env.EXPIRE_REFRESH_TOKEN_COOKIE),
+            });
+
+            return res.status(STATUS_CODE.OK).json(
                 createResponse(
-                    null,
-                    STATUS_MESSAGE.CHANGE_PASSWORD_SUCCESSFULLY,
-                    MESSAGE_CODE.CHANGE_PASSWORD_SUCCESSFULLY,
+                    {
+                        accessToken,
+                        refreshToken,
+                        maxAgeAt: Number(process.env.EXPIRE_ACCESS_TOKEN_COOKIE),
+                        maxAgeRt: Number(process.env.EXPIRE_REFRESH_TOKEN_COOKIE),
+                    },
+                    STATUS_MESSAGE.VERIFY_EMAIL_SUCCESSFULLY,
+                    MESSAGE_CODE.VERIFY_EMAIL_SUCCESSFULLY,
                     STATUS_CODE.OK,
-                    true,
+                    false,
                 ),
             );
+        } catch (error) {
+            next(error);
+        }
+    },
+    changePassword: async (req, res) => {
+        try {
+            const userId = req.user._id;
+            const newPassword = req.body.newPassword;
+
+            const user = await UserModel.findById(userId).select('password');
+            const isValid = user.checkPassword(req.body.oldPassword);
+
+            if (!isValid) {
+                return res
+                    .status(STATUS_CODE.BAD_REQUEST)
+                    .json(
+                        createResponse(
+                            null,
+                            STATUS_MESSAGE.INCORRECT_PASSWORD,
+                            MESSAGE_CODE.INCORRECT_PASSWORD,
+                            STATUS_CODE.BAD_REQUEST,
+                            false,
+                        ),
+                    );
+            }
+
+            const isValidNewPassword = user.checkPassword(newPassword);
+            if (isValidNewPassword) {
+                return res
+                    .status(STATUS_CODE.BAD_REQUEST)
+                    .json(
+                        createResponse(
+                            null,
+                            STATUS_MESSAGE.SAME_OLD_PASSWORD,
+                            MESSAGE_CODE.SAME_OLD_PASSWORD,
+                            STATUS_CODE.BAD_REQUEST,
+                            false,
+                        ),
+                    );
+            }
+
+            user.password = req.body.newPassword;
+            await user.save();
+
+            return res
+                .status(STATUS_CODE.OK)
+                .json(
+                    createResponse(
+                        null,
+                        STATUS_MESSAGE.CHANGE_PASSWORD_SUCCESSFULLY,
+                        MESSAGE_CODE.CHANGE_PASSWORD_SUCCESSFULLY,
+                        STATUS_CODE.OK,
+                        true,
+                    ),
+                );
+        } catch (error) {
+            next(error);
+        }
+    },
+    forgotPassword: async (req, res) => {
+        try {
+            const user = await UserModel.findOne({ email: req.body.email }).select('-password');
+            if (!user) {
+                return res
+                    .status(STATUS_CODE.BAD_REQUEST)
+                    .json(
+                        createResponse(
+                            null,
+                            STATUS_MESSAGE.USER_NOT_REGISTERED,
+                            MESSAGE_CODE.USER_NOT_REGISTERED,
+                            STATUS_CODE.BAD_REQUEST,
+                            false,
+                        ),
+                    );
+            }
+
+            const currentTimestamp = moment().unix();
+            const thresholdTimestamp = user.timeResendForgotPassword + 120;
+            const remainingSeconds = thresholdTimestamp - currentTimestamp;
+
+            if (remainingSeconds > 0) {
+                return res
+                    .status(STATUS_CODE.BAD_REQUEST)
+                    .json(
+                        createResponse(
+                            remainingSeconds,
+                            'Please wait in ' + remainingSeconds,
+                            MESSAGE_CODE.PLEASE_WAIT,
+                            STATUS_CODE.BAD_REQUEST,
+                            false,
+                        ),
+                    );
+            }
+
+            user.tokenVerifyForgotPassword = crypto.randomBytes(32).toString('hex');
+            user.timeResendForgotPassword = moment().unix();
+            const newUser = await user.save();
+
+            const link = `${process.env.URL_CLIENT}/login/forgot/${newUser.tokenVerifyForgotPassword}`;
+
+            const result = await sendEmail(newUser.email, 'Forgot password', link);
+
+            if (!result) {
+                return res
+                    .status(STATUS_CODE.BAD_REQUEST)
+                    .json(
+                        createResponse(
+                            null,
+                            STATUS_MESSAGE.EMAIL_NOT_FOUND,
+                            MESSAGE_CODE.EMAIL_NOT_FOUND,
+                            STATUS_CODE.BAD_REQUEST,
+                            false,
+                        ),
+                    );
+            }
+
+            return res
+                .status(STATUS_CODE.OK)
+                .json(
+                    createResponse(
+                        null,
+                        STATUS_MESSAGE.FORGOT_PASSWORD_SUCCESSFULLY,
+                        MESSAGE_CODE.FORGOT_PASSWORD_SUCCESSFULLY,
+                        STATUS_CODE.OK,
+                        true,
+                    ),
+                );
+        } catch (error) {
+            next(error);
+        }
+    },
+    verifyForgotPassword: async (req, res) => {
+        try {
+            const user = await UserModel.findOne({ tokenVerifyForgotPassword: req.body.token });
+            if (!user) {
+                return res
+                    .status(STATUS_CODE.BAD_REQUEST)
+                    .json(
+                        createResponse(
+                            null,
+                            STATUS_MESSAGE.TOKEN_INVALID,
+                            MESSAGE_CODE.TOKEN_INVALID,
+                            STATUS_CODE.BAD_REQUEST,
+                            false,
+                        ),
+                    );
+            }
+
+            user.password = req.body.newPassword;
+            user.tokenVerifyForgotPassword = null;
+
+            if (!user.email_verified) {
+                user.is_active = true;
+                user.email_verified = true;
+            }
+
+            await user.save();
+
+            return res
+                .status(STATUS_CODE.OK)
+                .json(
+                    createResponse(
+                        null,
+                        STATUS_MESSAGE.CHANGE_PASSWORD_SUCCESSFULLY,
+                        MESSAGE_CODE.CHANGE_PASSWORD_SUCCESSFULLY,
+                        STATUS_CODE.OK,
+                        true,
+                    ),
+                );
+        } catch (error) {
+            next(error);
+        }
     },
     logout: async (req, res, next) => {
         try {
