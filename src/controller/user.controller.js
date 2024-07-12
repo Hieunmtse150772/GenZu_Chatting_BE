@@ -86,11 +86,13 @@ module.exports = {
                 users: { $all: [id, req.user._id] },
                 status: 'active',
             });
-            const conversation = Conversation.find({
+            const conversation = await Conversation.find({
                 $and: [{ users: { $elemMatch: { $eq: id } } }, { users: { $elemMatch: { $eq: userId } } }],
-            });
+            })
+                .populate('users', '_id fullName email picture')
+                .populate('latestMessage');
 
-            res.status(200).json({
+            return res.status(200).json({
                 message: 'Search user successfully',
                 messageCode: 'search_user_successfully',
                 user,
