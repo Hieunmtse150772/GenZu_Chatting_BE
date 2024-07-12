@@ -11,6 +11,8 @@ const {
     verifyForgotPasswordBody,
     changeLanguageBody,
     verifyEmail,
+    refreshToken,
+    changeLanguageTranslateBody,
 } = require('@/validations');
 const verifyToken = require('@/middlewares/verifyToken.middleware');
 
@@ -19,7 +21,7 @@ router.post('/sign-up', validateBody(signUpBody), AuthController.signUp);
 router.get('/sign-in-google', AuthController.signInWithGoogle);
 router.get('/callback', AuthController.callBack);
 router.get('/profile', verifyToken, AuthController.profile);
-router.post('/refresh-token', AuthController.refreshToken);
+router.post('/refresh-token', validateBody(refreshToken), AuthController.refreshToken);
 router.delete('/logout', AuthController.logout);
 router.post('/resend-verify-email', AuthController.resendVerifyEmail);
 router.post('/verify-email', validateBody(verifyEmail), AuthController.verifyEmail);
@@ -32,6 +34,13 @@ router.patch(
     upload.single(),
     validateBody(changeLanguageBody),
     AuthController.changeLanguage,
+);
+router.patch(
+    '/update-language-translate',
+    verifyToken,
+    upload.single(),
+    validateBody(changeLanguageTranslateBody),
+    AuthController.changeLanguageTranslation,
 );
 
 module.exports = router;

@@ -16,4 +16,12 @@ module.exports = {
     ...groupValidator,
     ...messageValidator,
     ...userValidator,
+    eventValidators: {
+        'create group': groupValidator.createGroupBody,
+        'add member': groupValidator.addMemberGroupBody,
+        'delete member': groupValidator.deleteMemberGroupBody,
+        'update group': groupValidator.updateGroupBody,
+        'delete group': validateIdMongodb,
+        'new message': messageValidator.sendMessage2,
+    },
 };

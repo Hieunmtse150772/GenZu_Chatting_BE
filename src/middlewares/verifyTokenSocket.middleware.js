@@ -1,6 +1,6 @@
 const jwt = require('jsonwebtoken');
 
-const createResponse = require('@/utils/responseHelper');
+const { createResponse } = require('@/utils/responseHelper');
 const User = require('@/model/user.model');
 const { STATUS_MESSAGE, MESSAGE_CODE, STATUS_CODE } = require('@/enums/response');
 

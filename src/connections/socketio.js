@@ -12,11 +12,13 @@ const {
     updateGroupChat,
     deleteGroupChat,
 } = require('@/controller/group_chat.controller');
+const { sendSingleMessage } = require('@/controller/message2.controller');
 
-const createResponse = require('@/utils/responseHelper');
-const { MESSAGE_CODE, STATUS_CODE } = require('@/enums/response');
-const { eventValidators } = require('@/enums/validate');
+const { eventValidators } = require('@/validations');
 const verifyTokenSocketMiddleware = require('@/middlewares/verifyTokenSocket.middleware');
+
+const { createResponse } = require('@/utils/responseHelper');
+const { MESSAGE_CODE, STATUS_CODE } = require('@/enums/response');
 
 const app = express();
 const server = http.createServer(app);
@@ -95,6 +97,11 @@ io.on('connection', async (socket) => {
         deleteGroupChat(data, socket);
     });
 
+    // send message
+    socket.on('new message1', (data) => {
+        sendSingleMessage(data, socket);
+    });
+
     //Check is read friend request
     socket.on('read request', async (newRequest) => {
         const newRequestId = newRequest._id;
@@ -122,16 +129,12 @@ io.on('connection', async (socket) => {
 
             const isDuplicate = user.socketId.some((item) => item === socket.id);
             if (isDuplicate) {
-                console.log('The user id duplicate');
+                console.log('The socket id duplicate');
             } else {
                 user.socketId.push = socket.id;
                 is_online = true;
 
-                const newUser = await user.save();
-
-                if (newUser) {
-                    console.log('The user is online');
-                }
+                await user.save();
             }
         } catch (error) {
             console.log(error);
@@ -294,10 +297,6 @@ io.on('connection', async (socket) => {
             console.log(error);
         }
     });
-    // socket.off('setup', (userData) => {
-    //     console.log('USER DISCONNECTED');
-    //     socket.leave(userData._id);
-    // });
 });
 
 module.exports = { app, io, server };

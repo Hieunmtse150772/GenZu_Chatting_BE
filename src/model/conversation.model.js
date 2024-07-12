@@ -16,7 +16,7 @@ const ConversationSchema = mongoose.Schema(
         },
         groupAdmin: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
         deleteBy: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
-        blockUsers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+        blockUsers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User', default: [] }],
         status: { type: mongoose.Schema.Types.ObjectId },
     },
     {

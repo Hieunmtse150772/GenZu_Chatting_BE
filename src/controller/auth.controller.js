@@ -6,7 +6,7 @@ const UserModel = require('@/model/user.model');
 const { generateToken, verifyRefreshToken, sendEmail } = require('@/utils/functions');
 const client = require('@/connections/redis');
 const CONFIG = require('@/config');
-const createResponse = require('@/utils/responseHelper');
+const { createResponse } = require('@/utils/responseHelper');
 const { STATUS_CODE, STATUS_MESSAGE, MESSAGE_CODE } = require('@/enums/response');
 
 const google = require('googleapis').google;
@@ -290,7 +290,7 @@ module.exports = {
     },
     refreshToken: async (req, res, next) => {
         try {
-            const decoded = verifyRefreshToken(req.cookies.refreshToken, process.env.REFRESH_TOKEN_KEY);
+            const decoded = verifyRefreshToken(req.body.refreshToken, process.env.REFRESH_TOKEN_KEY);
 
             const value = await client.get(decoded.data);
 
@@ -379,6 +379,40 @@ module.exports = {
             }
 
             user.language = languageCode;
+
+            const newUser = await user.save();
+            return res
+                .status(STATUS_CODE.OK)
+                .json(
+                    createResponse(
+                        newUser,
+                        STATUS_MESSAGE.CHANGE_LANGUAGE_CODE_SUCCESSFULLY,
+                        MESSAGE_CODE.CHANGE_LANGUAGE_CODE_SUCCESSFULLY,
+                        STATUS_CODE.OK,
+                        true,
+                    ),
+                );
+        } catch (error) {
+            next(error);
+        }
+    },
+    changeLanguageTranslation: async (req, res, next) => {
+        const user = req.user;
+        const languageCode = req.body.languageTranslate;
+
+        try {
+            if (user.languageTranslate === languageCode) {
+                res.status(STATUS_CODE.BAD_REQUEST).json(
+                    createResponse(
+                        null,
+                        STATUS_MESSAGE.SAME_LANGUAGE_CODE,
+                        MESSAGE_CODE.SAME_LANGUAGE_CODE,
+                        STATUS_CODE.BAD_REQUEST,
+                        false,
+                    ),
+                );
+            }
+            user.languageTranslate = languageCode;
 
             const newUser = await user.save();
             return res

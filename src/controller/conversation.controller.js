@@ -6,7 +6,7 @@ const Message = require('../model/message.model');
 const User = require('../model/user.model');
 const MESSAGE_CODE = require('@/enums/response/messageCode.enum');
 const STATUS_MESSAGE = require('@/enums/response/statusMessage.enum');
-const createResponse = require('@/utils/responseHelper');
+const { createResponse } = require('@/utils/responseHelper');
 const { STATUS_CODE } = require('@/enums/response');
 
 module.exports = {
@@ -126,7 +126,6 @@ module.exports = {
     },
     createGroupConversation: async (req, res, next) => {
         const userId = req.user._id;
-
         if (!req.body.users || !req.body.name) {
             return res.status(400).send({ message: 'Please Fill all the field!' });
         }

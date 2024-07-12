@@ -36,16 +36,16 @@ const STATUS_MESSAGE = {
     SEND_MESSAGE_FAIL: 'Send message failed',
 
     // Group chat
-    CREATE_GROUP_SUCCESSFULLY: 'Create group successfully',
-    UPDATE_GROUP_SUCCESSFULLY: 'Update group successfully',
-    GROUP_NOT_FOUND: 'Group chat not found',
+    CREATE_GROUP_SUCCESSFULLY: 'Create conversation successfully',
+    UPDATE_GROUP_SUCCESSFULLY: 'Update conversation successfully',
+    GROUP_NOT_FOUND: 'Conversation chat not found',
     MEMBER_NOT_FOUND: 'Member not found',
-    DELETE_GROUP_SUCCESS: 'Delete group successfully',
-    ADD_MEMBER_TO_GROUP_SUCCESS: 'Add member to group successfully',
-    MEMBER_ALREADY_EXIST_IN_GROUP: 'Member already exist in group',
-    DELETE_MEMBER_SUCCESS: 'Delete member from group successfully',
+    DELETE_GROUP_SUCCESS: 'Delete conversation successfully',
+    ADD_MEMBER_TO_GROUP_SUCCESS: 'Add member to conversation successfully',
+    MEMBER_ALREADY_EXIST_IN_GROUP: 'Member already exist in conversation',
+    DELETE_MEMBER_SUCCESS: 'Delete member from conversation successfully',
     EXCHANGE_ADMIN_ID_REQUIRED: 'Exchange admin id required',
-    USER_NOT_IN_GROUP: 'User not in the group',
+    USER_NOT_IN_GROUP: 'User not in the conversation',
 
     //User
     CREATE_USER_SUCCESS: 'Create user successfully',
@@ -72,6 +72,7 @@ const STATUS_MESSAGE = {
     REDO_CONVERSATION_HISTORY_SUCCESS: 'Redo conversation history success',
     UPDATE_CONVERSATION_BACKGROUND_SUCCESS: 'Update conversation background success',
     UPDATE_CONVERSATION_AVATAR_SUCCESS: 'Update conversation avatar success',
+    USER_WAS_BLOCKED: 'User was blocked',
     NO_PERMISSION_ACCESS_CONVERSATION: 'You have no permission to access this conversation',
 
     //Friend

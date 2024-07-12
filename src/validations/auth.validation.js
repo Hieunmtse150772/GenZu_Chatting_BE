@@ -1,5 +1,7 @@
 const Joi = require('joi');
 
+const { languageCodes, languageTranslationCodes } = require('@/enums/validates');
+
 const signUpBody = Joi.object({
     fullName: Joi.string().min(2).required(),
     address: Joi.string().min(2),
@@ -21,7 +23,15 @@ const changePasswordBody = Joi.object({
 });
 
 const changeLanguageBody = Joi.object({
-    language: Joi.string().valid('vn', 'en', 'jp').required(),
+    language: Joi.string()
+        .valid(...languageCodes)
+        .required(),
+});
+
+const changeLanguageTranslateBody = Joi.object({
+    languageTranslate: Joi.string()
+        .valid(...languageTranslationCodes)
+        .required(),
 });
 
 const forgotPasswordBody = Joi.object({
@@ -30,6 +40,10 @@ const forgotPasswordBody = Joi.object({
 
 const verifyEmail = Joi.object({
     token: Joi.string().required(),
+});
+
+const refreshToken = Joi.object({
+    refreshToken: Joi.string().required(),
 });
 
 const verifyForgotPasswordBody = Joi.object({
@@ -44,5 +58,7 @@ module.exports = {
     forgotPasswordBody,
     changeLanguageBody,
     verifyForgotPasswordBody,
+    changeLanguageTranslateBody,
     verifyEmail,
+    refreshToken,
 };

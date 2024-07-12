@@ -12,6 +12,38 @@ module.exports = {
         try {
             const userId = req.user._id;
             const conversation_id = req.params.id;
+
+            const conversation = await Conversation.findById(conversation_id);
+
+            if (!conversation) {
+                return res
+                    .status(STATUS_CODE.NOT_FOUND)
+                    .json(
+                        createResponse(
+                            null,
+                            STATUS_MESSAGE.GROUP_NOT_FOUND,
+                            MESSAGE_CODE.GROUP_NOT_FOUND,
+                            STATUS_CODE.NOT_FOUND,
+                            false,
+                        ),
+                    );
+            }
+
+            const isExistMember = conversation.users.some((item) => item.equals(userId));
+            if (!isExistMember) {
+                return res
+                    .status(STATUS_CODE.NOT_FOUND)
+                    .json(
+                        createResponse(
+                            null,
+                            STATUS_MESSAGE.MEMBER_NOT_FOUND,
+                            MESSAGE_CODE.MEMBER_NOT_FOUND,
+                            STATUS_CODE.FORBIDDEN,
+                            false,
+                        ),
+                    );
+            }
+
             const message = await Message.find({
                 conversation: conversation_id,
                 status: 'active',
@@ -64,7 +96,6 @@ module.exports = {
                 const { user, ...otherMessageInfo } = Messages._doc;
                 return {
                     ...otherMessageInfo,
-                    message: Messages._doc.status === 'recalled' ? 'Message has been recalled' : Messages._doc.message,
                     request: {
                         type: 'Get',
                         description: '',
@@ -110,12 +141,12 @@ module.exports = {
             });
         }
     },
-    sendSingleMessage: async (req, res, next) => {
-        const { message, messageType, isSpoiled, styles, emojiBy } = req.body;
-        const userId = req.user._id;
-        const conversationId = req.query.id;
+    sendMessage: async (data, socket) => {
+        const userId = socket.user._id;
+        const { message, messageType, isSpoiled, styles, emojiBy, conversationId } = data;
+
         var messageCreated = {
-            sender: req.user._id,
+            sender: userId,
             message: message,
             conversation: conversationId,
             isSpoiled: isSpoiled,
@@ -127,29 +158,47 @@ module.exports = {
         try {
             const conversation = await Conversation.findOne({ _id: conversationId });
             if (!conversation) {
+                return socket.emit(
+                    'response',
+                    createResponse(
+                        null,
+                        STATUS_MESSAGE.CONVERSATION_NOT_FOUND,
+                        MESSAGE_CODE.CONVERSATION_NOT_FOUND,
+                        false,
+                    ),
+                );
+            }
+
+            const isUserAlreadyExist = conversation.users.find((item) => item.equals(userId));
+            if (!isUserAlreadyExist) {
                 return res
-                    .status(404)
+                    .status(STATUS_CODE.FORBIDDEN)
                     .json(
                         createResponse(
                             null,
-                            STATUS_MESSAGE.CONVERSATION_NOT_FOUND,
-                            MESSAGE_CODE.CONVERSATION_NOT_FOUND,
+                            STATUS_MESSAGE.USER_NOT_IN_GROUP,
+                            MESSAGE_CODE.USER_NOT_IN_GROUP,
+                            STATUS_CODE.FORBIDDEN,
                             false,
                         ),
                     );
             }
-            if (!conversation.users.includes(userId)) {
+
+            const isUserBlocked = conversation.blockUsers.some((item) => item.equals(userId));
+            if (isUserBlocked) {
                 return res
-                    .status(400)
+                    .status(STATUS_CODE.FORBIDDEN)
                     .json(
                         createResponse(
                             null,
-                            STATUS_MESSAGE.NO_PERMISSION_SEND_MESSAGE,
-                            MESSAGE_CODE.NO_PERMISSION_SEND_MESSAGE,
+                            STATUS_MESSAGE.USER_WAS_BLOCKED,
+                            MESSAGE_CODE.USER_WAS_BLOCKED,
+                            STATUS_CODE.FORBIDDEN,
                             false,
                         ),
                     );
             }
+
             var newMessage = await Message.create(messageCreated);
             newMessage = await newMessage.populate('sender', 'fullName picture email');
             newMessage = await newMessage.populate('conversation');
@@ -258,6 +307,7 @@ module.exports = {
     },
     recallMessage: async (req, res, next) => {
         const messageId = req.query.id;
+        console.log('messageId: ', messageId);
         const userId = req.user._id;
         try {
             const message = await Message.findOne({ _id: messageId });
@@ -274,14 +324,7 @@ module.exports = {
                         ),
                     );
             }
-            let messageUpdate = await Message.findByIdAndUpdate(
-                { _id: messageId },
-                { status: 'recalled' },
-                { new: true },
-            );
-            if (messageUpdate.status === 'recalled') {
-                messageUpdate.message = 'Message has been recalled';
-            }
+            const messageUpdate = await Message.findByIdAndUpdate({ _id: messageId }, { status: 'recalled' });
             return res
                 .status(200)
                 .json(
@@ -349,6 +392,7 @@ module.exports = {
         }
         try {
             const emoji = await Emoji.findOne({ _id: id });
+            console.log('emoji: ', emoji);
             if (!emoji) {
                 return res.status(200).json({
                     message: 'Emoji has been remove',
