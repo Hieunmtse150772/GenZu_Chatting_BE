@@ -62,6 +62,8 @@ const STATUS_MESSAGE = {
     EDIT_MESSAGE_SUCCESS: 'Edit message successfully',
     MESSAGE_NOT_FOUND: 'Message not found',
     MESSAGE_TOO_OLD_TO_EDIT: 'Message too old to edit (More than 30p)',
+    NO_PERMISSION_SEND_MESSAGE: 'You have no permission to send message in this conversation',
+
     //Conversation
     REMOVE_CONVERSATION_SUCCESS: 'Remove conversation success',
     CONVERSATION_NOT_FOUND: 'Conversation not found',
@@ -71,6 +73,7 @@ const STATUS_MESSAGE = {
     UPDATE_CONVERSATION_BACKGROUND_SUCCESS: 'Update conversation background success',
     UPDATE_CONVERSATION_AVATAR_SUCCESS: 'Update conversation avatar success',
     USER_WAS_BLOCKED: 'User was blocked',
+    NO_PERMISSION_ACCESS_CONVERSATION: 'You have no permission to access this conversation',
 
     //Friend
     FRIEND_REQUEST_SENT_SUCCESS: 'Friend request sent',

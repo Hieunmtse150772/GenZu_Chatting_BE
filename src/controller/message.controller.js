@@ -112,6 +112,7 @@ module.exports = {
     },
     sendSingleMessage: async (req, res, next) => {
         const { message, messageType, isSpoiled, styles, emojiBy } = req.body;
+        const userId = req.user._id;
         const conversationId = req.query.id;
         var messageCreated = {
             sender: req.user._id,
@@ -133,6 +134,18 @@ module.exports = {
                             null,
                             STATUS_MESSAGE.CONVERSATION_NOT_FOUND,
                             MESSAGE_CODE.CONVERSATION_NOT_FOUND,
+                            false,
+                        ),
+                    );
+            }
+            if (!conversation.users.includes(userId)) {
+                return res
+                    .status(400)
+                    .json(
+                        createResponse(
+                            null,
+                            STATUS_MESSAGE.NO_PERMISSION_SEND_MESSAGE,
+                            MESSAGE_CODE.NO_PERMISSION_SEND_MESSAGE,
                             false,
                         ),
                     );
@@ -245,7 +258,6 @@ module.exports = {
     },
     recallMessage: async (req, res, next) => {
         const messageId = req.query.id;
-        console.log('messageId: ', messageId);
         const userId = req.user._id;
         try {
             const message = await Message.findOne({ _id: messageId });
@@ -337,7 +349,6 @@ module.exports = {
         }
         try {
             const emoji = await Emoji.findOne({ _id: id });
-            console.log('emoji: ', emoji);
             if (!emoji) {
                 return res.status(200).json({
                     message: 'Emoji has been remove',
