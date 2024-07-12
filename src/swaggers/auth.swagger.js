@@ -1,4 +1,4 @@
-const { languageCode } = require('@/enums/validate');
+const { languageCodes, languageTranslationCodes } = require('@/enums/validates');
 
 const authSwagger = {
     '/auth/sign-up': {
@@ -110,6 +110,21 @@ const authSwagger = {
         post: {
             tags: ['Auth'],
             description: 'Refresh token for access',
+            requestBody: {
+                content: {
+                    'application/json': {
+                        schema: {
+                            type: 'object',
+                            properties: {
+                                refreshToken: {
+                                    description: 'Refresh token of the user',
+                                    type: 'string',
+                                },
+                            },
+                        },
+                    },
+                },
+            },
             responses: {
                 200: {
                     description: 'Refresh token successfully',
@@ -254,8 +269,8 @@ const authSwagger = {
                                 language: {
                                     description: 'Language code',
                                     type: 'string',
-                                    enum: languageCode,
-                                    default: 'vn',
+                                    enum: languageCodes,
+                                    default: 'vi',
                                 },
                             },
                         },
@@ -264,7 +279,43 @@ const authSwagger = {
             },
             responses: {
                 200: {
-                    description: 'Change password successfully',
+                    description: 'Change language code successfully',
+                    content: {
+                        'application/json': {},
+                    },
+                },
+            },
+        },
+    },
+    '/auth/update-language-translate': {
+        patch: {
+            tags: ['Auth'],
+            description: 'Change language translate of user',
+            security: [
+                {
+                    accessToken: [],
+                },
+            ],
+            requestBody: {
+                content: {
+                    'multipart/form-data': {
+                        schema: {
+                            type: 'object',
+                            properties: {
+                                languageTranslate: {
+                                    description: 'Language translate code',
+                                    type: 'string',
+                                    enum: languageTranslationCodes,
+                                    default: 'vi',
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+            responses: {
+                200: {
+                    description: 'Change language translate code successfully',
                     content: {
                         'application/json': {},
                     },

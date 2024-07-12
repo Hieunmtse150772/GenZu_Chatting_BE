@@ -6,7 +6,7 @@ const Message = require('../model/message.model');
 const User = require('../model/user.model');
 const MESSAGE_CODE = require('@/enums/response/messageCode.enum');
 const STATUS_MESSAGE = require('@/enums/response/statusMessage.enum');
-const createResponse = require('@/utils/responseHelper');
+const { createResponse } = require('@/utils/responseHelper');
 const { STATUS_CODE } = require('@/enums/response');
 
 module.exports = {
@@ -44,8 +44,6 @@ module.exports = {
         if (isChat.length > 0) {
             res.send(isChat[0]);
         } else {
-            console.log('user: ', res);
-
             var chatData = {
                 chatName: 'sender',
                 isGroupChat: false,
@@ -104,7 +102,6 @@ module.exports = {
     },
     fetchConversation: async (req, res, next) => {
         try {
-            console.log('userId: ', req.user._id);
             Conversation.find({ users: { $elemMatch: { $eq: req.user._id } } })
                 .populate('users', 'email fullName picture is_online offline_at')
                 .populate('groupAdmin', '-password')
@@ -129,8 +126,6 @@ module.exports = {
     },
     createGroupConversation: async (req, res, next) => {
         const userId = req.user._id;
-        console.log('userId: ', userId);
-
         if (!req.body.users || !req.body.name) {
             return res.status(400).send({ message: 'Please Fill all the field!' });
         }

@@ -3,7 +3,7 @@ const { ObjectId } = require('mongodb');
 const Conversation = require('../model/conversation.model');
 const Message = require('../model/message.model');
 const { STATUS_CODE, STATUS_MESSAGE, MESSAGE_CODE } = require('@/enums/response');
-const createResponse = require('@/utils/responseHelper');
+const { createResponse, responseNotificationSocket } = require('@/utils/responseHelper');
 
 module.exports = {
     createGroupChat: async (data, socket) => {
@@ -23,7 +23,7 @@ module.exports = {
             });
 
             groupChat.users.forEach((item) => {
-                socket.in(item).emit('request join group', groupChat.id);
+                socket.in(item).emit('notification', responseNotificationSocket('join group', groupChat._id));
             });
             users.forEach(async (item) => {
                 latestMessage = await Message.create({
@@ -36,8 +36,9 @@ module.exports = {
                 });
             });
             const fullGroupChatInfo = await Conversation.findById(groupChat._id)
-                .populate('users', 'picture fullName _id email')
-                .populate('groupAdmin', 'picture fullName _id email');
+                .populate('users', 'picture fullName _id email is_online offline_at')
+                .populate('groupAdmin', 'picture fullName _id email is_online offline_at');
+            socket.join(groupChat._id);
 
             return socket
                 .in(groupChat._id)
@@ -67,6 +68,8 @@ module.exports = {
     addMemberGroupChat: async (data, socket) => {
         const groupId = data.groupId;
         const newUsers = data.users;
+        const userId = socket.user._id;
+        let latestMessage;
 
         try {
             const group = await Conversation.findById(groupId);
@@ -101,8 +104,19 @@ module.exports = {
             }
 
             group.users.push(...newUsers);
-
             const newGroup = await group.save();
+
+            newUsers.forEach(async (item) => {
+                latestMessage = await Message.create({
+                    sender: userId,
+                    message: 'add_to_group',
+                    conversation: group._id,
+                    status: 'active',
+                    affected_user_id: item,
+                    message_type: 'notification',
+                });
+                socket.in(item).emit('notification', responseNotificationSocket('join group', group._id));
+            });
 
             return socket
                 .in(newGroup._id)

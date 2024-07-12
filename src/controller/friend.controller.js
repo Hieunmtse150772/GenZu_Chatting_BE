@@ -3,7 +3,7 @@ const MESSAGE = require('@/enums/response/statusMessage.enum');
 const FriendRequest = require('@/model/friendRequest.model');
 const FriendShip = require('@/model/friendShip.model');
 const MESSAGE_CODE = require('@/enums/response/messageCode.enum');
-const createResponse = require('@/utils/responseHelper');
+const { createResponse } = require('@/utils/responseHelper');
 const STATUS_MESSAGE = require('@/enums/response/statusMessage.enum');
 const { STATUS_CODE } = require('@/enums/response');
 const Conversation = require('@/model/conversation.model');
@@ -19,12 +19,10 @@ module.exports = {
                 });
             }
             // const senderId = req.user._id;
-            console.log('userId: ', userId);
             var friendList = await FriendShip.find({
                 users: userId,
                 status: 'active',
             }).populate('users', 'fullName picture email is_online offline_at');
-            console.log('req.user._id: ', req.user._id);
             var conversations = await Conversation.find({
                 isGroupChat: false,
                 $and: [{ users: { $elemMatch: { $eq: userId } } }],

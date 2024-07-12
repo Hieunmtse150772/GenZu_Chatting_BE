@@ -8,4 +8,14 @@ const createResponse = (data, message, messageCode, status, success) => {
     };
 };
 
-module.exports = createResponse;
+const responseNotificationSocket = (action, data) => {
+    return {
+        action,
+        data,
+    };
+};
+
+module.exports = {
+    createResponse,
+    responseNotificationSocket,
+};
