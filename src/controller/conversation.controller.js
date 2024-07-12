@@ -235,6 +235,7 @@ module.exports = {
     updateConversationBackground: async (req, res, next) => {
         const conversationId = req.query.id;
         const background = req.body.background;
+        const { url, backgroundType } = background;
         const userId = req.user._id;
         try {
             const users = await Conversation.findOne({ _id: conversationId }).select('users');
@@ -252,7 +253,7 @@ module.exports = {
             }
             const conversationUpdate = await Conversation.findByIdAndUpdate(
                 { _id: conversationId },
-                { background: background },
+                { background: { url: url, backgroundType: backgroundType } },
                 { new: true },
             );
             return res

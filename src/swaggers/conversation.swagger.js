@@ -135,7 +135,17 @@ const conversationSwagger = {
                             properties: {
                                 background: {
                                     description: 'Url của ảnh nền hội thoại',
-                                    type: 'string',
+                                    type: 'object',
+                                    properties: {
+                                        url: {
+                                            type: 'string',
+                                            example: '#ffff',
+                                        },
+                                        backgroundType: {
+                                            type: 'string',
+                                            example: 'color',
+                                        },
+                                    },
                                 },
                             },
                         },

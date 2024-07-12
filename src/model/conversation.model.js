@@ -7,7 +7,10 @@ const ConversationSchema = mongoose.Schema(
     {
         chatName: { type: String, trim: true },
         avatar: { type: String, default: null },
-        background: { type: String, default: null },
+        background: {
+            url: { type: String, default: null },
+            backgroundType: { type: String, default: '#FFFFF', enum: ['color', 'image'] },
+        },
         isGroupChat: { type: Boolean, default: false },
         users: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User', default: [] }],
         latestMessage: {
