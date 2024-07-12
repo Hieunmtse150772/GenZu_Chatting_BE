@@ -61,7 +61,8 @@ module.exports = async function (req, res, next) {
                     path: 'sender',
                     select: 'fullName _id',
                 },
-            });
+            })
+            .populate('replyMessage', '_id sender message messageType');
         // console.log('query: ', query);
         // query = query.map((list) => {
         //     list, (list.message = list.message.replace(/<br>/g, '\n'));

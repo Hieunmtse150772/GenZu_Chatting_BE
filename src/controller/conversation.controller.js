@@ -42,7 +42,15 @@ module.exports = {
         });
 
         if (isChat.length > 0) {
-            res.send(isChat[0]);
+            res.status(200).json(
+                createResponse(
+                    isChat[0],
+                    STATUS_MESSAGE.CONVERSATION_ACCESS_SUCCESS,
+                    MESSAGE_CODE.CONVERSATION_ACCESS_SUCCESS,
+                    STATUS_CODE.OK,
+                    true,
+                ),
+            );
         } else {
             var chatData = {
                 chatName: 'sender',
@@ -54,11 +62,11 @@ module.exports = {
                 const FullChat = await Conversation.findOne({
                     _id: createdChat._id,
                 }).populate('users', '-password');
-                res.status(200).json(
+                res.status(201).json(
                     createResponse(
                         FullChat,
-                        STATUS_MESSAGE.CONVERSATION_ACCESS_SUCCESS,
-                        MESSAGE_CODE.CONVERSATION_ACCESS_SUCCESS,
+                        STATUS_MESSAGE.CONVERSATION_CREATE_SUCCESS,
+                        MESSAGE_CODE.CONVERSATION_CREATE_SUCCESS,
                         STATUS_CODE.OK,
                         true,
                     ),

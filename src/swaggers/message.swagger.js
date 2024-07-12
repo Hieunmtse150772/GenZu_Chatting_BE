@@ -204,6 +204,10 @@ const messageSwagger = {
                                     description: 'Type of message',
                                     type: 'string',
                                 },
+                                replyMessage: {
+                                    description: 'Id of message you want to reply',
+                                    type: 'string',
+                                },
                                 emojiBy: {
                                     description: 'Emoji by users',
                                     type: 'array',
