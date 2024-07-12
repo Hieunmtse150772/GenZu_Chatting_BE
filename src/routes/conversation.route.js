@@ -10,12 +10,20 @@ const {
     validateIdMongodb,
     addMemberGroupBody,
     deleteMemberGroupBody,
+    updateBackgroundConversation,
 } = require('@/validations');
 
 router.get('/', verifyToken, ConversationController.fetchConversation);
 router.post('/', verifyToken, ConversationController.accessConversation);
 router.patch('/', verifyToken, validateQuery(validateIdMongodb), ConversationController.redoHistoryConversation);
 router.delete('/', verifyToken, validateQuery(validateIdMongodb), ConversationController.removeHistoryConversation);
+router.patch(
+    '/background',
+    verifyToken,
+    validateQuery(validateIdMongodb),
+    validateBody(updateBackgroundConversation),
+    ConversationController.updateConversationBackground,
+);
 
 router.post('/group', verifyToken, validateBody(createGroupBody), GroupChatController.createGroupChat);
 router.patch(

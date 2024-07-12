@@ -117,6 +117,13 @@ module.exports = {
                     //   messageCode: 'get_conversations_successfully',
                     //   data: results,
                     // });
+                    results = results.map((conversation) => {
+                        console.log('conversation: ', conversation);
+                        if (conversation.latestMessage && conversation.latestMessage.status === 'recalled') {
+                            conversation.latestMessage.message = 'This message has been recalled';
+                        }
+                        return conversation;
+                    });
                     res.status(200).send(results);
                 });
         } catch (error) {
@@ -228,20 +235,34 @@ module.exports = {
     },
     updateConversationBackground: async (req, res, next) => {
         const conversationId = req.query.id;
-        const background = req.body.url;
+        const background = req.body.background;
         const userId = req.user._id;
         try {
+            const users = await Conversation.findOne({ _id: conversationId }).select('users');
+            if (!users.users.includes(userId)) {
+                return res
+                    .status(400)
+                    .json(
+                        createResponse(
+                            null,
+                            STATUS_MESSAGE.NO_PERMISSION_UPDATE_BACKGROUND,
+                            MESSAGE_CODE.NO_PERMISSION_UPDATE_BACKGROUND,
+                            false,
+                        ),
+                    );
+            }
             const conversationUpdate = await Conversation.findByIdAndUpdate(
                 { _id: conversationId },
                 { background: background },
+                { new: true },
             );
             return res
-                .status(201)
+                .status(200)
                 .json(
                     createResponse(
                         conversationUpdate,
-                        STATUS_MESSAGE.UPDATE_EMOJI_MESSAGE_SUCCESS,
-                        MESSAGE_CODE.UPDATE_CONVERSATION_BACKGROUND_SUCCESS,
+                        STATUS_MESSAGE.UPDATE_BACKGROUND_CONVERSATION_SUCCESS,
+                        MESSAGE_CODE.UPDATE_BACKGROUND_CONVERSATION_SUCCESS,
                         STATUS_CODE.CREATED,
                         true,
                     ),

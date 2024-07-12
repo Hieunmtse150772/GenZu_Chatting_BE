@@ -75,7 +75,8 @@ const STATUS_MESSAGE = {
     UPDATE_CONVERSATION_AVATAR_SUCCESS: 'Update conversation avatar success',
     USER_WAS_BLOCKED: 'User was blocked',
     NO_PERMISSION_ACCESS_CONVERSATION: 'You have no permission to access this conversation',
-
+    UPDATE_BACKGROUND_CONVERSATION_SUCCESS: 'Update background conversation success',
+    NO_PERMISSION_UPDATE_BACKGROUND: 'You have no permission to update background',
     //Friend
     FRIEND_REQUEST_SENT_SUCCESS: 'Friend request sent',
     FRIEND_REQUEST_SENT_FAIL: 'Friend request sent failed',
