@@ -37,7 +37,7 @@ module.exports = async function (req, res, next) {
             searchQuery = { ...searchQuery, _id: { $gte: req.query.messageId } };
         }
         const conversation = await Conversation.findOne({ _id: conversation_id });
-        if (!conversation.users.includes(userId)) {
+        if (!conversation?.users?.includes(userId)) {
             res.status(400).json(
                 createResponse(
                     null,
