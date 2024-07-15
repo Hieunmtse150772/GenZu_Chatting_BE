@@ -107,6 +107,36 @@ const conversationSwagger = {
             },
         },
     },
+    '/conversations/{id}': {
+        get: {
+            tags: ['Conversation'],
+            description: 'Get conversations by id',
+            security: [
+                {
+                    accessToken: [],
+                },
+            ],
+            parameters: [
+                {
+                    name: 'id',
+                    in: 'path',
+                    description: 'Id of conversation',
+                    schema: {
+                        type: 'string',
+                        example: '6679c40ab0528a3618e7e646',
+                    },
+                },
+            ],
+            responses: {
+                200: {
+                    description: 'Get conversation by id successfully',
+                    content: {
+                        'application/json': {},
+                    },
+                },
+            },
+        },
+    },
     '/conversations/background': {
         patch: {
             tags: ['Conversation'],

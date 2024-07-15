@@ -180,6 +180,99 @@ module.exports = {
             next(error);
         }
     },
+    sendMessage: async (data, socket) => {
+        const userId = socket.user._id;
+        const { message, messageType, isSpoiled, styles, emojiBy, conversationId } = data;
+        var messageCreated = {
+            sender: userId,
+            message: message,
+            conversation: conversationId,
+            isSpoiled: isSpoiled,
+            status: 'active',
+            messageType: messageType,
+            styles: styles,
+            emojiBy: emojiBy,
+        };
+        try {
+            const conversation = await Conversation.findOne({ _id: conversationId });
+            if (!conversation) {
+                return socket.emit(
+                    'response send message',
+                    createResponse(
+                        null,
+                        STATUS_MESSAGE.CONVERSATION_NOT_FOUND,
+                        MESSAGE_CODE.CONVERSATION_NOT_FOUND,
+                        false,
+                    ),
+                );
+            }
+
+            const isUserAlreadyExist = conversation.users.find((item) => item.equals(userId));
+            if (!isUserAlreadyExist) {
+                return socket.emit(
+                    'response send message',
+                    createResponse(
+                        null,
+                        STATUS_MESSAGE.USER_NOT_IN_GROUP,
+                        MESSAGE_CODE.USER_NOT_IN_GROUP,
+                        STATUS_CODE.FORBIDDEN,
+                        false,
+                    ),
+                );
+            }
+
+            const isUserBlocked = conversation.blockUsers.some((item) => item.equals(userId));
+            if (isUserBlocked) {
+                return socket.emit(
+                    'response send message',
+                    createResponse(
+                        null,
+                        STATUS_MESSAGE.USER_WAS_BLOCKED,
+                        MESSAGE_CODE.USER_WAS_BLOCKED,
+                        STATUS_CODE.FORBIDDEN,
+                        false,
+                    ),
+                );
+            }
+
+            var newMessage = await Message.create(messageCreated);
+            newMessage = await newMessage.populate('sender', 'fullName picture email');
+            newMessage = await newMessage.populate('conversation');
+            newMessage = await User.populate(newMessage, {
+                path: 'conversation.users',
+                select: 'fullName picture email',
+            });
+            await Conversation.findByIdAndUpdate(
+                conversationId,
+                {
+                    latestMessage: newMessage._id,
+                },
+                { new: true },
+            );
+            socket.in(conversationId).emit('message received', newMessage);
+            return socket.emit(
+                'response send message',
+                createResponse(
+                    newMessage,
+                    STATUS_MESSAGE.SEND_MESSAGE_SUCCESS,
+                    MESSAGE_CODE.SEND_MESSAGE_SUCCESS,
+                    STATUS_CODE.CREATED,
+                    true,
+                ),
+            );
+        } catch (error) {
+            return socket.emit(
+                'response send message',
+                createResponse(
+                    error,
+                    STATUS_MESSAGE.INTERNAL_SERVER_ERROR,
+                    MESSAGE_CODE.INTERNAL_SERVER_ERROR,
+                    STATUS_CODE.INTERNAL_SERVER_ERROR,
+                    false,
+                ),
+            );
+        }
+    },
     deleteMessage: async (req, res, next) => {
         const messageId = req.query.id;
         const userId = req.user._id;

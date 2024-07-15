@@ -118,13 +118,35 @@ module.exports = {
                     //   data: results,
                     // });
                     results = results.map((conversation) => {
-                        console.log('conversation: ', conversation);
                         if (conversation.latestMessage && conversation.latestMessage.status === 'recalled') {
                             conversation.latestMessage.message = 'This message has been recalled';
                         }
                         return conversation;
                     });
                     res.status(200).send(results);
+                });
+        } catch (error) {
+            res.status(400);
+            throw new Error(error.message);
+        }
+    },
+    getConversationById: async (req, res, next) => {
+        try {
+            Conversation.findById(req.params.id)
+                .populate('users', 'email fullName picture is_online offline_at')
+                .populate('groupAdmin', '-password')
+                .populate('latestMessage')
+                .sort({ updatedAt: -1 })
+                .then(async (result) => {
+                    result = await User.populate(result, {
+                        path: 'latestMessage.sender',
+                        select: 'fullName picture email',
+                    });
+
+                    if (result.latestMessage && result.latestMessage.status === 'recalled') {
+                        result.latestMessage.message = 'This message has been recalled';
+                    }
+                    res.status(200).send(result);
                 });
         } catch (error) {
             res.status(400);
