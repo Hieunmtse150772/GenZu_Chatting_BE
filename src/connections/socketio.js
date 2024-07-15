@@ -171,7 +171,6 @@ io.on('connection', async (socket) => {
 
     //Create new conversation
     socket.on('access chat', (conversationInfo) => {
-        console.log('access chat: ', conversationInfo.conversation.users);
         try {
             if (conversationInfo?.conversation) {
                 for (i = 0; i < conversationInfo?.conversation?.users.length; i++) {
@@ -271,9 +270,7 @@ io.on('connection', async (socket) => {
                 console.error('Invalid newMessageReceived data');
                 return;
             }
-
             const chatRoom = messageRecalled.data.data.conversation;
-            console.log('chat room: ', chatRoom);
             socket.to(chatRoom).emit('recall received', messageRecalled);
         } catch (error) {
             console.log('error socket: ', error);
@@ -290,11 +287,9 @@ io.on('connection', async (socket) => {
             const chatRoom = newMessageReceived.conversation._id;
             socket.to(chatRoom).emit('message received', newMessageReceived);
             const users = await Conversation.findOne({ _id: chatRoom });
-            console.log('userss: ', users);
 
             if (users) {
                 for (i = 0; i < users.users.length; i++) {
-                    console.log('userId: ', users.users[i]);
                     socket.to(String(users.users[i])).emit('new message received', newMessageReceived);
                 }
             }
@@ -305,7 +300,6 @@ io.on('connection', async (socket) => {
 
     socket.on('disconnect', async (data) => {
         try {
-            console.log('data: ', data);
             const user = await User.findOne({ socketId: socket.id }).select('socketId _id');
 
             if (user) {
