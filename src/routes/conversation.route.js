@@ -14,6 +14,7 @@ const {
     updateAvatarConversation,
 } = require('@/validations');
 
+router.get('/:id', verifyToken, validateParams(validateIdMongodb), ConversationController.getConversationById);
 router.get('/', verifyToken, ConversationController.fetchConversation);
 router.post('/', verifyToken, ConversationController.accessConversation);
 router.patch('/', verifyToken, validateQuery(validateIdMongodb), ConversationController.redoHistoryConversation);

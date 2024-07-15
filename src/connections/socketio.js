@@ -12,7 +12,7 @@ const {
     updateGroupChat,
     deleteGroupChat,
 } = require('@/controller/group_chat.controller');
-const { sendSingleMessage } = require('@/controller/message2.controller');
+const { sendMessage } = require('@/controller/message.controller');
 
 const { eventValidators } = require('@/validations');
 const verifyTokenSocketMiddleware = require('@/middlewares/verifyTokenSocket.middleware');
@@ -50,11 +50,11 @@ io.on('connection', async (socket) => {
 
         // validate event
         if (eventValidators[event]) {
-            const { error } = eventValidators[event].validate(data);
+            const { error } = eventValidators[event].validate(data, { context: { user: socket.user } });
             if (error) {
                 socket.emit(
                     'validation',
-                    createResponse({ event, ...error }, error, null, STATUS_CODE.BAD_REQUEST, false),
+                    createResponse({ event, ...error }, error.details[0], null, STATUS_CODE.BAD_REQUEST, false),
                 );
                 return;
             }
@@ -97,9 +97,11 @@ io.on('connection', async (socket) => {
         deleteGroupChat(data, socket);
     });
 
-    // send message
-    socket.on('new message1', (data) => {
-        sendSingleMessage(data, socket);
+    socket.on('join conversation', (room) => {
+        socket.join(room);
+    });
+    socket.on('send message', (data) => {
+        sendMessage(data, socket);
     });
 
     //Check is read friend request

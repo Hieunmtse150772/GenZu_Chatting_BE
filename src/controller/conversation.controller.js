@@ -138,6 +138,29 @@ module.exports = {
             throw new Error(error.message);
         }
     },
+    getConversationById: async (req, res, next) => {
+        try {
+            Conversation.findById(req.params.id)
+                .populate('users', 'email fullName picture is_online offline_at')
+                .populate('groupAdmin', '-password')
+                .populate('latestMessage')
+                .sort({ updatedAt: -1 })
+                .then(async (result) => {
+                    result = await User.populate(result, {
+                        path: 'latestMessage.sender',
+                        select: 'fullName picture email',
+                    });
+
+                    if (result.latestMessage && result.latestMessage.status === 'recalled') {
+                        result.latestMessage.message = 'This message has been recalled';
+                    }
+                    res.status(200).send(result);
+                });
+        } catch (error) {
+            res.status(400);
+            throw new Error(error.message);
+        }
+    },
     createGroupConversation: async (req, res, next) => {
         const userId = req.user._id;
         if (!req.body.users || !req.body.name) {

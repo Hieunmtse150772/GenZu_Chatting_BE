@@ -8,10 +8,11 @@ const createResponse = (data, message, messageCode, status, success) => {
     };
 };
 
-const responseNotificationSocket = (action, data) => {
+const responseNotificationSocket = (data, actionCode, success) => {
     return {
-        action,
         data,
+        actionCode,
+        success,
     };
 };
 

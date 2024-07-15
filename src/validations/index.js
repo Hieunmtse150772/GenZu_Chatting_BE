@@ -24,6 +24,6 @@ module.exports = {
         'delete member': groupValidator.deleteMemberGroupBody,
         'update group': groupValidator.updateGroupBody,
         'delete group': validateIdMongodb,
-        'new message1': messageValidator.sendMessage2,
+        'send message': messageValidator.sendMessage2,
     },
 };

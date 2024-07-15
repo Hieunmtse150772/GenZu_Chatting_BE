@@ -11,19 +11,22 @@ module.exports = {
         const users = data.users;
         let latestMessage;
 
-        users.push(userId);
         try {
             const groupChat = await Conversation.create({
                 chatName: data.chatName,
                 avatar: data.avatar,
                 background: data.background,
                 isGroupChat: true,
-                users: users,
+                users: [userId, ...users],
                 groupAdmin: userId,
             });
-
             groupChat.users.forEach((item) => {
-                socket.in(item).emit('notification', responseNotificationSocket('join group', groupChat._id));
+                socket
+                    .in(item.toString())
+                    .emit(
+                        'notification',
+                        responseNotificationSocket(groupChat, MESSAGE_CODE.ADD_MEMBER_TO_GROUP_SUCCESSFULLY, true),
+                    );
             });
             users.forEach(async (item) => {
                 latestMessage = await Message.create({
@@ -38,23 +41,20 @@ module.exports = {
             const fullGroupChatInfo = await Conversation.findById(groupChat._id)
                 .populate('users', 'picture fullName _id email is_online offline_at')
                 .populate('groupAdmin', 'picture fullName _id email is_online offline_at');
-            socket.join(groupChat._id);
 
-            return socket
-                .in(groupChat._id)
-                .emit(
-                    'response',
-                    createResponse(
-                        fullGroupChatInfo,
-                        STATUS_MESSAGE.CREATE_GROUP_SUCCESSFULLY,
-                        MESSAGE_CODE.CREATE_GROUP_SUCCESSFULLY,
-                        STATUS_CODE.CREATED,
-                        true,
-                    ),
-                );
+            return socket.emit(
+                'response group',
+                createResponse(
+                    fullGroupChatInfo,
+                    STATUS_MESSAGE.CREATE_GROUP_SUCCESSFULLY,
+                    MESSAGE_CODE.CREATE_GROUP_SUCCESSFULLY,
+                    STATUS_CODE.CREATED,
+                    true,
+                ),
+            );
         } catch (error) {
             return socket.emit(
-                'response',
+                'response group',
                 createResponse(
                     error,
                     STATUS_MESSAGE.INTERNAL_SERVER_ERROR,
@@ -76,7 +76,7 @@ module.exports = {
 
             if (!group) {
                 return socket.emit(
-                    'response',
+                    'response group',
                     createResponse(
                         null,
                         STATUS_MESSAGE.GROUP_NOT_FOUND,
@@ -92,7 +92,7 @@ module.exports = {
 
             if (duplicateUsers.length > 0) {
                 return socket.emit(
-                    'response',
+                    'response group',
                     createResponse(
                         duplicateUsers,
                         STATUS_MESSAGE.MEMBER_ALREADY_EXIST_IN_GROUP,
@@ -132,7 +132,7 @@ module.exports = {
                 );
         } catch (error) {
             return socket.emit(
-                'response',
+                'response group',
                 createResponse(
                     error,
                     STATUS_MESSAGE.INTERNAL_SERVER_ERROR,
@@ -156,7 +156,7 @@ module.exports = {
 
             if (!group) {
                 return socket.emit(
-                    'response',
+                    'response group',
                     createResponse(
                         null,
                         STATUS_MESSAGE.GROUP_NOT_FOUND,
@@ -178,7 +178,7 @@ module.exports = {
 
             if (!userDeleteInGroup) {
                 return socket.emit(
-                    'response',
+                    'response group',
                     createResponse(
                         null,
                         STATUS_MESSAGE.USER_NOT_IN_GROUP,
@@ -191,7 +191,7 @@ module.exports = {
 
             if (!memberIsExis) {
                 return socket.emit(
-                    'response',
+                    'response group',
                     createResponse(
                         null,
                         STATUS_MESSAGE.MEMBER_NOT_FOUND,
@@ -206,7 +206,7 @@ module.exports = {
                 // not admin and delete others
                 if (!userId.equals(memberId)) {
                     return socket.emit(
-                        'response',
+                        'response group',
                         createResponse(null, STATUS_MESSAGE.FORBIDDEN, null, STATUS_CODE.FORBIDDEN, false),
                     );
                     // not admin and delete self
@@ -224,7 +224,7 @@ module.exports = {
                     group.latestMessage = latestMessage;
                     const newGroup = await group.save();
                     return socket.emit(
-                        'response',
+                        'response group',
                         createResponse(
                             newGroup,
                             STATUS_MESSAGE.DELETE_MEMBER_SUCCESS,
@@ -250,7 +250,7 @@ module.exports = {
                     group.latestMessage = latestMessage;
                     const newGroup = await group.save();
                     return socket.emit(
-                        'response',
+                        'response group',
                         createResponse(
                             newGroup,
                             STATUS_MESSAGE.DELETE_MEMBER_SUCCESS,
@@ -263,7 +263,7 @@ module.exports = {
                     // la admin xoa chinh minh
                     if (!req.body.exchangeAdmin) {
                         return socket.emit(
-                            'response',
+                            'response group',
                             createResponse(
                                 null,
                                 STATUS_MESSAGE.EXCHANGE_ADMIN_ID_REQUIRED,
@@ -278,7 +278,7 @@ module.exports = {
 
                     if (!userExist) {
                         return socket.emit(
-                            'response',
+                            'response group',
                             createResponse(
                                 null,
                                 STATUS_MESSAGE.MEMBER_NOT_FOUND,
@@ -316,7 +316,7 @@ module.exports = {
                         group.latestMessage = latestMessage;
                         const newGroup = await group.save();
                         return socket.emit(
-                            'response',
+                            'response group',
                             createResponse(
                                 newGroup,
                                 STATUS_MESSAGE.DELETE_MEMBER_SUCCESS,
@@ -336,7 +336,7 @@ module.exports = {
             }
         } catch (error) {
             return socket.emit(
-                'response',
+                'response group',
                 createResponse(
                     error,
                     STATUS_MESSAGE.INTERNAL_SERVER_ERROR,
@@ -394,7 +394,7 @@ module.exports = {
             const newGroup = await group.save();
 
             return socket.emit(
-                'response',
+                'response group',
                 createResponse(
                     newGroup,
                     STATUS_MESSAGE.UPDATE_GROUP_SUCCESSFULLY,
@@ -405,7 +405,7 @@ module.exports = {
             );
         } catch (error) {
             return socket.emit(
-                'response',
+                'response group',
                 createResponse(
                     error,
                     STATUS_MESSAGE.INTERNAL_SERVER_ERROR,
@@ -456,7 +456,7 @@ module.exports = {
             return res.status(STATUS_CODE.NO_CONTENT).json();
         } catch (error) {
             return socket.emit(
-                'response',
+                'response group',
                 createResponse(
                     error,
                     STATUS_MESSAGE.INTERNAL_SERVER_ERROR,
