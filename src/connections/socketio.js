@@ -36,7 +36,6 @@ const io = require('socket.io')(server, {
         // credentials: true,
     },
 });
-let userJoinRooms = new Map();
 
 io.on('connection', async (socket) => {
     // verify user
@@ -70,8 +69,12 @@ io.on('connection', async (socket) => {
 
     //Send request add friend
     socket.on('friend request', (newRequest) => {
-        const receiverId = newRequest.receiver._id;
-        socket.to(receiverId).emit('received request', newRequest);
+        try {
+            const receiverId = newRequest.receiver._id;
+            socket.to(receiverId).emit('received request', newRequest);
+        } catch (error) {
+            console.log('error socket: ', error);
+        }
     });
 
     //Accept request friend
@@ -106,10 +109,14 @@ io.on('connection', async (socket) => {
 
     //Check is read friend request
     socket.on('read request', async (newRequest) => {
-        const newRequestId = newRequest._id;
-        const sender = newRequest.sender._id;
-        const updateRequest = await FriendRequest.findByIdAndUpdate(newRequestId, { isRead: true });
-        socket.to(sender).emit('isRead', true);
+        try {
+            const newRequestId = newRequest._id;
+            const sender = newRequest.sender._id;
+            const updateRequest = await FriendRequest.findByIdAndUpdate(newRequestId, { isRead: true });
+            socket.to(sender).emit('isRead', true);
+        } catch (error) {
+            console.log(error);
+        }
     });
 
     socket.on('login', async (userId) => {
@@ -164,70 +171,42 @@ io.on('connection', async (socket) => {
 
     //Create new conversation
     socket.on('access chat', (conversationInfo) => {
-        console.log('access chat: ', conversationInfo.conversation.users);
-        if (conversationInfo?.conversation) {
-            for (i = 0; i < conversationInfo?.conversation?.users.length; i++) {
-                if (conversationInfo?.conversation?.users[i]._id !== conversationInfo?.userId) {
-                    socket.to(conversationInfo?.conversation.users[i]._id).emit('accessed chat', conversationInfo);
+        try {
+            if (conversationInfo?.conversation) {
+                for (i = 0; i < conversationInfo?.conversation?.users.length; i++) {
+                    if (conversationInfo?.conversation?.users[i]._id !== conversationInfo?.userId) {
+                        socket.to(conversationInfo?.conversation?.users[i]._id).emit('accessed chat', conversationInfo);
+                    }
                 }
             }
+        } catch (error) {
+            console.log('error: ', error);
         }
     });
 
     //Set up room with conversation id for user who was join to chat
     socket.on('join chat', (room) => {
-        if (room.conversation) {
-            socket.join(room.conversation);
-            const userIds = userJoinRooms.get(room.user);
-            if (userIds) {
-                const userId = userIds.get(room.conversation);
-                if (userId) {
-                    userId.add(socket.id);
-                } else {
-                    userIds.set(room.conversation, new Set([socket.id]));
-                    // const newRoomId = new Map([[room.conversation, new Set([socket.id])]]);
-                    userJoinRooms.set(room.user, userIds);
-                }
+        try {
+            if (room.conversation) {
+                socket.join(room.conversation);
             } else {
-                // Nếu không tồn tại, tạo mới Key user chứa cuộc Key trò truyên chứa Set() socketId
-                // const newRoomId = new Map([[room.conversation, new Set([socket.id])]]);
-                const newRoomId = new Map([[room.conversation, new Set([socket.id])]]);
-                userJoinRooms.set(room.user, newRoomId);
+                console.log('room not found');
             }
-            console.log('userIds: ', userJoinRooms);
-        } else {
-            console.log('room not found');
+        } catch (error) {
+            console.log('error socket: ', error);
         }
     });
 
     //Out room chat with conversation id when user leave chat or not focus on chat room
     socket.on('leave chat', (room) => {
-        if (room.conversation) {
-            socket.leave(room.conversation);
-            const roomIds = userJoinRooms.get(room.user);
-            if (roomIds) {
-                const roomId = roomIds.get(room.conversation);
-                roomId.delete(socket.id);
-                if (roomId.size === 0) {
-                    roomIds.delete(room.conversation);
-                } else {
-                    userJoinRooms.set(room.user, roomIds);
-                }
-                if (roomIds.length === 0) {
-                    userJoinRooms.delete(room.user);
-                }
-                // roomIds.delete(room.user);
-                // if (userIds.size === 0) {
-                //     userJoinRooms.delete(room.conversation);
-                //     console.log(`Room ${room.conversation} is now empty and has been deleted.`);
-                // } else {
-                //     userJoinRooms.set(room.conversation, userIds);
-                // }
+        try {
+            if (room.conversation) {
+                socket.leave(room.conversation);
             } else {
-                console.log(`Không tìm thấy conversationId ${room.conversation}`);
+                console.log('room not found');
             }
-        } else {
-            console.log('room not found');
+        } catch (error) {
+            console.log('error socket: ', error);
         }
     });
 
@@ -241,85 +220,89 @@ io.on('connection', async (socket) => {
 
     //Listening the action reacting message with emoji
     socket.on('add emoji', (emojiAdded) => {
-        if (!emojiAdded.conversation) {
-            console.log('Invalid conversation id');
-            return;
-        }
-        const chatRoom = emojiAdded.conversation;
+        try {
+            if (!emojiAdded.conversation) {
+                console.log('Invalid conversation id');
+                return;
+            }
+            const chatRoom = emojiAdded.conversation;
 
-        socket.to(chatRoom).emit('emoji received', emojiAdded);
+            socket.to(chatRoom).emit('emoji received', emojiAdded);
+        } catch (error) {
+            console.log('error socket: ', error);
+        }
     });
 
     //Listening the action edit emoji
     socket.on('edit emoji', (emojiAdded) => {
-        if (!emojiAdded.conversation) {
-            console.log('Invalid conversation id');
-            return;
-        }
-        const chatRoom = emojiAdded.conversation;
+        try {
+            if (!emojiAdded.conversation) {
+                console.log('Invalid conversation id');
+                return;
+            }
+            const chatRoom = emojiAdded.conversation;
 
-        socket.to(chatRoom).emit('emoji received', emojiAdded);
+            socket.to(chatRoom).emit('emoji received', emojiAdded);
+        } catch (error) {
+            console.log('error socket: ', error);
+        }
     });
 
     //Listening the action delete emoji
     socket.on('delete emoji', (emojiAdded) => {
-        if (!emojiAdded.conversation) {
-            console.log('Invalid conversation id');
-            return;
-        }
-        const chatRoom = emojiAdded.conversation;
+        try {
+            if (!emojiAdded.conversation) {
+                console.log('Invalid conversation id');
+                return;
+            }
+            const chatRoom = emojiAdded.conversation;
 
-        socket.to(chatRoom).emit('emoji received', emojiAdded);
+            socket.to(chatRoom).emit('emoji received', emojiAdded);
+        } catch (error) {
+            console.log('error socket: ', error);
+        }
     });
 
     // Gửi thông báo tin nhắn đã bị thu hồi đến tất cả socket trong phòng, ngoại trừ socket của người gửi
     socket.on('recall', (messageRecalled) => {
-        console.log('socket recall: ', messageRecalled.data.data);
-        if (!messageRecalled || !messageRecalled.data.data.conversation) {
-            console.error('Invalid newMessageReceived data');
-            return;
+        try {
+            if (!messageRecalled || !messageRecalled.data.data.conversation) {
+                console.error('Invalid newMessageReceived data');
+                return;
+            }
+            const chatRoom = messageRecalled.data.data.conversation;
+            socket.to(chatRoom).emit('recall received', messageRecalled);
+        } catch (error) {
+            console.log('error socket: ', error);
         }
-
-        const chatRoom = messageRecalled.data.data.conversation;
-        console.log('chat room: ', chatRoom);
-        socket.to(chatRoom).emit('recall received', messageRecalled);
     });
 
     // Gửi tin nhắn đến tất cả socket trong phòng, ngoại trừ socket của người gửi
     socket.on('new message', async (newMessageReceived) => {
-        if (!newMessageReceived || !newMessageReceived.conversation || !newMessageReceived.conversation._id) {
-            console.error('Invalid newMessageReceived data');
-            return;
-        }
-        const chatRoom = newMessageReceived.conversation._id;
-        socket.to(chatRoom).emit('message received', newMessageReceived);
-        console.log('----------------------------------------------------');
-        const users = await Conversation.findById(chatRoom).select('users');
-        if (users) {
-            // const userInRooms = userJoinRooms.get(chatRoom);
-            users.users.forEach((user) => {
-                const socketUserInRoom = getSocketIdByRoomAndUserID(user, chatRoom);
-                socketUserInRoom.forEach((socketId) => {
-                    socket.to(socketId).emit('new message received', newMessageReceived);
-                });
-            });
+        try {
+            if (!newMessageReceived || !newMessageReceived.conversation || !newMessageReceived.conversation._id) {
+                console.error('Invalid newMessageReceived data');
+                return;
+            }
+            const chatRoom = newMessageReceived.conversation._id;
+            socket.to(chatRoom).emit('message received', newMessageReceived);
+            const users = await Conversation.findOne({ _id: chatRoom });
+
+            if (users) {
+                for (i = 0; i < users.users.length; i++) {
+                    socket.to(String(users.users[i])).emit('new message received', newMessageReceived);
+                }
+            }
+        } catch (error) {
+            console.log('error socket: ', error);
         }
     });
 
     socket.on('disconnect', async (data) => {
         try {
-            console.log('data: ', data);
             const user = await User.findOne({ socketId: socket.id }).select('socketId _id');
 
             if (user) {
-                // //Xóa user ra khỏi các phòng
-                // userJoinRooms.forEach((userSet, key) => {
-                //     userSet.delete(String(user._id));
-                //     // Nếu Set rỗng sau khi xóa, có thể tùy chọn xóa luôn key khỏi Map
-                //     if (userSet.size === 0) {
-                //         userMap.delete(key);
-                //     }
-                // });
                 user.socketId = user.socketId.filter((item) => item !== socket.id);
 
                 if (!user.socketId.length) {
@@ -333,13 +316,6 @@ io.on('connection', async (socket) => {
             console.log(error);
         }
     });
-    const getSocketIdByRoomAndUserID = (userId, roomId) => {
-        const userInRoom = userJoinRooms.get(userId);
-        if (userInRoom) {
-            return userInRoom.get(roomId);
-        }
-        return [];
-    };
 });
 
 module.exports = { app, io, server };
