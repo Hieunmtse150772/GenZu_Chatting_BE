@@ -36,7 +36,6 @@ const io = require('socket.io')(server, {
         // credentials: true,
     },
 });
-let userJoinRooms = new Map([]);
 
 io.on('connection', async (socket) => {
     // verify user
@@ -70,8 +69,12 @@ io.on('connection', async (socket) => {
 
     //Send request add friend
     socket.on('friend request', (newRequest) => {
-        const receiverId = newRequest.receiver._id;
-        socket.to(receiverId).emit('received request', newRequest);
+        try {
+            const receiverId = newRequest.receiver._id;
+            socket.to(receiverId).emit('received request', newRequest);
+        } catch (error) {
+            console.log('error socket: ', error);
+        }
     });
 
     //Accept request friend
@@ -80,7 +83,7 @@ io.on('connection', async (socket) => {
         socket.to(senderId).emit('received reply', newRequest);
     });
 
-    // group chat
+    //Group chat
     socket.on('create group', (data) => {
         createGroupChat(data, socket);
     });
@@ -106,10 +109,14 @@ io.on('connection', async (socket) => {
 
     //Check is read friend request
     socket.on('read request', async (newRequest) => {
-        const newRequestId = newRequest._id;
-        const sender = newRequest.sender._id;
-        const updateRequest = await FriendRequest.findByIdAndUpdate(newRequestId, { isRead: true });
-        socket.to(sender).emit('isRead', true);
+        try {
+            const newRequestId = newRequest._id;
+            const sender = newRequest.sender._id;
+            const updateRequest = await FriendRequest.findByIdAndUpdate(newRequestId, { isRead: true });
+            socket.to(sender).emit('isRead', true);
+        } catch (error) {
+            console.log(error);
+        }
     });
 
     socket.on('login', async (userId) => {
@@ -163,50 +170,43 @@ io.on('connection', async (socket) => {
     });
 
     //Create new conversation
-    socket.on('access chat', (conversation) => {
-        if (conversation) {
-            for (i = 0; i < conversation?.users.length; i++) {
-                if (conversation?.users[i] !== conversation?.userId) {
-                    socket.to(conversation?.users[i]).emit('accessed chat', conversation);
+    socket.on('access chat', (conversationInfo) => {
+        try {
+            if (conversationInfo?.conversation) {
+                for (i = 0; i < conversationInfo?.conversation?.users.length; i++) {
+                    if (conversationInfo?.conversation?.users[i]._id !== conversationInfo?.userId) {
+                        socket.to(conversationInfo?.conversation?.users[i]._id).emit('accessed chat', conversationInfo);
+                    }
                 }
             }
+        } catch (error) {
+            console.log('error: ', error);
         }
     });
+
     //Set up room with conversation id for user who was join to chat
     socket.on('join chat', (room) => {
-        if (room.conversation) {
-            socket.join(room.conversation);
-            const userIds = userJoinRooms.get(room.conversation);
-            if (userIds) {
-                userIds.add(room.user);
+        try {
+            if (room.conversation) {
+                socket.join(room.conversation);
             } else {
-                // Nếu không tồn tại, tạo mới cuộc trò chuyện
-                userJoinRooms.set(room.conversation, new Set([room.user]));
+                console.log('room not found');
             }
-            console.log(userJoinRooms);
-        } else {
-            console.log('room not found');
+        } catch (error) {
+            console.log('error socket: ', error);
         }
     });
 
     //Out room chat with conversation id when user leave chat or not focus on chat room
     socket.on('leave chat', (room) => {
-        if (room.conversation) {
-            socket.leave(room.conversation);
-            const userIds = userJoinRooms.get(room.conversation);
-            if (userIds) {
-                userIds.delete(room.user);
-                if (userIds.size === 0) {
-                    userJoinRooms.delete(room.conversation);
-                    console.log(`Room ${room.conversation} is now empty and has been deleted.`);
-                } else {
-                    userJoinRooms.set(room.conversation, userIds);
-                }
+        try {
+            if (room.conversation) {
+                socket.leave(room.conversation);
             } else {
-                console.log(`Không tìm thấy conversationId ${room.conversation}`);
+                console.log('room not found');
             }
-        } else {
-            console.log('room not found');
+        } catch (error) {
+            console.log('error socket: ', error);
         }
     });
 
@@ -220,82 +220,91 @@ io.on('connection', async (socket) => {
 
     //Listening the action reacting message with emoji
     socket.on('add emoji', (emojiAdded) => {
-        if (!emojiAdded.conversation) {
-            console.log('Invalid conversation id');
-            return;
-        }
-        const chatRoom = emojiAdded.conversation;
+        try {
+            if (!emojiAdded.conversation) {
+                console.log('Invalid conversation id');
+                return;
+            }
+            const chatRoom = emojiAdded.conversation;
 
-        socket.to(chatRoom).emit('emoji received', emojiAdded);
+            socket.to(chatRoom).emit('emoji received', emojiAdded);
+        } catch (error) {
+            console.log('error socket: ', error);
+        }
     });
 
     //Listening the action edit emoji
     socket.on('edit emoji', (emojiAdded) => {
-        if (!emojiAdded.conversation) {
-            console.log('Invalid conversation id');
-            return;
-        }
-        const chatRoom = emojiAdded.conversation;
+        try {
+            if (!emojiAdded.conversation) {
+                console.log('Invalid conversation id');
+                return;
+            }
+            const chatRoom = emojiAdded.conversation;
 
-        socket.to(chatRoom).emit('emoji received', emojiAdded);
+            socket.to(chatRoom).emit('emoji received', emojiAdded);
+        } catch (error) {
+            console.log('error socket: ', error);
+        }
     });
 
     //Listening the action delete emoji
     socket.on('delete emoji', (emojiAdded) => {
-        if (!emojiAdded.conversation) {
-            console.log('Invalid conversation id');
-            return;
-        }
-        const chatRoom = emojiAdded.conversation;
+        try {
+            if (!emojiAdded.conversation) {
+                console.log('Invalid conversation id');
+                return;
+            }
+            const chatRoom = emojiAdded.conversation;
 
-        socket.to(chatRoom).emit('emoji received', emojiAdded);
+            socket.to(chatRoom).emit('emoji received', emojiAdded);
+        } catch (error) {
+            console.log('error socket: ', error);
+        }
     });
 
     // Gửi thông báo tin nhắn đã bị thu hồi đến tất cả socket trong phòng, ngoại trừ socket của người gửi
     socket.on('recall', (messageRecalled) => {
-        console.log('socket recall: ', messageRecalled.data.data);
-        if (!messageRecalled || !messageRecalled.data.data.conversation) {
-            console.error('Invalid newMessageReceived data');
-            return;
+        try {
+            if (!messageRecalled || !messageRecalled.data.data.conversation) {
+                console.error('Invalid newMessageReceived data');
+                return;
+            }
+            const chatRoom = messageRecalled.data.data.conversation;
+            socket.to(chatRoom).emit('recall received', messageRecalled);
+        } catch (error) {
+            console.log('error socket: ', error);
         }
-
-        const chatRoom = messageRecalled.data.data.conversation;
-        console.log('chat room: ', chatRoom);
-        socket.to(chatRoom).emit('recall received', messageRecalled);
     });
 
     // Gửi tin nhắn đến tất cả socket trong phòng, ngoại trừ socket của người gửi
     socket.on('new message', async (newMessageReceived) => {
-        if (!newMessageReceived || !newMessageReceived.conversation || !newMessageReceived.conversation._id) {
-            console.error('Invalid newMessageReceived data');
-            return;
-        }
-        const chatRoom = newMessageReceived.conversation._id;
+        try {
+            if (!newMessageReceived || !newMessageReceived.conversation || !newMessageReceived.conversation._id) {
+                console.error('Invalid newMessageReceived data');
+                return;
+            }
+            const chatRoom = newMessageReceived.conversation._id;
+            socket.to(chatRoom).emit('message received', newMessageReceived);
+            const users = await Conversation.findOne({ _id: chatRoom });
 
-        socket.to(chatRoom).emit('message received', newMessageReceived);
-        console.log('----------------------------------------------------');
-        const users = await Conversation.findById(chatRoom).select('users');
-        if (users) {
-            const userInRooms = userJoinRooms.get(chatRoom);
-
-            const userNotInRooms = users?.users?.filter((user) => !userInRooms?.has(String(user._id)));
-
-            if (userNotInRooms.length > 0) {
-                for (i = 0; i < userNotInRooms.length; i++) {
-                    const userId = String(userNotInRooms[i]);
-                    console.log('userNotInRooms[i]: ', userNotInRooms[i]);
-                    socket.to(userId).emit('new message received', newMessageReceived);
-                    console.log('chay vo day: ', i);
+            if (users) {
+                for (i = 0; i < users.users.length; i++) {
+                    socket.to(String(users.users[i])).emit('new message received', newMessageReceived);
                 }
             }
+        } catch (error) {
+            console.log('error socket: ', error);
         }
     });
 
-    socket.on('disconnect', async () => {
+    socket.on('disconnect', async (data) => {
         try {
-            const user = await User.findOne({ socketId: socket.id }).select('socketId');
+            const user = await User.findOne({ socketId: socket.id }).select('socketId _id');
+
             if (user) {
                 user.socketId = user.socketId.filter((item) => item !== socket.id);
+
                 if (!user.socketId.length) {
                     user.offline_at = moment();
                     user.is_online = false;
