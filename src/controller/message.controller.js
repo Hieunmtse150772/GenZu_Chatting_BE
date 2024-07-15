@@ -154,6 +154,7 @@ module.exports = {
             var newMessage = await Message.create(messageCreated);
             newMessage = await newMessage.populate('sender', 'fullName picture email');
             newMessage = await newMessage.populate('conversation');
+            newMessage = await newMessage.populate('replyMessage', '_id sender message messageType');
             newMessage = await User.populate(newMessage, {
                 path: 'conversation.users',
                 select: 'fullName picture email',
