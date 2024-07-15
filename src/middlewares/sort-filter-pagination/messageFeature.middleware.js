@@ -1,6 +1,6 @@
 const Message = require('@/model/message.model');
 const Conversation = require('@/model/conversation.model');
-const createResponse = require('@/utils/responseHelper');
+const { createResponse } = require('@/utils/responseHelper');
 const { STATUS_MESSAGE, MESSAGE_CODE } = require('@/enums/response');
 
 module.exports = async function (req, res, next) {
@@ -38,14 +38,16 @@ module.exports = async function (req, res, next) {
         }
         const conversation = await Conversation.findOne({ _id: conversation_id });
         if (!conversation?.users?.includes(userId)) {
-            res.status(400).json(
-                createResponse(
-                    null,
-                    STATUS_MESSAGE.NO_PERMISSION_ACCESS_CONVERSATION,
-                    MESSAGE_CODE.NO_PERMISSION_ACCESS_CONVERSATION,
-                    false,
-                ),
-            );
+            return res
+                .status(400)
+                .json(
+                    createResponse(
+                        null,
+                        STATUS_MESSAGE.NO_PERMISSION_ACCESS_CONVERSATION,
+                        MESSAGE_CODE.NO_PERMISSION_ACCESS_CONVERSATION,
+                        false,
+                    ),
+                );
         }
         let query = Message.find({
             conversation: conversation_id,
