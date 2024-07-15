@@ -36,7 +36,7 @@ const io = require('socket.io')(server, {
         // credentials: true,
     },
 });
-let userJoinRooms = new Map([]);
+let userJoinRooms = new Map();
 
 io.on('connection', async (socket) => {
     // verify user
@@ -80,7 +80,7 @@ io.on('connection', async (socket) => {
         socket.to(senderId).emit('received reply', newRequest);
     });
 
-    // group chat
+    //Group chat
     socket.on('create group', (data) => {
         createGroupChat(data, socket);
     });
@@ -164,11 +164,11 @@ io.on('connection', async (socket) => {
 
     //Create new conversation
     socket.on('access chat', (conversationInfo) => {
-        console.log('access chat: ', conversationInfo);
-        if (conversationInfo.conversation) {
+        console.log('access chat: ', conversationInfo.conversation.users);
+        if (conversationInfo?.conversation) {
             for (i = 0; i < conversationInfo?.conversation?.users.length; i++) {
                 if (conversationInfo?.conversation?.users[i]._id !== conversationInfo?.userId) {
-                    socket.to(conversationInfo?.users[i]._id).emit('accessed chat', conversationInfo);
+                    socket.to(conversationInfo?.conversation.users[i]._id).emit('accessed chat', conversationInfo);
                 }
             }
         }
@@ -178,14 +178,23 @@ io.on('connection', async (socket) => {
     socket.on('join chat', (room) => {
         if (room.conversation) {
             socket.join(room.conversation);
-            const userIds = userJoinRooms.get(room.conversation);
+            const userIds = userJoinRooms.get(room.user);
             if (userIds) {
-                userIds.add(room.user);
+                const userId = userIds.get(room.conversation);
+                if (userId) {
+                    userId.add(socket.id);
+                } else {
+                    userIds.set(room.conversation, new Set([socket.id]));
+                    // const newRoomId = new Map([[room.conversation, new Set([socket.id])]]);
+                    userJoinRooms.set(room.user, userIds);
+                }
             } else {
-                // Nếu không tồn tại, tạo mới cuộc trò chuyện
-                userJoinRooms.set(room.conversation, new Set([room.user]));
+                // Nếu không tồn tại, tạo mới Key user chứa cuộc Key trò truyên chứa Set() socketId
+                // const newRoomId = new Map([[room.conversation, new Set([socket.id])]]);
+                const newRoomId = new Map([[room.conversation, new Set([socket.id])]]);
+                userJoinRooms.set(room.user, newRoomId);
             }
-            console.log(userJoinRooms);
+            console.log('userIds: ', userJoinRooms);
         } else {
             console.log('room not found');
         }
@@ -195,15 +204,25 @@ io.on('connection', async (socket) => {
     socket.on('leave chat', (room) => {
         if (room.conversation) {
             socket.leave(room.conversation);
-            const userIds = userJoinRooms.get(room.conversation);
-            if (userIds) {
-                userIds.delete(room.user);
-                if (userIds.size === 0) {
-                    userJoinRooms.delete(room.conversation);
-                    console.log(`Room ${room.conversation} is now empty and has been deleted.`);
+            const roomIds = userJoinRooms.get(room.user);
+            if (roomIds) {
+                const roomId = roomIds.get(room.conversation);
+                roomId.delete(socket.id);
+                if (roomId.size === 0) {
+                    roomIds.delete(room.conversation);
                 } else {
-                    userJoinRooms.set(room.conversation, userIds);
+                    userJoinRooms.set(room.user, roomIds);
                 }
+                if (roomIds.length === 0) {
+                    userJoinRooms.delete(room.user);
+                }
+                // roomIds.delete(room.user);
+                // if (userIds.size === 0) {
+                //     userJoinRooms.delete(room.conversation);
+                //     console.log(`Room ${room.conversation} is now empty and has been deleted.`);
+                // } else {
+                //     userJoinRooms.set(room.conversation, userIds);
+                // }
             } else {
                 console.log(`Không tìm thấy conversationId ${room.conversation}`);
             }
@@ -273,31 +292,36 @@ io.on('connection', async (socket) => {
             return;
         }
         const chatRoom = newMessageReceived.conversation._id;
-
         socket.to(chatRoom).emit('message received', newMessageReceived);
         console.log('----------------------------------------------------');
         const users = await Conversation.findById(chatRoom).select('users');
         if (users) {
-            const userInRooms = userJoinRooms.get(chatRoom);
-
-            const userNotInRooms = users?.users?.filter((user) => !userInRooms?.has(String(user._id)));
-
-            if (userNotInRooms.length > 0) {
-                for (i = 0; i < userNotInRooms.length; i++) {
-                    const userId = String(userNotInRooms[i]);
-                    console.log('userNotInRooms[i]: ', userNotInRooms[i]);
-                    socket.to(userId).emit('new message received', newMessageReceived);
-                    console.log('chay vo day: ', i);
-                }
-            }
+            // const userInRooms = userJoinRooms.get(chatRoom);
+            users.users.forEach((user) => {
+                const socketUserInRoom = getSocketIdByRoomAndUserID(user, chatRoom);
+                socketUserInRoom.forEach((socketId) => {
+                    socket.to(socketId).emit('new message received', newMessageReceived);
+                });
+            });
         }
     });
 
-    socket.on('disconnect', async () => {
+    socket.on('disconnect', async (data) => {
         try {
-            const user = await User.findOne({ socketId: socket.id }).select('socketId');
+            console.log('data: ', data);
+            const user = await User.findOne({ socketId: socket.id }).select('socketId _id');
+
             if (user) {
+                // //Xóa user ra khỏi các phòng
+                // userJoinRooms.forEach((userSet, key) => {
+                //     userSet.delete(String(user._id));
+                //     // Nếu Set rỗng sau khi xóa, có thể tùy chọn xóa luôn key khỏi Map
+                //     if (userSet.size === 0) {
+                //         userMap.delete(key);
+                //     }
+                // });
                 user.socketId = user.socketId.filter((item) => item !== socket.id);
+
                 if (!user.socketId.length) {
                     user.offline_at = moment();
                     user.is_online = false;
@@ -309,6 +333,13 @@ io.on('connection', async (socket) => {
             console.log(error);
         }
     });
+    const getSocketIdByRoomAndUserID = (userId, roomId) => {
+        const userInRoom = userJoinRooms.get(userId);
+        if (userInRoom) {
+            return userInRoom.get(roomId);
+        }
+        return [];
+    };
 });
 
 module.exports = { app, io, server };
