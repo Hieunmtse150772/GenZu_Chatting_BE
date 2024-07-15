@@ -37,7 +37,7 @@ module.exports = async function (req, res, next) {
             searchQuery = { ...searchQuery, _id: { $gte: req.query.messageId } };
         }
         const conversation = await Conversation.findOne({ _id: conversation_id });
-        if (!conversation.users.includes(userId)) {
+        if (!conversation?.users?.includes(userId)) {
             res.status(400).json(
                 createResponse(
                     null,
@@ -61,7 +61,8 @@ module.exports = async function (req, res, next) {
                     path: 'sender',
                     select: 'fullName _id',
                 },
-            });
+            })
+            .populate('replyMessage', '_id sender message messageType');
         // console.log('query: ', query);
         // query = query.map((list) => {
         //     list, (list.message = list.message.replace(/<br>/g, '\n'));

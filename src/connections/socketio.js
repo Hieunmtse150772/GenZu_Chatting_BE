@@ -270,18 +270,22 @@ io.on('connection', async (socket) => {
             console.error('Invalid newMessageReceived data');
             return;
         }
-
         const chatRoom = newMessageReceived.conversation._id;
+
         socket.to(chatRoom).emit('message received', newMessageReceived);
+        console.log('----------------------------------------------------');
         const users = await Conversation.findById(chatRoom).select('users');
         if (users) {
             const userInRooms = userJoinRooms.get(chatRoom);
 
-            const userNotInRooms = users.users.filter((user) => !userInRooms.has(String(user._id)));
+            const userNotInRooms = users?.users?.filter((user) => !userInRooms?.has(String(user._id)));
 
             if (userNotInRooms.length > 0) {
                 for (i = 0; i < userNotInRooms.length; i++) {
-                    socket.to(String(userNotInRooms[i])).emit('new message received', newMessageReceived);
+                    const userId = String(userNotInRooms[i]);
+                    console.log('userNotInRooms[i]: ', userNotInRooms[i]);
+                    socket.to(userId).emit('new message received', newMessageReceived);
+                    console.log('chay vo day: ', i);
                 }
             }
         }

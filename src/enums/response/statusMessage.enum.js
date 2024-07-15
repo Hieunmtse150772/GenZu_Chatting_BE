@@ -69,6 +69,7 @@ const STATUS_MESSAGE = {
     REMOVE_CONVERSATION_SUCCESS: 'Remove conversation success',
     CONVERSATION_NOT_FOUND: 'Conversation not found',
     CONVERSATION_ACCESS_SUCCESS: 'Conversation access success',
+    CONVERSATION_CREATE_SUCCESS: 'Conversation create success',
     DELETE_CONVERSATION_HISTORY_SUCCESS: 'Delete conversation history success',
     REDO_CONVERSATION_HISTORY_SUCCESS: 'Redo conversation history success',
     UPDATE_CONVERSATION_BACKGROUND_SUCCESS: 'Update conversation background success',
@@ -77,6 +78,9 @@ const STATUS_MESSAGE = {
     NO_PERMISSION_ACCESS_CONVERSATION: 'You have no permission to access this conversation',
     UPDATE_BACKGROUND_CONVERSATION_SUCCESS: 'Update background conversation success',
     NO_PERMISSION_UPDATE_BACKGROUND: 'You have no permission to update background',
+    UPDATE_AVATAR_CONVERSATION_SUCCESS: 'Update avatar conversation success',
+    NO_PERMISSION_UPDATE_AVATAR: 'You have no permission to update avatar',
+
     //Friend
     FRIEND_REQUEST_SENT_SUCCESS: 'Friend request sent',
     FRIEND_REQUEST_SENT_FAIL: 'Friend request sent failed',

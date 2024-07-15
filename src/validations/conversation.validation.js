@@ -13,11 +13,18 @@ const fetchConversation = Joi.object({
     //   status: Joi.string().required(),
 });
 const updateBackgroundConversation = Joi.object({
-    background: Joi.string().min(1).required(),
+    background: Joi.object({
+        url: Joi.string().min(1).required(),
+        backgroundType: Joi.string().min(1).required(),
+    }),
+});
+const updateAvatarConversation = Joi.object({
+    avatar: Joi.string().min(1).required(),
 });
 
 module.exports = {
     accessConversation,
     fetchConversation,
     updateBackgroundConversation,
+    updateAvatarConversation,
 };

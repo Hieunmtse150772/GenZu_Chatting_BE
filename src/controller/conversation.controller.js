@@ -42,7 +42,15 @@ module.exports = {
         });
 
         if (isChat.length > 0) {
-            res.send(isChat[0]);
+            res.status(200).json(
+                createResponse(
+                    isChat[0],
+                    STATUS_MESSAGE.CONVERSATION_ACCESS_SUCCESS,
+                    MESSAGE_CODE.CONVERSATION_ACCESS_SUCCESS,
+                    STATUS_CODE.OK,
+                    true,
+                ),
+            );
         } else {
             var chatData = {
                 chatName: 'sender',
@@ -54,11 +62,11 @@ module.exports = {
                 const FullChat = await Conversation.findOne({
                     _id: createdChat._id,
                 }).populate('users', '-password');
-                res.status(200).json(
+                res.status(201).json(
                     createResponse(
                         FullChat,
-                        STATUS_MESSAGE.CONVERSATION_ACCESS_SUCCESS,
-                        MESSAGE_CODE.CONVERSATION_ACCESS_SUCCESS,
+                        STATUS_MESSAGE.CONVERSATION_CREATE_SUCCESS,
+                        MESSAGE_CODE.CONVERSATION_CREATE_SUCCESS,
                         STATUS_CODE.OK,
                         true,
                     ),
@@ -258,10 +266,11 @@ module.exports = {
     updateConversationBackground: async (req, res, next) => {
         const conversationId = req.query.id;
         const background = req.body.background;
+        const { url, backgroundType } = background;
         const userId = req.user._id;
         try {
             const users = await Conversation.findOne({ _id: conversationId }).select('users');
-            if (!users.users.includes(userId)) {
+            if (!users?.users?.includes(userId)) {
                 return res
                     .status(400)
                     .json(
@@ -275,7 +284,7 @@ module.exports = {
             }
             const conversationUpdate = await Conversation.findByIdAndUpdate(
                 { _id: conversationId },
-                { background: background },
+                { background: { url: url, backgroundType: backgroundType } },
                 { new: true },
             );
             return res
@@ -285,6 +294,44 @@ module.exports = {
                         conversationUpdate,
                         STATUS_MESSAGE.UPDATE_BACKGROUND_CONVERSATION_SUCCESS,
                         MESSAGE_CODE.UPDATE_BACKGROUND_CONVERSATION_SUCCESS,
+                        STATUS_CODE.CREATED,
+                        true,
+                    ),
+                );
+        } catch (error) {
+            next(error);
+        }
+    },
+    updateConversationAvatar: async (req, res, next) => {
+        const conversationId = req.query.id;
+        const avatar = req.body.avatar;
+        const userId = req.user._id;
+        try {
+            const users = await Conversation.findOne({ _id: conversationId }).select('users');
+            if (!users?.users?.includes(userId)) {
+                return res
+                    .status(400)
+                    .json(
+                        createResponse(
+                            null,
+                            STATUS_MESSAGE.NO_PERMISSION_UPDATE_AVATAR,
+                            MESSAGE_CODE.NO_PERMISSION_UPDATE_AVATAR,
+                            false,
+                        ),
+                    );
+            }
+            const conversationUpdate = await Conversation.findByIdAndUpdate(
+                { _id: conversationId },
+                { avatar: avatar },
+                { new: true },
+            );
+            return res
+                .status(200)
+                .json(
+                    createResponse(
+                        conversationUpdate,
+                        STATUS_MESSAGE.UPDATE_AVATAR_CONVERSATION_SUCCESS,
+                        MESSAGE_CODE.UPDATE_AVATAR_CONVERSATION_SUCCESS,
                         STATUS_CODE.CREATED,
                         true,
                     ),

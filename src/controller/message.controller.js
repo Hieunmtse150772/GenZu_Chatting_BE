@@ -111,7 +111,7 @@ module.exports = {
         }
     },
     sendSingleMessage: async (req, res, next) => {
-        const { message, messageType, isSpoiled, styles, emojiBy } = req.body;
+        const { message, messageType, isSpoiled, styles, emojiBy, replyMessage } = req.body;
         const userId = req.user._id;
         const conversationId = req.query.id;
         var messageCreated = {
@@ -123,6 +123,7 @@ module.exports = {
             messageType: messageType,
             styles: styles,
             emojiBy: emojiBy,
+            replyMessage: replyMessage,
         };
         try {
             const conversation = await Conversation.findOne({ _id: conversationId });
