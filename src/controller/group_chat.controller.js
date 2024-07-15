@@ -38,7 +38,11 @@ module.exports = {
                     message_type: 'notification',
                 });
             });
-            const fullGroupChatInfo = await Conversation.findById(groupChat._id)
+            const fullGroupChatInfo = await Conversation.findByIdAndUpdate(
+                groupChat._id,
+                { latestMessage },
+                { new: true },
+            )
                 .populate('users', 'picture fullName _id email is_online offline_at')
                 .populate('groupAdmin', 'picture fullName _id email is_online offline_at');
 
@@ -73,7 +77,6 @@ module.exports = {
 
         try {
             const group = await Conversation.findById(groupId);
-
             if (!group) {
                 return socket.emit(
                     'response group',
@@ -103,9 +106,6 @@ module.exports = {
                 );
             }
 
-            group.users.push(...newUsers);
-            const newGroup = await group.save();
-
             newUsers.forEach(async (item) => {
                 latestMessage = await Message.create({
                     sender: userId,
@@ -115,21 +115,41 @@ module.exports = {
                     affected_user_id: item,
                     message_type: 'notification',
                 });
-                socket.in(item).emit('notification', responseNotificationSocket('join group', group._id));
+                socket
+                    .in(group._id.toString())
+                    .emit(
+                        'message received',
+                        responseNotificationSocket(latestMessage, MESSAGE_CODE.SEND_MESSAGE_SUCCESS, true),
+                    );
             });
 
-            return socket
-                .in(newGroup._id)
-                .emit(
-                    'add member successfully',
-                    createResponse(
-                        newGroup,
-                        STATUS_MESSAGE.ADD_MEMBER_TO_GROUP_SUCCESS,
-                        MESSAGE_CODE.ADD_MEMBER_TO_GROUP_SUCCESSFULLY,
-                        STATUS_CODE.OK,
-                        true,
-                    ),
-                );
+            const newGroup = await Conversation.findByIdAndUpdate(
+                { _id: group._id },
+                { $push: { users: { $each: newUsers } }, $set: { latestMessage } },
+                { new: true },
+            )
+                .populate('users', 'picture fullName _id email is_online offline_at')
+                .populate('groupAdmin', 'picture fullName _id email is_online offline_at');
+
+            newUsers.forEach((item) => {
+                socket
+                    .in(item.toString())
+                    .emit(
+                        'notification',
+                        responseNotificationSocket(newGroup, MESSAGE_CODE.ADD_MEMBER_TO_GROUP_SUCCESSFULLY, true),
+                    );
+            });
+
+            return socket.emit(
+                'response group',
+                createResponse(
+                    newGroup,
+                    STATUS_MESSAGE.ADD_MEMBER_TO_GROUP_SUCCESS,
+                    MESSAGE_CODE.ADD_MEMBER_TO_GROUP_SUCCESSFULLY,
+                    STATUS_CODE.OK,
+                    true,
+                ),
+            );
         } catch (error) {
             return socket.emit(
                 'response group',
@@ -211,7 +231,7 @@ module.exports = {
                     );
                     // not admin and delete self
                 } else {
-                    group.users = group.users.filter((item) => !item.equals(userId));
+                    const newMembers = group.users.filter((item) => !item.equals(userId));
                     const latestMessage = await Message.create({
                         sender: userId,
                         message: MESSAGE_CODE.USER_LEAVE_IN_GROUP,
@@ -221,8 +241,21 @@ module.exports = {
                         message_type: 'notification',
                     });
 
-                    group.latestMessage = latestMessage;
-                    const newGroup = await group.save();
+                    const newGroup = await Conversation.findByIdAndUpdate(
+                        { _id: group._id },
+                        { users: newMembers, latestMessage },
+                        { new: true },
+                    )
+                        .populate('users', 'picture fullName _id email is_online offline_at')
+                        .populate('groupAdmin', 'picture fullName _id email is_online offline_at');
+
+                    socket
+                        .in(group._id.toString())
+                        .emit(
+                            'message received',
+                            responseNotificationSocket(latestMessage, MESSAGE_CODE.SEND_MESSAGE_SUCCESS, true),
+                        );
+
                     return socket.emit(
                         'response group',
                         createResponse(
@@ -237,7 +270,7 @@ module.exports = {
             } else {
                 // la admin xoa nguoi khac
                 if (!userId.equals(memberId)) {
-                    group.users = group.users.filter((item) => !item.equals(memberId));
+                    const newMembers = group.users.filter((item) => !item.equals(memberId));
                     const latestMessage = await Message.create({
                         sender: userId,
                         message: MESSAGE_CODE.DELETE_USER_IN_GROUP,
@@ -246,9 +279,21 @@ module.exports = {
                         affected_user_id: memberId,
                         message_type: 'notification',
                     });
+                    const newGroup = await Conversation.findByIdAndUpdate(
+                        { _id: group._id },
+                        { users: newMembers, latestMessage },
+                        { new: true },
+                    )
+                        .populate('users', 'picture fullName _id email is_online offline_at')
+                        .populate('groupAdmin', 'picture fullName _id email is_online offline_at');
 
-                    group.latestMessage = latestMessage;
-                    const newGroup = await group.save();
+                    socket
+                        .in(group._id.toString())
+                        .emit(
+                            'message received',
+                            responseNotificationSocket(latestMessage, MESSAGE_CODE.SEND_MESSAGE_SUCCESS, true),
+                        );
+
                     return socket.emit(
                         'response group',
                         createResponse(
@@ -261,7 +306,7 @@ module.exports = {
                     );
                 } else {
                     // la admin xoa chinh minh
-                    if (!req.body.exchangeAdmin) {
+                    if (!data.exchangeAdmin) {
                         return socket.emit(
                             'response group',
                             createResponse(
@@ -293,7 +338,7 @@ module.exports = {
                     if (group.users.length > 1) {
                         // update groupAdmin to new user
                         group.groupAdmin = exchangeAdminId;
-                        await Message.create({
+                        const transferLeaderMs = await Message.create({
                             sender: userId,
                             message: MESSAGE_CODE.TRANSFER_GROUP_LEADER,
                             conversation: group._id,
@@ -301,6 +346,13 @@ module.exports = {
                             affected_user_id: exchangeAdminId,
                             message_type: 'notification',
                         });
+
+                        socket
+                            .in(group._id.toString())
+                            .emit(
+                                'message received',
+                                responseNotificationSocket(transferLeaderMs, MESSAGE_CODE.SEND_MESSAGE_SUCCESS, true),
+                            );
 
                         // delete self from the group
                         group.users.pull(memberId);
@@ -314,13 +366,21 @@ module.exports = {
                         });
 
                         group.latestMessage = latestMessage;
-                        const newGroup = await group.save();
+                        await group.save();
+
+                        socket
+                            .in(group._id.toString())
+                            .emit(
+                                'message received',
+                                responseNotificationSocket(latestMessage, MESSAGE_CODE.SEND_MESSAGE_SUCCESS, true),
+                            );
+
                         return socket.emit(
                             'response group',
                             createResponse(
-                                newGroup,
-                                STATUS_MESSAGE.DELETE_MEMBER_SUCCESS,
-                                MESSAGE_CODE.DELETE_MEMBER_SUCCESSFULLY,
+                                null,
+                                STATUS_MESSAGE.USER_LEAVE_IN_GROUP,
+                                MESSAGE_CODE.USER_LEAVE_IN_GROUP,
                                 STATUS_CODE.OK,
                                 true,
                             ),
@@ -330,7 +390,16 @@ module.exports = {
                     } else {
                         // delete group
                         await Conversation.deleteOne({ _id: group._id });
-                        return socket.emit('delete group successfully', STATUS_CODE.NO_CONTENT);
+                        return socket.emit(
+                            'response group',
+                            createResponse(
+                                null,
+                                STATUS_MESSAGE.DELETE_GROUP_SUCCESS,
+                                MESSAGE_CODE.DELETE_GROUP_SUCCESSFULLY,
+                                STATUS_CODE.OK,
+                                true,
+                            ),
+                        );
                     }
                 }
             }
@@ -347,17 +416,17 @@ module.exports = {
             );
         }
     },
-    updateGroupChat: async (req, res, next) => {
-        const userId = req.user._id;
-        const groupId = req.params.id;
+    updateGroupChat: async (data, socket) => {
+        const userId = socket.user._id;
+        const groupId = data.groupId;
 
         try {
             const group = await Conversation.findById(groupId);
 
             let latestMessage;
 
-            if (req.body.avatar) {
-                group.avatar = req.body.avatar;
+            if (data.avatar) {
+                group.avatar = data.avatar;
                 latestMessage = await Message.create({
                     sender: userId,
                     message: 'changed_avatar',
@@ -365,10 +434,16 @@ module.exports = {
                     status: 'active',
                     message_type: 'notification',
                 });
+                socket
+                    .in(group._id.toString())
+                    .emit(
+                        'message received',
+                        responseNotificationSocket(latestMessage, MESSAGE_CODE.SEND_MESSAGE_SUCCESS, true),
+                    );
             }
 
-            if (req.body.background) {
-                group.background = req.body.background;
+            if (data.background) {
+                group.background = data.background;
                 latestMessage = await Message.create({
                     sender: userId,
                     message: 'changed_background',
@@ -376,27 +451,42 @@ module.exports = {
                     status: 'active',
                     message_type: 'notification',
                 });
+                socket
+                    .in(group._id.toString())
+                    .emit(
+                        'message received',
+                        responseNotificationSocket(latestMessage, MESSAGE_CODE.SEND_MESSAGE_SUCCESS, true),
+                    );
             }
 
-            if (req.body.chatName) {
+            if (data.chatName) {
                 latestMessage = await Message.create({
                     sender: userId,
-                    message: `changed_group_name ${group.chatName} ${req.body.chatName}`,
+                    message: `changed_group_name ${group.chatName} ${data.chatName}`,
                     conversation: groupId,
                     status: 'active',
                     message_type: 'notification',
                 });
-                group.chatName = req.body.chatName;
+                group.chatName = data.chatName;
+                socket
+                    .in(group._id.toString())
+                    .emit(
+                        'message received',
+                        responseNotificationSocket(latestMessage, MESSAGE_CODE.SEND_MESSAGE_SUCCESS, true),
+                    );
             }
 
             group.latestMessage = latestMessage;
 
             const newGroup = await group.save();
 
+            const resGroup = await Conversation.findById(newGroup._id)
+                .populate('users', 'picture fullName _id email is_online offline_at')
+                .populate('groupAdmin', 'picture fullName _id email is_online offline_at');
             return socket.emit(
                 'response group',
                 createResponse(
-                    newGroup,
+                    resGroup,
                     STATUS_MESSAGE.UPDATE_GROUP_SUCCESSFULLY,
                     MESSAGE_CODE.UPDATE_GROUP_SUCCESSFULLY,
                     STATUS_CODE.OK,
@@ -416,44 +506,51 @@ module.exports = {
             );
         }
     },
-    deleteGroupChat: async (req, res, next) => {
-        const userId = req.user._id;
-        const groupId = req.params.id;
+    deleteGroupChat: async (data, socket) => {
+        const userId = socket.user._id;
+        const groupId = data.id;
 
         try {
             const group = await Conversation.findById(groupId);
 
             if (!group) {
-                return res
-                    .status(STATUS_CODE.NOT_FOUND)
-                    .json(
-                        createResponse(
-                            null,
-                            STATUS_MESSAGE.GROUP_NOT_FOUND,
-                            MESSAGE_CODE.GROUP_NOT_FOUND,
-                            STATUS_CODE.NOT_FOUND,
-                            false,
-                        ),
-                    );
+                socket.emit(
+                    'response group',
+                    createResponse(
+                        null,
+                        STATUS_MESSAGE.GROUP_NOT_FOUND,
+                        MESSAGE_CODE.GROUP_NOT_FOUND,
+                        STATUS_CODE.NOT_FOUND,
+                        false,
+                    ),
+                );
             }
 
             if (!userId.equals(group.groupAdmin)) {
-                return res
-                    .status(STATUS_CODE.FORBIDDEN)
-                    .json(
-                        createResponse(
-                            null,
-                            STATUS_MESSAGE.FORBIDDEN,
-                            STATUS_CODE.FORBIDDEN,
-                            STATUS_CODE.FORBIDDEN,
-                            false,
-                        ),
-                    );
+                socket.emit(
+                    'response group',
+                    createResponse(
+                        null,
+                        STATUS_MESSAGE.FORBIDDEN,
+                        MESSAGE_CODE.FORBIDDEN,
+                        STATUS_CODE.FORBIDDEN,
+                        false,
+                    ),
+                );
             }
 
             await Conversation.deleteOne({ _id: group._id });
 
-            return res.status(STATUS_CODE.NO_CONTENT).json();
+            return socket.emit(
+                'response group',
+                createResponse(
+                    null,
+                    STATUS_MESSAGE.DELETE_GROUP_SUCCESS,
+                    MESSAGE_CODE.DELETE_GROUP_SUCCESSFULLY,
+                    STATUS_CODE.OK,
+                    false,
+                ),
+            );
         } catch (error) {
             return socket.emit(
                 'response group',
