@@ -164,10 +164,11 @@ io.on('connection', async (socket) => {
 
     //Create new conversation
     socket.on('access chat', (conversation) => {
+        console.log('access chat: ', conversation);
         if (conversation) {
             for (i = 0; i < conversation?.users.length; i++) {
-                if (conversation?.users[i] !== conversation?.userId) {
-                    socket.to(conversation?.users[i]).emit('accessed chat', conversation);
+                if (conversation?.users[i]._id !== conversation?.userId) {
+                    socket.to(conversation?.users[i]._id).emit('accessed chat', conversation);
                 }
             }
         }
