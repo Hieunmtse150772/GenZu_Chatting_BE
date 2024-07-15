@@ -163,16 +163,17 @@ io.on('connection', async (socket) => {
     });
 
     //Create new conversation
-    socket.on('access chat', (conversation) => {
-        console.log('access chat: ', conversation);
-        if (conversation) {
-            for (i = 0; i < conversation?.users.length; i++) {
-                if (conversation?.users[i]._id !== conversation?.userId) {
-                    socket.to(conversation?.users[i]._id).emit('accessed chat', conversation);
+    socket.on('access chat', (conversationInfo) => {
+        console.log('access chat: ', conversationInfo);
+        if (conversationInfo.conversation) {
+            for (i = 0; i < conversationInfo?.conversation?.users.length; i++) {
+                if (conversationInfo?.conversation?.users[i]._id !== conversationInfo?.userId) {
+                    socket.to(conversationInfo?.users[i]._id).emit('accessed chat', conversationInfo);
                 }
             }
         }
     });
+
     //Set up room with conversation id for user who was join to chat
     socket.on('join chat', (room) => {
         if (room.conversation) {
