@@ -64,7 +64,7 @@ const STATUS_MESSAGE = {
     MESSAGE_NOT_FOUND: 'Message not found',
     MESSAGE_TOO_OLD_TO_EDIT: 'Message too old to edit (More than 30p)',
     NO_PERMISSION_SEND_MESSAGE: 'You have no permission to send message in this conversation',
-
+    WATCH_MESSAGE_SUCCESS: 'Watch message success',
     //Conversation
     REMOVE_CONVERSATION_SUCCESS: 'Remove conversation success',
     CONVERSATION_NOT_FOUND: 'Conversation not found',

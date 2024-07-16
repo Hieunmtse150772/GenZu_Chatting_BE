@@ -35,7 +35,7 @@ module.exports = {
                     conversation: groupChat,
                     status: 'active',
                     affected_user_id: item,
-                    message_type: 'notification',
+                    messageType: 'notification',
                 });
             });
             const fullGroupChatInfo = await Conversation.findByIdAndUpdate(
@@ -113,7 +113,7 @@ module.exports = {
                     conversation: group._id,
                     status: 'active',
                     affected_user_id: item,
-                    message_type: 'notification',
+                    messageType: 'notification',
                 });
                 socket
                     .in(group._id.toString())
@@ -238,7 +238,7 @@ module.exports = {
                         conversation: group._id,
                         status: 'active',
                         affected_user_id: userId,
-                        message_type: 'notification',
+                        messageType: 'notification',
                     });
 
                     const newGroup = await Conversation.findByIdAndUpdate(
@@ -277,7 +277,7 @@ module.exports = {
                         conversation: group._id,
                         status: 'active',
                         affected_user_id: memberId,
-                        message_type: 'notification',
+                        messageType: 'notification',
                     });
                     const newGroup = await Conversation.findByIdAndUpdate(
                         { _id: group._id },
@@ -344,7 +344,7 @@ module.exports = {
                             conversation: group._id,
                             status: 'active',
                             affected_user_id: exchangeAdminId,
-                            message_type: 'notification',
+                            messageType: 'notification',
                         });
 
                         socket
@@ -362,7 +362,7 @@ module.exports = {
                             conversation: group._id,
                             status: 'active',
                             affected_user_id: userId,
-                            message_type: 'notification',
+                            messageType: 'notification',
                         });
 
                         group.latestMessage = latestMessage;
@@ -432,7 +432,7 @@ module.exports = {
                     message: 'changed_avatar',
                     conversation: groupId,
                     status: 'active',
-                    message_type: 'notification',
+                    messageType: 'notification',
                 });
                 socket
                     .in(group._id.toString())
@@ -449,7 +449,7 @@ module.exports = {
                     message: 'changed_background',
                     conversation: groupId,
                     status: 'active',
-                    message_type: 'notification',
+                    messageType: 'notification',
                 });
                 socket
                     .in(group._id.toString())
@@ -465,7 +465,7 @@ module.exports = {
                     message: `changed_group_name ${group.chatName} ${data.chatName}`,
                     conversation: groupId,
                     status: 'active',
-                    message_type: 'notification',
+                    messageType: 'notification',
                 });
                 group.chatName = data.chatName;
                 socket

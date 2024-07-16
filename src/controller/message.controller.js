@@ -534,4 +534,28 @@ module.exports = {
             console.log(`${text[i]} => (${target}) ${translation}`);
         });
     },
+    readMessage: async (data, socket) => {
+        try {
+            const userId = socket.user._id;
+
+            const messageUpdate = await Message.findByIdAndUpdate(
+                { _id: data._id },
+                { $push: { readBy: userId } },
+                { new: true },
+            );
+
+            return socket.emit(
+                'watched message',
+                createResponse(
+                    messageUpdate,
+                    STATUS_MESSAGE.WATCH_MESSAGE_SUCCESS,
+                    MESSAGE_CODE.WATCH_MESSAGE_SUCCESS,
+                    STATUS_CODE.OK,
+                    false,
+                ),
+            );
+        } catch (error) {
+            return next(error);
+        }
+    },
 };
