@@ -48,12 +48,15 @@ process.on('uncaughtException', (err) => {
 });
 
 // Creates a client
-const translate = new Translate('AIzaSyBVeD1KHamEJol0d0fXlwsPiFJLfuCmHao');
+
+// Creates a client
+const translate = new Translate({ key: 'AIzaSyC-AnLiqjKykX7n-Hg4p4_tEAxFARqkNBo' });
 
 /**
  * TODO(developer): Uncomment the following lines before running the sample.
  */
-const text = 'Hello, world!';
+const text =
+    'Before you can start using the Cloud Translation API, you must have a project that has the Cloud Translation API enabled, and you must have the appropriate credentials';
 const target = 'ru';
 
 async function translateText() {

@@ -56,6 +56,7 @@ module.exports = async function (req, res, next) {
         })
             .find(searchQuery ? searchQuery : {})
             .populate('sender', '_id fullName picture')
+            .populate('affected_user_id', '_id fullName picture')
             .populate('conversation')
             .populate({
                 path: 'emojiBy',
