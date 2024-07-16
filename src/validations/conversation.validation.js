@@ -1,3 +1,4 @@
+const { objectIdValidator } = require('@/utils/functions');
 const Joi = require('joi');
 
 const accessConversation = Joi.object({
@@ -18,6 +19,10 @@ const updateBackgroundConversation = Joi.object({
         backgroundType: Joi.string().min(1).required(),
     }),
 });
+const blockUserConversation = Joi.object({
+    blockUserId: Joi.string().required().custom(objectIdValidator, 'ObjectId validation'),
+    id: Joi.string().required().custom(objectIdValidator, 'ObjectId validation'),
+});
 const updateAvatarConversation = Joi.object({
     avatar: Joi.string().min(1).required(),
 });
@@ -27,4 +32,5 @@ module.exports = {
     fetchConversation,
     updateBackgroundConversation,
     updateAvatarConversation,
+    blockUserConversation,
 };

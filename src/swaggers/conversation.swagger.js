@@ -237,6 +237,80 @@ const conversationSwagger = {
             },
         },
     },
+    '/conversations/blockUsers': {
+        patch: {
+            tags: ['Conversation'],
+            description: 'Block user',
+            security: [
+                {
+                    accessToken: [],
+                },
+            ],
+            parameters: [
+                {
+                    name: 'id',
+                    in: 'query',
+                    description: 'Id of conversation',
+                    schema: {
+                        type: 'string',
+                    },
+                },
+                {
+                    name: 'blockUserId',
+                    in: 'query',
+                    description: 'Id of user',
+                    schema: {
+                        type: 'string',
+                    },
+                },
+            ],
+            responses: {
+                200: {
+                    description: 'Update avatar conversation successfully',
+                    content: {
+                        'application/json': {},
+                    },
+                },
+            },
+        },
+    },
+    '/conversations/unBlockUsers': {
+        patch: {
+            tags: ['Conversation'],
+            description: 'Un block user',
+            security: [
+                {
+                    accessToken: [],
+                },
+            ],
+            parameters: [
+                {
+                    name: 'id',
+                    in: 'query',
+                    description: 'Id of conversation',
+                    schema: {
+                        type: 'string',
+                    },
+                },
+                {
+                    name: 'blockUserId',
+                    in: 'query',
+                    description: 'Id of user',
+                    schema: {
+                        type: 'string',
+                    },
+                },
+            ],
+            responses: {
+                200: {
+                    description: 'Update avatar conversation successfully',
+                    content: {
+                        'application/json': {},
+                    },
+                },
+            },
+        },
+    },
 };
 
 module.exports = conversationSwagger;

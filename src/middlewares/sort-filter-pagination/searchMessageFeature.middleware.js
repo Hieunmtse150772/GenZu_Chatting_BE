@@ -71,8 +71,11 @@ module.exports = async function (req, res, next) {
             const pageNumber = Math.floor(index / pageLimit) + 1;
 
             data.push({
-                message: message._id,
+                _id: message._id,
+                sender: message.sender,
+                message: message.message,
                 pageNumber: pageNumber,
+                createdAt: message.createdAt,
             });
         }
 

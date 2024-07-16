@@ -313,7 +313,7 @@ io.on('connection', async (socket) => {
     //Change background conversation
     socket.on('change background', async (background) => {
         try {
-            socket.to(background.conversation).emit(background);
+            socket.to(background.conversation).emit('changed background', background);
         } catch (error) {
             console.log('error socket: ', error);
         }
