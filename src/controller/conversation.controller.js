@@ -270,6 +270,7 @@ module.exports = {
         const userId = req.user._id;
         try {
             const users = await Conversation.findOne({ _id: conversationId }).select('users');
+
             if (!users?.users?.includes(userId)) {
                 return res
                     .status(400)
@@ -282,16 +283,34 @@ module.exports = {
                         ),
                     );
             }
+            const messageCreate = {
+                sender: userId,
+                message: MESSAGE_CODE.UPDATE_BACKGROUND_CONVERSATION_SUCCESS,
+                conversation: conversationId,
+                status: 'active',
+                messageType: 'notification',
+            };
             const conversationUpdate = await Conversation.findByIdAndUpdate(
                 { _id: conversationId },
                 { background: { url: url, backgroundType: backgroundType } },
                 { new: true },
             );
+            var message = await Message.create(messageCreate);
+            message = await message.populate('sender', 'fullName picture email');
+            message = await message.populate('conversation');
+            message = await User.populate(message, {
+                path: 'conversation.users',
+                select: 'fullName picture email',
+            });
+            const result = {
+                message,
+                conversationUpdate,
+            };
             return res
                 .status(200)
                 .json(
                     createResponse(
-                        conversationUpdate,
+                        result,
                         STATUS_MESSAGE.UPDATE_BACKGROUND_CONVERSATION_SUCCESS,
                         MESSAGE_CODE.UPDATE_BACKGROUND_CONVERSATION_SUCCESS,
                         STATUS_CODE.CREATED,
