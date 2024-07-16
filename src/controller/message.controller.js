@@ -1,4 +1,6 @@
 const mongodb = require('mongodb');
+const { Translate } = require('@google-cloud/translate').v2;
+
 const Conversation = require('../model/conversation.model');
 const Message = require('@/model/message.model');
 const User = require('@/model/user.model');
@@ -7,6 +9,9 @@ const MESSAGE_CODE = require('@/enums/response/messageCode.enum');
 const { createResponse } = require('@/utils/responseHelper');
 const STATUS_MESSAGE = require('@/enums/response/statusMessage.enum');
 const { STATUS_CODE } = require('@/enums/response');
+
+const translate = new Translate({ key: process.env.TRANSLATION_API_KEY_TRANSLATION });
+
 module.exports = {
     getAllMessages: async (req, res, next) => {
         try {
@@ -518,41 +523,15 @@ module.exports = {
             return next(error);
         }
     },
-    // sendMessage: async (req, res, next) => {
-    //   try {
-    //     const conversation_id = req.params.id;
-    //     if (!mongodb.ObjectId.isValid(conversation_id)) {
-    //       return res.status(400).json({
-    //         message: 'The conversation id is invalid',
-    //         messageCode: 'invalid_conversation_id',
-    //       });
-    //     }
-    //     const senderId = req.user._id ;
-    //     const { message } = req.body;
-    //     // let conversation = await Conversation.findOne({
-    //     //   id: conversation_id,
-    //     // });
-    //     // if (!conversation) {
-    //     //   conversation = new Conversation({
-    //     //     participants: [senderId, receiverId],
-    //     //   });
-    //     // }
-    //     // const newMessage = await Message.create({
-    //     //   senderId,
-    //     //   receiverId,
-    //     //   message,
-    //     // });
-    //     // if (newMessage) {
-    //     //   conversation.messages.push(newMessage._id);
-    //     // }
-    //     // await conversation.save();
-    //     return res.status(201).json({
-    //       message: 'Message sent successfully',
-    //       messageCode: 'sent_successfully',
-    //       data: message,
-    //     });
-    //   } catch (error) {
-    //     next(error);
-    //   }
-    // },
+    translateMessage: async (req, res, next) => {
+        const text = req.body.message;
+        const target = req.body.languageTranslate;
+
+        let [translations] = await translate.translate(text, target);
+        translations = Array.isArray(translations) ? translations : [translations];
+        console.log('Translations:');
+        translations.forEach((translation, i) => {
+            console.log(`${text[i]} => (${target}) ${translation}`);
+        });
+    },
 };
