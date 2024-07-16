@@ -27,16 +27,21 @@ module.exports = async function (req, res, next) {
         if (req.query.startDate) {
             dateQuery.$gte = new Date(req.query.startDate);
         }
+
         if (req.query.endDate) {
             dateQuery.$lte = new Date(req.query.endDate);
         }
+
         if (req.query.startDate || req.query.endDate) {
             searchQuery = { createdAt: dateQuery };
         }
+
         if (req.query.messageId) {
             searchQuery = { ...searchQuery, _id: { $gte: req.query.messageId } };
         }
+
         const conversation = await Conversation.findOne({ _id: conversation_id });
+
         if (!conversation?.users?.includes(userId)) {
             return res
                 .status(400)
@@ -65,10 +70,6 @@ module.exports = async function (req, res, next) {
                 },
             })
             .populate('replyMessage', '_id sender message messageType');
-        // console.log('query: ', query);
-        // query = query.map((list) => {
-        //     list, (list.message = list.message.replace(/<br>/g, '\n'));
-        // });
         // Pagination
         const page = Number(req.query.page) || 1;
         const limit = Number(req.query.limit) || 20;
@@ -82,40 +83,38 @@ module.exports = async function (req, res, next) {
             },
             totalDocs: 0,
         };
-        if (!req.query.messageId) {
-            const totalCount = await Message.countDocuments({
-                conversation: conversation_id,
-                status: { $in: ['active', 'recalled'] },
-                deleteBy: { $nin: userId },
-            }).exec();
+        const totalCount = await Message.countDocuments({
+            conversation: conversation_id,
+            status: { $in: ['active', 'recalled'] },
+            deleteBy: { $nin: userId },
+        }).exec();
 
-            results.totalDocs = totalCount;
+        results.totalDocs = totalCount;
 
-            if (endIndex < totalCount) {
-                results.next = {
-                    page: page + 1,
-                    limit,
-                };
-            }
-
-            if (startIndex > 0) {
-                results.previous = {
-                    page: page - 1,
-                    limit,
-                };
-            }
-
-            results.totalPages = Math.ceil(totalCount / limit);
-            results.lastPage = Math.ceil(totalCount / limit);
-
-            // If requested page don't exist
-            if (req.query.page && Number(req.query.page) > Math.ceil(totalCount / limit)) {
-                // throw new Error(`This page don't exist`);
-            }
-
-            // Final pagination query
-            query = query.limit(limit).skip(startIndex);
+        if (endIndex < totalCount) {
+            results.next = {
+                page: page + 1,
+                limit,
+            };
         }
+
+        if (startIndex > 0) {
+            results.previous = {
+                page: page - 1,
+                limit,
+            };
+        }
+
+        results.totalPages = Math.ceil(totalCount / limit);
+        results.lastPage = Math.ceil(totalCount / limit);
+
+        // If requested page don't exist
+        if (req.query.page && Number(req.query.page) > Math.ceil(totalCount / limit)) {
+            // throw new Error(`This page don't exist`);
+        }
+
+        // Final pagination query
+        query = query.limit(limit).skip(startIndex);
 
         query = query.sort('-createdAt');
 
