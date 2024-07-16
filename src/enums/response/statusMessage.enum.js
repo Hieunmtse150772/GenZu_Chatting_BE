@@ -80,7 +80,11 @@ const STATUS_MESSAGE = {
     NO_PERMISSION_UPDATE_BACKGROUND: 'You have no permission to update background',
     UPDATE_AVATAR_CONVERSATION_SUCCESS: 'Update avatar conversation success',
     NO_PERMISSION_UPDATE_AVATAR: 'You have no permission to update avatar',
-
+    NO_PERMISSION_BLOCK_USER: 'You have no permission to block user',
+    NO_PERMISSION_UN_BLOCK_USER: 'You have no permission to un-block user',
+    BLOCK_USER_SUCCESS: 'Block user success',
+    UN_BLOCK_USER_SUCCESS: 'Un-block user success',
+    USER_AlREADY_BLOCKED: 'User is already blocked',
     //Friend
     FRIEND_REQUEST_SENT_SUCCESS: 'Friend request sent',
     FRIEND_REQUEST_SENT_FAIL: 'Friend request sent failed',

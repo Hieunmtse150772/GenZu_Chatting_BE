@@ -29,24 +29,26 @@ module.exports = {
             })
                 .populate('users', '_id fullName email picture')
                 .populate('latestMessage');
+            if (friendList.length > 0) {
+                friendList = friendList.map((friend) => {
+                    friendInfo = friend.users.filter((user) => user?._id.toString() !== userId.toString())[0];
+                    return {
+                        info: friendInfo,
+                        friendRequest: friend.friendRequest,
+                        friendShip: friend._id,
+                        status: friend.status,
+                        isChat: Boolean(conversations),
+                        conversation: conversations.filter((conversation) => {
+                            const userIds = conversation.users.map((user) => String(user?._id));
+                            return userIds.includes(String(userId)) && userIds.includes(String(friendInfo?._id));
+                        }),
+                        createdAt: friend.createdAt,
+                        updatedAt: friend.updatedAt,
+                    };
+                });
+            }
 
-            friendList = friendList.map((friend) => {
-                friendInfo = friend.users.filter((user) => user?._id.toString() !== userId.toString())[0];
-                return {
-                    info: friendInfo,
-                    friendRequest: friend.friendRequest,
-                    friendShip: friend._id,
-                    status: friend.status,
-                    isChat: Boolean(conversations),
-                    conversation: conversations.filter((conversation) => {
-                        const userIds = conversation.users.map((user) => String(user?._id));
-                        return userIds.includes(String(userId)) && userIds.includes(String(friendInfo?._id));
-                    }),
-                    createdAt: friend.createdAt,
-                    updatedAt: friend.updatedAt,
-                };
-            });
-            if (!friendList) {
+            if (friendList.length > 0) {
                 return res.status(200).json({
                     message: 'Get friend list was successfully.',
                     messageCode: 'get_friend_list_successfully',

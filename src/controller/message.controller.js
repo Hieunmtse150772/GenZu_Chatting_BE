@@ -156,6 +156,20 @@ module.exports = {
                         ),
                     );
             }
+            const isUserBlocked = conversation.blockUsers.some((item) => item.equals(userId));
+            if (isUserBlocked) {
+                return res
+                    .status(403)
+                    .json(
+                        createResponse(
+                            null,
+                            STATUS_MESSAGE.USER_WAS_BLOCKED,
+                            MESSAGE_CODE.USER_WAS_BLOCKED,
+                            STATUS_CODE.FORBIDDEN,
+                            false,
+                        ),
+                    );
+            }
             var newMessage = await Message.create(messageCreated);
             newMessage = await newMessage.populate('sender', 'fullName picture email');
             newMessage = await newMessage.populate('conversation');

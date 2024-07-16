@@ -12,6 +12,7 @@ const {
     deleteMemberGroupBody,
     updateBackgroundConversation,
     updateAvatarConversation,
+    blockUserConversation,
 } = require('@/validations');
 
 router.get('/:id', verifyToken, validateParams(validateIdMongodb), ConversationController.getConversationById);
@@ -19,6 +20,7 @@ router.get('/', verifyToken, ConversationController.fetchConversation);
 router.post('/', verifyToken, ConversationController.accessConversation);
 router.patch('/', verifyToken, validateQuery(validateIdMongodb), ConversationController.redoHistoryConversation);
 router.delete('/', verifyToken, validateQuery(validateIdMongodb), ConversationController.removeHistoryConversation);
+
 router.patch(
     '/background',
     verifyToken,
@@ -49,6 +51,8 @@ router.patch(
     validateBody(deleteMemberGroupBody),
     GroupChatController.deleteMemberGroupChat,
 );
+router.delete('/group/:id', verifyToken, validateParams(validateIdMongodb), GroupChatController.deleteGroupChat);
+
 router.patch(
     '/group/:id',
     verifyToken,
@@ -56,6 +60,17 @@ router.patch(
     validateBody(updateGroupBody),
     GroupChatController.updateGroupChat,
 );
-router.delete('/group/:id', verifyToken, validateParams(validateIdMongodb), GroupChatController.deleteGroupChat);
+router.patch(
+    '/blockUsers',
+    verifyToken,
+    validateQuery(blockUserConversation),
+    ConversationController.blockUserConversation,
+);
+router.patch(
+    '/unBlockUsers',
+    verifyToken,
+    validateQuery(blockUserConversation),
+    ConversationController.unBlockUserConversation,
+);
 
 module.exports = router;
