@@ -3,7 +3,6 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
-const { Translate } = require('@google-cloud/translate').v2;
 
 const routes = require('@/routes');
 require('@/connections/mongodb');
@@ -46,32 +45,6 @@ process.on('uncaughtException', (err) => {
             });
         });
 });
-
-// Creates a client
-
-// Creates a client
-const translate = new Translate({ key: 'AIzaSyC-AnLiqjKykX7n-Hg4p4_tEAxFARqkNBo' });
-
-/**
- * TODO(developer): Uncomment the following lines before running the sample.
- */
-const text =
-    'Before you can start using the Cloud Translation API, you must have a project that has the Cloud Translation API enabled, and you must have the appropriate credentials';
-const target = 'ru';
-
-async function translateText() {
-    // Translates the text into the target language. "text" can be a string for
-    // translating a single piece of text, or an array of strings for translating
-    // multiple texts.
-    let [translations] = await translate.translate(text, target);
-    translations = Array.isArray(translations) ? translations : [translations];
-    console.log('Translations:');
-    translations.forEach((translation, i) => {
-        console.log(`${text[i]} => (${target}) ${translation}`);
-    });
-}
-
-translateText();
 
 server.close(() => {
     console.log('Server has been closed.');
