@@ -88,11 +88,11 @@ module.exports = {
     },
     searchMessages: async (req, res, next) => {
         if (res?.paginatedResults) {
-            const { results, totalDocs, totalPages } = res.paginatedResults;
+            const { results, totalDocs, totalPages, data } = res.paginatedResults;
             const responseObject = {
                 totalDocs: totalDocs || 0,
-                totalPages: totalPages || 0,
-                count: results?.length || 0,
+                count: data.length || 0,
+                data: data,
             };
 
             responseObject.Messages = results?.map((Messages) => {
@@ -308,7 +308,7 @@ module.exports = {
         const messageId = req.query.id;
         const userId = req.user._id;
         const { content } = req.body;
-        const message = Message.findOne(messageId);
+        const message = await Message.findOne(messageId);
         if (!message) {
             return res.status(404).json({
                 message: STATUS_MESSAGE.MESSAGE_NOT_FOUND,

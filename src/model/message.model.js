@@ -29,6 +29,10 @@ const MessageSchema = mongoose.Schema(
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Message',
         },
+        translateMessage: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'MessageTranslate',
+        },
         status: {
             type: String,
             default: 'active',
