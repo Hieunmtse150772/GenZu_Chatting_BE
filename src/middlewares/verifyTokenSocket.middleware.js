@@ -12,8 +12,8 @@ module.exports = function (token, socket) {
                 'validation',
                 createResponse(
                     null,
-                    STATUS_MESSAGE.UNAUTHORIED,
-                    MESSAGE_CODE.UNAUTHORIED,
+                    STATUS_MESSAGE.UNAUTHORIZED,
+                    MESSAGE_CODE.UNAUTHORIZED,
                     STATUS_CODE.UNAUTHORIZED,
                     false,
                 ),
