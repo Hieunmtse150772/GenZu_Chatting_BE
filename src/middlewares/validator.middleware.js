@@ -28,7 +28,7 @@ module.exports = {
     validateBody: (validator) => {
         return async (req, res, next) => {
             try {
-                const validated = await validator.validateAsync(req.body, { context: { user: req.user } });
+                const validated = await validator.validateAsync(req.body);
                 req.body = validated;
                 next();
             } catch (err) {
