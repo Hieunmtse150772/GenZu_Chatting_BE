@@ -88,11 +88,11 @@ module.exports = {
     },
     searchMessages: async (req, res, next) => {
         if (res?.paginatedResults) {
-            const { results, totalDocs, totalPages } = res.paginatedResults;
+            const { results, totalDocs, totalPages, data } = res.paginatedResults;
             const responseObject = {
                 totalDocs: totalDocs || 0,
-                totalPages: totalPages || 0,
-                count: results?.length || 0,
+                count: data.length || 0,
+                data: data,
             };
 
             responseObject.Messages = results?.map((Messages) => {
@@ -152,6 +152,20 @@ module.exports = {
                             null,
                             STATUS_MESSAGE.NO_PERMISSION_SEND_MESSAGE,
                             MESSAGE_CODE.NO_PERMISSION_SEND_MESSAGE,
+                            false,
+                        ),
+                    );
+            }
+            const isUserBlocked = conversation.blockUsers.some((item) => item.equals(userId));
+            if (isUserBlocked) {
+                return res
+                    .status(403)
+                    .json(
+                        createResponse(
+                            null,
+                            STATUS_MESSAGE.USER_WAS_BLOCKED,
+                            MESSAGE_CODE.USER_WAS_BLOCKED,
+                            STATUS_CODE.FORBIDDEN,
                             false,
                         ),
                     );
@@ -308,7 +322,7 @@ module.exports = {
         const messageId = req.query.id;
         const userId = req.user._id;
         const { content } = req.body;
-        const message = Message.findOne(messageId);
+        const message = await Message.findOne(messageId);
         if (!message) {
             return res.status(404).json({
                 message: STATUS_MESSAGE.MESSAGE_NOT_FOUND,
@@ -585,6 +599,30 @@ module.exports = {
                 );
         } catch (error) {
             next(error);
+        }
+    },
+    readMessage: async (data, socket) => {
+        try {
+            const userId = socket.user._id;
+
+            const messageUpdate = await Message.findByIdAndUpdate(
+                { _id: data._id },
+                { $push: { readBy: userId } },
+                { new: true },
+            );
+
+            return socket.emit(
+                'watched message',
+                createResponse(
+                    messageUpdate,
+                    STATUS_MESSAGE.WATCH_MESSAGE_SUCCESS,
+                    MESSAGE_CODE.WATCH_MESSAGE_SUCCESS,
+                    STATUS_CODE.OK,
+                    false,
+                ),
+            );
+        } catch (error) {
+            return next(error);
         }
     },
 };
