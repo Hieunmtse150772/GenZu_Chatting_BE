@@ -541,6 +541,15 @@ module.exports = {
 
             await Conversation.deleteOne({ _id: group._id });
 
+            group.users.forEach((item) => {
+                socket
+                    .in(item.toString())
+                    .emit(
+                        'notification',
+                        responseNotificationSocket(null, MESSAGE_CODE.DELETE_GROUP_SUCCESSFULLY, true),
+                    );
+            });
+
             return socket.emit(
                 'response group',
                 createResponse(
@@ -548,7 +557,7 @@ module.exports = {
                     STATUS_MESSAGE.DELETE_GROUP_SUCCESS,
                     MESSAGE_CODE.DELETE_GROUP_SUCCESSFULLY,
                     STATUS_CODE.OK,
-                    false,
+                    true,
                 ),
             );
         } catch (error) {
