@@ -32,8 +32,9 @@ module.exports = async function (req, res, next) {
         if (req.query.sender) {
             searchQuery = { sender: req.query.sender, ...searchQuery };
         }
-        console.log('searchQuery: ', searchQuery);
-        let query = Message.find({
+        const pageLimit = 40;
+
+        let query = await Message.find({
             conversation: conversation_id,
             status: 'active',
             deleteBy: { $nin: userId },
@@ -52,25 +53,41 @@ module.exports = async function (req, res, next) {
 
         const results = {
             totalDocs: 0,
+            data: [],
         };
+        const data = [];
+        for (const message of query) {
+            // Tìm vị trí của tin nhắn trong toàn bộ collection
+            const index = await Message.countDocuments({
+                $and: [
+                    {
+                        conversation: conversation_id,
+                        status: { $in: ['active', 'recalled'] },
+                        deleteBy: { $nin: userId },
+                    },
+                    { _id: { $gt: message._id } },
+                ],
+            });
+            const pageNumber = Math.floor(index / pageLimit) + 1;
 
-        const totalCount = await Message.countDocuments().exec();
-
-        results.totalDocs = totalCount;
-
-        query = query.sort('-createdAt');
-
-        // Fields Limiting
-        if (req.query.fields) {
-            const fields = req.query.fields.split(',').join(' ');
-
-            // ?filed=price,description,ratings
-            query = query.select(fields);
-        } else {
-            query = query.select('-_v');
+            data.push({
+                _id: message._id,
+                sender: message.sender,
+                message: message.message,
+                pageNumber: pageNumber,
+                createdAt: message.createdAt,
+            });
         }
 
-        results.results = await query.exec();
+        const totalCount = await Message.countDocuments({
+            conversation: conversation_id,
+            status: { $in: ['active', 'recalled'] },
+            deleteBy: { $nin: userId },
+        }).exec();
+
+        results.totalDocs = totalCount;
+        results.data = data;
+        // console.log('querry: ', results);
 
         // Add paginated Results to the request
         res.paginatedResults = results;

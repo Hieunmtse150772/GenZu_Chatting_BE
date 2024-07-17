@@ -270,6 +270,7 @@ module.exports = {
         const userId = req.user._id;
         try {
             const users = await Conversation.findOne({ _id: conversationId }).select('users');
+
             if (!users?.users?.includes(userId)) {
                 return res
                     .status(400)
@@ -282,16 +283,34 @@ module.exports = {
                         ),
                     );
             }
+            const messageCreate = {
+                sender: userId,
+                message: MESSAGE_CODE.UPDATE_BACKGROUND_CONVERSATION_SUCCESS,
+                conversation: conversationId,
+                status: 'active',
+                messageType: 'notification',
+            };
             const conversationUpdate = await Conversation.findByIdAndUpdate(
                 { _id: conversationId },
                 { background: { url: url, backgroundType: backgroundType } },
                 { new: true },
             );
+            var message = await Message.create(messageCreate);
+            message = await message.populate('sender', 'fullName picture email');
+            message = await message.populate('conversation');
+            message = await User.populate(message, {
+                path: 'conversation.users',
+                select: 'fullName picture email',
+            });
+            const result = {
+                message,
+                conversationUpdate,
+            };
             return res
                 .status(200)
                 .json(
                     createResponse(
-                        conversationUpdate,
+                        result,
                         STATUS_MESSAGE.UPDATE_BACKGROUND_CONVERSATION_SUCCESS,
                         MESSAGE_CODE.UPDATE_BACKGROUND_CONVERSATION_SUCCESS,
                         STATUS_CODE.CREATED,
@@ -339,6 +358,101 @@ module.exports = {
         } catch (error) {
             next(error);
         }
+    },
+    blockUserConversation: async (req, res, next) => {
+        const userId = req.user._id;
+        const conversationId = req.query.id;
+        const userBlockId = req.query.blockUserId;
+        try {
+            const users = await Conversation.findById({ _id: conversationId }).select('users');
+
+            if (users.blockUser.includes(userBlockId)) {
+                return res
+                    .status(403)
+                    .json(
+                        createResponse(
+                            null,
+                            STATUS_MESSAGE.USER_AlREADY_BLOCKED,
+                            MESSAGE_CODE.USER_AlREADY_BLOCKED,
+                            false,
+                        ),
+                    );
+            }
+
+            if (!users?.users?.includes(userId)) {
+                return res
+                    .status(400)
+                    .json(
+                        createResponse(
+                            null,
+                            STATUS_MESSAGE.NO_PERMISSION_BLOCK_USER,
+                            MESSAGE_CODE.NO_PERMISSION_BLOCK_USER,
+                            false,
+                        ),
+                    );
+            }
+
+            const conversationUpdate = await Conversation.findByIdAndUpdate(
+                { _id: conversationId },
+                {
+                    $push: { blockUsers: [userBlockId] },
+                },
+                {
+                    new: true,
+                },
+            );
+            return res
+                .status(200)
+                .json(
+                    createResponse(
+                        conversationUpdate,
+                        STATUS_MESSAGE.BLOCK_USER_SUCCESS,
+                        MESSAGE_CODE.BLOCK_USER_SUCCESS,
+                        true,
+                    ),
+                );
+        } catch (error) {}
+    },
+    unBlockUserConversation: async (req, res, next) => {
+        const userId = req.user._id;
+        const conversationId = req.query.id;
+        const userBlockId = req.query.blockUserId;
+        try {
+            const users = await Conversation.findById({ _id: conversationId }).select('users');
+
+            if (!users?.users?.includes(userId)) {
+                return res
+                    .status(400)
+                    .json(
+                        createResponse(
+                            null,
+                            STATUS_MESSAGE.NO_PERMISSION_UN_BLOCK_USER,
+                            MESSAGE_CODE.NO_PERMISSION_UN_BLOCK_USER,
+                            false,
+                        ),
+                    );
+            }
+
+            const conversationUpdate = await Conversation.findByIdAndUpdate(
+                { _id: conversationId },
+                {
+                    $pull: { blockUsers: [userBlockId] },
+                },
+                {
+                    new: true,
+                },
+            );
+            return res
+                .status(200)
+                .json(
+                    createResponse(
+                        conversationUpdate,
+                        STATUS_MESSAGE.UN_BLOCK_USER_SUCCESS,
+                        MESSAGE_CODE.UN_BLOCK_USER_SUCCESS,
+                        true,
+                    ),
+                );
+        } catch (error) {}
     },
     // sendMessage: async (req, res, next) => {
     //   try {

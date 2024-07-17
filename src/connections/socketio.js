@@ -12,7 +12,7 @@ const {
     updateGroupChat,
     deleteGroupChat,
 } = require('@/controller/group_chat.controller');
-const { sendMessage } = require('@/controller/message.controller');
+const { sendMessage, readMessage } = require('@/controller/message.controller');
 
 const { eventValidators } = require('@/validations');
 const verifyTokenSocketMiddleware = require('@/middlewares/verifyTokenSocket.middleware');
@@ -218,6 +218,15 @@ io.on('connection', async (socket) => {
     //Listening the action stop type of user when they was stopped typing
     socket.on('stop_typing', (room) => socket.in(room).emit('stop_typing'));
 
+    //Listening the action read message of user when they was seen the message
+    socket.on('watch message', (message) => {
+        try {
+            readMessage(message, socket);
+        } catch (error) {
+            console.log('error socket: ', error);
+        }
+    });
+
     //Listening the action reacting message with emoji
     socket.on('add emoji', (emojiAdded) => {
         try {
@@ -284,8 +293,11 @@ io.on('connection', async (socket) => {
                 console.error('Invalid newMessageReceived data');
                 return;
             }
+
             const chatRoom = newMessageReceived.conversation._id;
+
             socket.to(chatRoom).emit('message received', newMessageReceived);
+
             const users = await Conversation.findOne({ _id: chatRoom });
 
             if (users) {
@@ -298,7 +310,16 @@ io.on('connection', async (socket) => {
         }
     });
 
-    socket.on('disconnect', async (data) => {
+    //Change background conversation
+    socket.on('change background', async (background) => {
+        try {
+            socket.to(background.conversation).emit('changed background', background);
+        } catch (error) {
+            console.log('error socket: ', error);
+        }
+    });
+
+    socket.on('disconnect', async () => {
         try {
             const user = await User.findOne({ socketId: socket.id }).select('socketId _id');
 
