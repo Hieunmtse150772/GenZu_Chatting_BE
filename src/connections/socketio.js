@@ -100,9 +100,6 @@ io.on('connection', async (socket) => {
         deleteGroupChat(data, socket);
     });
 
-    socket.on('join conversation', (room) => {
-        socket.join(room);
-    });
     socket.on('send message', (data) => {
         sendMessage(data, socket);
     });
