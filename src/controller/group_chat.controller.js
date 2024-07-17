@@ -31,7 +31,7 @@ module.exports = {
             users.forEach(async (item) => {
                 latestMessage = await Message.create({
                     sender: userId,
-                    message: 'add_to_group',
+                    message: MESSAGE_CODE.ADD_MEMBER_TO_GROUP_SUCCESSFULLY,
                     conversation: groupChat,
                     status: 'active',
                     affected_user_id: item,
@@ -109,7 +109,7 @@ module.exports = {
             newUsers.forEach(async (item) => {
                 latestMessage = await Message.create({
                     sender: userId,
-                    message: 'add_to_group',
+                    message: MESSAGE_CODE.ADD_MEMBER_TO_GROUP_SUCCESSFULLY,
                     conversation: group._id,
                     status: 'active',
                     affected_user_id: item,
@@ -429,7 +429,7 @@ module.exports = {
                 group.avatar = data.avatar;
                 latestMessage = await Message.create({
                     sender: userId,
-                    message: 'changed_avatar',
+                    message: MESSAGE_CODE.CHANGE_AVATAR,
                     conversation: groupId,
                     status: 'active',
                     messageType: 'notification',
@@ -446,7 +446,7 @@ module.exports = {
                 group.background = data.background;
                 latestMessage = await Message.create({
                     sender: userId,
-                    message: 'changed_background',
+                    message: MESSAGE_CODE.CHANGE_BACKGROUND,
                     conversation: groupId,
                     status: 'active',
                     messageType: 'notification',
@@ -462,7 +462,7 @@ module.exports = {
             if (data.chatName) {
                 latestMessage = await Message.create({
                     sender: userId,
-                    message: `changed_group_name ${group.chatName} ${data.chatName}`,
+                    message: `${MESSAGE_CODE.CHANGE_NAME} ${group.chatName} ${data.chatName}`,
                     conversation: groupId,
                     status: 'active',
                     messageType: 'notification',

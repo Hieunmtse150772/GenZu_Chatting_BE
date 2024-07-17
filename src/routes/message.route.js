@@ -13,6 +13,7 @@ const {
     getMessages,
     updateEmoji,
     searchMessages,
+    messageTranslate,
 } = require('@/validations');
 
 router.get(
@@ -50,5 +51,7 @@ router.post('/emoji', verifyToken, validateBody(sendEmoji), MessageController.ad
 router.patch('/emoji', validateBody(updateEmoji), verifyToken, MessageController.updateEmojiMessage);
 
 router.delete('/emoji', verifyToken, MessageController.removeEmojiMessage);
+
+router.post('/translate', verifyToken, validateBody(messageTranslate), MessageController.translateMessage);
 
 module.exports = router;

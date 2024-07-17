@@ -1,5 +1,6 @@
 const Joi = require('joi');
-const { objectIdValidator } = require('@/utils/functions');
+const { objectIdValidator, arrayUniqueValidator } = require('@/utils/functions');
+const { languageTranslationCodes } = require('@/enums/validates');
 
 const getMessages = Joi.object({
     id: Joi.string().required().custom(objectIdValidator, 'ObjectId validation'),
@@ -54,6 +55,16 @@ const sendEmoji = Joi.object({
 const updateEmoji = Joi.object({
     newEmoji: Joi.string().required(),
 });
+const messageTranslate = Joi.object({
+    languageCode: Joi.string()
+        .valid(...languageTranslationCodes)
+        .required(),
+    messageIds: Joi.array()
+        .min(1)
+        .items(Joi.string().custom(objectIdValidator, 'ObjectId validation'))
+        .custom(arrayUniqueValidator, 'Array unique validation'),
+});
+
 module.exports = {
     getMessages,
     sendMessage,
@@ -61,4 +72,5 @@ module.exports = {
     updateEmoji,
     searchMessages,
     sendMessage2,
+    messageTranslate,
 };

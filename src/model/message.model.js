@@ -59,6 +59,7 @@ const MessageSchema = mongoose.Schema(
             },
         },
         affected_user_id: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+        translations: { type: Object, default: {} },
     },
     {
         timestamps: true,

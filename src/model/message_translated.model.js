@@ -1,30 +1,16 @@
 const mongoose = require('mongoose');
 
 const connection = require('../connections/mongodb');
+const { languageTranslationCodes } = require('@/enums/validates');
 
 const MessageTranslatedSchema = mongoose.Schema(
     {
         message_id: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Message',
-            required: true
+            required: true,
         },
-        participant_id: {
-            ref: 'Participant',
-            type: String,
-            required: true
-        },
-        status: {
-            type: String,
-            required: true
-        },
-        type_room: {
-            type: String,
-            required: true
-        },
-        back_ground: {
-            type: String,
-        },
+        translate: [{ type: Object, default: [] }],
     },
     {
         timestamps: true,
