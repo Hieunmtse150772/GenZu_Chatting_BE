@@ -35,6 +35,7 @@ const STATUS_MESSAGE = {
     //Message
     SEND_MESSAGE_SUCCESS: 'Send message successfully',
     SEND_MESSAGE_FAIL: 'Send message failed',
+    TRANSLATE_MESSAGE_SUCCESSFULLY: 'Translate message successfully',
 
     // Group chat
     CREATE_GROUP_SUCCESSFULLY: 'Create conversation successfully',

@@ -447,6 +447,50 @@ const messageSwagger = {
             },
         },
     },
+    '/messages/translate': {
+        post: {
+            tags: ['Message'],
+            description: 'Translate message',
+            security: [
+                {
+                    accessToken: [],
+                },
+            ],
+            requestBody: {
+                content: {
+                    'application/json': {
+                        schema: {
+                            type: 'object',
+                            properties: {
+                                messageIds: {
+                                    description: 'Message id needs translation',
+                                    type: 'array',
+                                    items: {
+                                        type: 'string',
+                                        description: 'id of message',
+                                    },
+                                },
+                                languageCode: {
+                                    description: 'Language translate code',
+                                    type: 'string',
+                                    example: 'en',
+                                },
+                            },
+                            required: ['message'],
+                        },
+                    },
+                },
+            },
+            responses: {
+                200: {
+                    description: 'Translate message successfully',
+                    content: {
+                        'application/json': {},
+                    },
+                },
+            },
+        },
+    },
 };
 
 module.exports = messageSwagger;

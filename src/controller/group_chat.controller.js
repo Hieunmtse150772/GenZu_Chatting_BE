@@ -31,11 +31,11 @@ module.exports = {
             users.forEach(async (item) => {
                 latestMessage = await Message.create({
                     sender: userId,
-                    message: 'add_to_group',
+                    message: MESSAGE_CODE.ADD_MEMBER_TO_GROUP_SUCCESSFULLY,
                     conversation: groupChat,
                     status: 'active',
                     affected_user_id: item,
-                    message_type: 'notification',
+                    messageType: 'notification',
                 });
             });
             const fullGroupChatInfo = await Conversation.findByIdAndUpdate(
@@ -109,11 +109,11 @@ module.exports = {
             newUsers.forEach(async (item) => {
                 latestMessage = await Message.create({
                     sender: userId,
-                    message: 'add_to_group',
+                    message: MESSAGE_CODE.ADD_MEMBER_TO_GROUP_SUCCESSFULLY,
                     conversation: group._id,
                     status: 'active',
                     affected_user_id: item,
-                    message_type: 'notification',
+                    messageType: 'notification',
                 });
                 socket
                     .in(group._id.toString())
@@ -238,7 +238,7 @@ module.exports = {
                         conversation: group._id,
                         status: 'active',
                         affected_user_id: userId,
-                        message_type: 'notification',
+                        messageType: 'notification',
                     });
 
                     const newGroup = await Conversation.findByIdAndUpdate(
@@ -277,7 +277,7 @@ module.exports = {
                         conversation: group._id,
                         status: 'active',
                         affected_user_id: memberId,
-                        message_type: 'notification',
+                        messageType: 'notification',
                     });
                     const newGroup = await Conversation.findByIdAndUpdate(
                         { _id: group._id },
@@ -344,7 +344,7 @@ module.exports = {
                             conversation: group._id,
                             status: 'active',
                             affected_user_id: exchangeAdminId,
-                            message_type: 'notification',
+                            messageType: 'notification',
                         });
 
                         socket
@@ -362,7 +362,7 @@ module.exports = {
                             conversation: group._id,
                             status: 'active',
                             affected_user_id: userId,
-                            message_type: 'notification',
+                            messageType: 'notification',
                         });
 
                         group.latestMessage = latestMessage;
@@ -429,10 +429,10 @@ module.exports = {
                 group.avatar = data.avatar;
                 latestMessage = await Message.create({
                     sender: userId,
-                    message: 'changed_avatar',
+                    message: MESSAGE_CODE.CHANGE_AVATAR,
                     conversation: groupId,
                     status: 'active',
-                    message_type: 'notification',
+                    messageType: 'notification',
                 });
                 socket
                     .in(group._id.toString())
@@ -446,10 +446,10 @@ module.exports = {
                 group.background = data.background;
                 latestMessage = await Message.create({
                     sender: userId,
-                    message: 'changed_background',
+                    message: MESSAGE_CODE.CHANGE_BACKGROUND,
                     conversation: groupId,
                     status: 'active',
-                    message_type: 'notification',
+                    messageType: 'notification',
                 });
                 socket
                     .in(group._id.toString())
@@ -462,10 +462,10 @@ module.exports = {
             if (data.chatName) {
                 latestMessage = await Message.create({
                     sender: userId,
-                    message: `changed_group_name ${group.chatName} ${data.chatName}`,
+                    message: `${MESSAGE_CODE.CHANGE_NAME} ${group.chatName} ${data.chatName}`,
                     conversation: groupId,
                     status: 'active',
-                    message_type: 'notification',
+                    messageType: 'notification',
                 });
                 group.chatName = data.chatName;
                 socket

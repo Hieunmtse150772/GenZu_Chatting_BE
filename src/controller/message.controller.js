@@ -524,14 +524,67 @@ module.exports = {
         }
     },
     translateMessage: async (req, res, next) => {
-        const text = req.body.message;
-        const target = req.body.languageTranslate;
+        try {
+            const { messageIds, languageCode } = req.body;
 
-        let [translations] = await translate.translate(text, target);
-        translations = Array.isArray(translations) ? translations : [translations];
-        console.log('Translations:');
-        translations.forEach((translation, i) => {
-            console.log(`${text[i]} => (${target}) ${translation}`);
-        });
+            const messages = await Message.find({ _id: { $in: messageIds } });
+
+            if (!messages.length) {
+                return res
+                    .status(STATUS_CODE.BAD_REQUEST)
+                    .json(
+                        createResponse(
+                            null,
+                            STATUS_MESSAGE.MESSAGE_NOT_FOUND,
+                            MESSAGE_CODE.MEMBER_NOT_FOUND,
+                            STATUS_CODE.BAD_REQUEST,
+                            false,
+                        ),
+                    );
+            }
+
+            const textsToTranslate = [];
+            const indicesToTranslate = [];
+
+            // Kiểm tra xem tin nhắn đã được dịch chưa
+            messages.forEach((msg, index) => {
+                if (!msg.translations || !msg.translations[languageCode]) {
+                    textsToTranslate.push(msg.message);
+                    indicesToTranslate.push(index);
+                }
+            });
+
+            if (textsToTranslate.length > 0) {
+                const [translations] = await translate.translate(textsToTranslate, languageCode);
+
+                // Cập nhật bản dịch vào MongoDB
+                indicesToTranslate.forEach((index, i) => {
+                    messages[index].translations[languageCode] = translations[i];
+                });
+
+                const bulkOps = messages.map((msg) => ({
+                    updateOne: {
+                        filter: { _id: msg._id },
+                        update: { $set: { translations: msg.translations } },
+                    },
+                }));
+
+                await Message.bulkWrite(bulkOps);
+            }
+
+            return res
+                .status(STATUS_CODE.OK)
+                .json(
+                    createResponse(
+                        messages,
+                        STATUS_MESSAGE.TRANSLATE_MESSAGE_SUCCESSFULLY,
+                        MESSAGE_CODE.TRANSLATE_MESSAGE_SUCCESSFULLY,
+                        STATUS_CODE.OK,
+                        true,
+                    ),
+                );
+        } catch (error) {
+            next(error);
+        }
     },
 };
