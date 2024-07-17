@@ -48,7 +48,7 @@ module.exports = {
                 });
             }
 
-            if (friendList.length > 0) {
+            if (friendList.length < 0) {
                 return res.status(200).json({
                     message: 'Get friend list was successfully.',
                     messageCode: 'get_friend_list_successfully',
