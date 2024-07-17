@@ -2,12 +2,12 @@ const mongodb = require('mongodb');
 const MESSAGE = require('@/enums/response/statusMessage.enum');
 const FriendRequest = require('@/model/friendRequest.model');
 const FriendShip = require('@/model/friendShip.model');
+const User = require('@/model/user.model');
 const MESSAGE_CODE = require('@/enums/response/messageCode.enum');
 const { createResponse } = require('@/utils/responseHelper');
 const STATUS_MESSAGE = require('@/enums/response/statusMessage.enum');
 const { STATUS_CODE } = require('@/enums/response');
 const Conversation = require('@/model/conversation.model');
-
 module.exports = {
     getFriendList: async (req, res, next) => {
         try {
@@ -24,40 +24,54 @@ module.exports = {
                 status: 'active',
             }).populate('users', 'fullName picture email is_online offline_at');
             var conversations = await Conversation.find({
-                isGroupChat: false,
                 $and: [{ users: { $elemMatch: { $eq: userId } } }],
             })
                 .populate('users', '_id fullName email picture')
                 .populate('latestMessage');
-            if (friendList.length > 0) {
-                friendList = friendList.map((friend) => {
-                    friendInfo = friend.users.filter((user) => user?._id.toString() !== userId.toString())[0];
-                    return {
-                        info: friendInfo,
-                        friendRequest: friend.friendRequest,
-                        friendShip: friend._id,
-                        status: friend.status,
-                        isChat: Boolean(conversations),
-                        conversation: conversations.filter((conversation) => {
-                            const userIds = conversation.users.map((user) => String(user?._id));
-                            return userIds.includes(String(userId)) && userIds.includes(String(friendInfo?._id));
-                        }),
-                        createdAt: friend.createdAt,
-                        updatedAt: friend.updatedAt,
-                    };
-                });
-            }
 
             if (friendList.length < 0) {
                 return res.status(200).json({
                     message: 'Get friend list was successfully.',
-                    messageCode: 'get_friend_list_successfully',
+                    messageCode: 'get_friend_list_SUCCESSFULLYfully',
                     data: [],
                 });
             }
+            friendList = friendList.map((friend) => {
+                friendInfo = friend.users.filter((user) => user?._id.toString() !== userId.toString())[0];
+                return {
+                    info: friendInfo,
+                    friendRequest: friend.friendRequest,
+                    friendShip: friend._id,
+                    status: friend.status,
+                    isChat: Boolean(conversations),
+                    conversation: conversations
+                        ? conversations.filter((conversation) => {
+                              const userIds = conversation.users.map((user) => String(user?._id));
+                              return (
+                                  userIds.includes(String(userId)) &&
+                                  userIds.includes(String(friendInfo?._id)) &&
+                                  conversation.isGroupChat == false
+                              );
+                          })
+                        : [],
+                    groupConversation: conversations
+                        ? conversations.filter((conversation) => {
+                              const userIds = conversation.users.map((user) => String(user?._id));
+                              return (
+                                  userIds.includes(String(userId)) &&
+                                  userIds.includes(String(friendInfo?._id)) &&
+                                  conversation.isGroupChat == true
+                              );
+                          })
+                        : [],
+                    createdAt: friend.createdAt,
+                    updatedAt: friend.updatedAt,
+                };
+            });
+
             return res.status(200).json({
                 message: 'Get friend list was successfully',
-                messageCode: 'get_friend_list_successfully',
+                messageCode: 'get_friend_list_SUCCESSFULLYfully',
                 data: friendList,
             });
         } catch (error) {
@@ -80,7 +94,7 @@ module.exports = {
 
             return res.status(200).json({
                 message: 'Get friend request list was successfully',
-                messageCode: 'get_friend_request_list_successfully',
+                messageCode: 'get_friend_request_list_SUCCESSFULLYfully',
                 data: friendList,
             });
         } catch (error) {
@@ -104,7 +118,13 @@ module.exports = {
             })
                 .populate('sender', 'fullName picture _id')
                 .populate('receiver', 'fullName picture _id');
-
+            if (friendRequestList.length < 0) {
+                return res.status(200).json({
+                    message: 'Get friend list was successfully.',
+                    messageCode: 'get_friend_list_SUCCESSFULLYfully',
+                    data: [],
+                });
+            }
             const notification = friendRequestList.map((friendRequest) => {
                 return {
                     id: friendRequest._id,
@@ -120,7 +140,7 @@ module.exports = {
             });
             return res.status(200).json({
                 message: 'Get friend request notification list was successfully',
-                messageCode: 'get_friend_request_notification_list_successfully',
+                messageCode: 'get_friend_request_notification_list_SUCCESSFULLYfully',
                 data: notification,
             });
         } catch (error) {
@@ -144,13 +164,13 @@ module.exports = {
             if (!friendList) {
                 return res.status(200).json({
                     message: 'Get friend list was successfully.',
-                    messageCode: 'get_friend_list_successfully',
+                    messageCode: 'get_friend_list_SUCCESSFULLYfully',
                     data: [],
                 });
             }
             return res.status(200).json({
                 message: 'Get friend list was successfully',
-                messageCode: 'get_friend_list_successfully',
+                messageCode: 'get_friend_list_SUCCESSFULLYfully',
                 data: friendList,
             });
         } catch (error) {
@@ -167,6 +187,12 @@ module.exports = {
                     message: 'Can not add friend to yourself',
                     messageCode: 'can_not_add_friend_to_yourself',
                 });
+            }
+            const user = await User.findOne({ _id: id });
+            if (!user) {
+                return res
+                    .status(400)
+                    .json(createResponse(null, STATUS_MESSAGE.USER_NOT_FOUND, MESSAGE_CODE.USER_NOT_FOUND, false));
             }
             //Trường hợp đã là bạn bè
             const isFriend = await FriendShip.findOne({ users: { $all: [senderId, id] }, status: 'active' });
@@ -198,6 +224,13 @@ module.exports = {
                     },
                 ],
             });
+            if (!request) {
+                return res
+                    .status(400)
+                    .json(
+                        createResponse(null, STATUS_MESSAGE.REQUEST_NOT_FOUND, MESSAGE_CODE.REQUEST_NOT_FOUND, false),
+                    );
+            }
             if (request?.status === 'pending') {
                 const updateRequest = await FriendRequest.findByIdAndUpdate(request?._id, { status: 'accepted' });
                 const friendShip = await FriendShip.create({
@@ -221,7 +254,7 @@ module.exports = {
             addFriendRequest = await addFriendRequest.populate('receiver', 'fullName email picture');
             return res.status(201).json({
                 message: 'Send add friend request successfully',
-                messageCode: 'sent_add_friend_successfully',
+                messageCode: 'sent_add_friend_SUCCESSFULLYfully',
                 data: addFriendRequest,
             });
         } catch (error) {
@@ -235,7 +268,13 @@ module.exports = {
             const friendRequest = await FriendRequest.findOne({
                 id,
             });
-
+            if (!friendRequest) {
+                return res
+                    .status(400)
+                    .json(
+                        createResponse(null, STATUS_MESSAGE.REQUEST_NOT_FOUND, MESSAGE_CODE.REQUEST_NOT_FOUND, false),
+                    );
+            }
             const { status } = await FriendRequest.findOne({
                 users: { $all: [friendRequest.sender, friendRequest.receiver] },
                 status: 'active',
@@ -256,7 +295,7 @@ module.exports = {
             });
             return res.status(201).json({
                 message: 'Accept friend request successfully',
-                messageCode: 'accept_friend_successfully',
+                messageCode: 'accept_friend_SUCCESSFULLYfully',
                 data: updateRequest,
             });
         } catch (error) {
@@ -270,6 +309,13 @@ module.exports = {
             const friendRequest = await FriendRequest.findOne({
                 _id: id,
             });
+            if (!friendRequest) {
+                return res
+                    .status(400)
+                    .json(
+                        createResponse(null, STATUS_MESSAGE.REQUEST_NOT_FOUND, MESSAGE_CODE.REQUEST_NOT_FOUND, false),
+                    );
+            }
             if (String(friendRequest.receiver) !== String(receiverId)) {
                 return res.status(200).json({
                     message: MESSAGE.NO_PERMISSION_ACCEPT_REQUEST,
@@ -309,8 +355,8 @@ module.exports = {
             });
 
             return res.status(201).json({
-                message: MESSAGE.ACCEPT_FRIEND_SUCCESS,
-                messageCode: 'accept_friend_successfully',
+                message: MESSAGE.ACCEPT_FRIEND_SUCCESSFULLY,
+                messageCode: 'accept_friend_SUCCESSFULLYfully',
                 data: updateRequest,
             });
         } catch (error) {
@@ -330,6 +376,11 @@ module.exports = {
         const friendRequest = await FriendRequest.findOne({
             _id: id,
         });
+        if (!friendRequest) {
+            return res
+                .status(400)
+                .json(createResponse(null, STATUS_MESSAGE.REQUEST_NOT_FOUND, MESSAGE_CODE.REQUEST_NOT_FOUND, false));
+        }
         if (String(friendRequest.receiver) !== String(receiverId)) {
             return res.status(200).json({
                 message: MESSAGE.NO_PERMISSION_REJECT_REQUEST,
@@ -358,9 +409,9 @@ module.exports = {
         });
 
         return res.status(201).json({
-            message: MESSAGE.REJECT_FRIEND_SUCCESS,
-            messageCode: 'reject_friend_successfully',
-            status: MESSAGE_CODE.REJECT_FRIEND_SUCCESS,
+            message: MESSAGE.REJECT_FRIEND_SUCCESSFULLY,
+            messageCode: 'reject_friend_SUCCESSFULLYfully',
+            status: MESSAGE_CODE.REJECT_FRIEND_SUCCESSFULLY,
             data: updateRequest,
         });
     },
@@ -405,9 +456,9 @@ module.exports = {
         });
 
         return res.status(201).json({
-            message: MESSAGE.REMOVE_FRIEND_REQUEST_SUCCESS,
-            messageCode: 'remove_friend_request_successfully',
-            status: MESSAGE_CODE.REMOVE_FRIEND_REQUEST_SUCCESS,
+            message: MESSAGE.REMOVE_FRIEND_REQUEST_SUCCESSFULLY,
+            messageCode: 'remove_friend_request_SUCCESSFULLYfully',
+            status: MESSAGE_CODE.REMOVE_FRIEND_REQUEST_SUCCESSFULLY,
             data: updateRequest,
         });
     },
@@ -423,6 +474,13 @@ module.exports = {
 
         try {
             const friendShip = await FriendShip.findByIdAndDelete({ _id: id });
+            if (!friendShip) {
+                return res
+                    .status(400)
+                    .json(
+                        createResponse(null, STATUS_MESSAGE.REQUEST_NOT_FOUND, MESSAGE_CODE.REQUEST_NOT_FOUND, false),
+                    );
+            }
             const friendRequest = await FriendRequest.findByIdAndUpdate(
                 friendShip.friendRequest,
                 {
@@ -430,14 +488,20 @@ module.exports = {
                 },
                 { new: true },
             );
-
+            if (!friendRequest) {
+                return res
+                    .status(400)
+                    .json(
+                        createResponse(null, STATUS_MESSAGE.REQUEST_NOT_FOUND, MESSAGE_CODE.REQUEST_NOT_FOUND, false),
+                    );
+            }
             return res
                 .status(200)
                 .json(
                     createResponse(
                         friendRequest,
-                        STATUS_MESSAGE.REMOVE_FRIEND_SUCCESS,
-                        MESSAGE_CODE.REMOVE_FRIEND_SUCCESS,
+                        STATUS_MESSAGE.REMOVE_FRIEND_SUCCESSFULLY,
+                        MESSAGE_CODE.REMOVE_FRIEND_SUCCESSFULLY,
                         STATUS_CODE.OK,
                         true,
                     ),

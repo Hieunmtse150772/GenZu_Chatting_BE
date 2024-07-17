@@ -186,15 +186,7 @@ io.on('connection', async (socket) => {
 
     //Set up room with conversation id for user who was join to chat
     socket.on('join chat', (room) => {
-        try {
-            if (room.conversation) {
-                socket.join(room.conversation);
-            } else {
-                console.log('room not found');
-            }
-        } catch (error) {
-            console.log('error socket: ', error);
-        }
+        socket.join(room.conversation);
     });
 
     //Out room chat with conversation id when user leave chat or not focus on chat room
