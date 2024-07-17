@@ -28,7 +28,7 @@ const verifyToken = (token, secretKey) => {
         const decoded = jwt.verify(token, secretKey);
         return decoded;
     } catch (error) {
-        throw createHttpError({ status: 403, message: error.message });
+        throw createHttpError[401](error.message);
     }
 };
 
