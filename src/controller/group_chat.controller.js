@@ -546,14 +546,14 @@ module.exports = {
                     .in(item.toString())
                     .emit(
                         'notification',
-                        responseNotificationSocket(null, MESSAGE_CODE.DELETE_GROUP_SUCCESSFULLY, true),
+                        responseNotificationSocket(group._id, MESSAGE_CODE.DELETE_GROUP_SUCCESSFULLY, true),
                     );
             });
 
             return socket.emit(
                 'response group',
                 createResponse(
-                    null,
+                    group._id,
                     STATUS_MESSAGE.DELETE_GROUP_SUCCESS,
                     MESSAGE_CODE.DELETE_GROUP_SUCCESSFULLY,
                     STATUS_CODE.OK,
