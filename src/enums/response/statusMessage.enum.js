@@ -85,6 +85,7 @@ const STATUS_MESSAGE = {
     NO_PERMISSION_UPDATE_AVATAR: 'You have no permission to update avatar',
     NO_PERMISSION_BLOCK_USER: 'You have no permission to block user',
     NO_PERMISSION_UN_BLOCK_USER: 'You have no permission to un-block user',
+    GET_BLOCK_USER_SUCCESSFULLY: 'Get block list success',
     BLOCK_USER_SUCCESSFULLY: 'Block user success',
     UN_BLOCK_USER_SUCCESSFULLY: 'Un-block user success',
     USER_AlREADY_BLOCKED: 'User is already blocked',

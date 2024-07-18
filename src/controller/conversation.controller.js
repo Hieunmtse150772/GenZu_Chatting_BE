@@ -363,7 +363,7 @@ module.exports = {
             }
             const messageCreate = {
                 sender: userId,
-                message: `${user.fullName} just changed the wallpaper`,
+                message: STATUS_CODE.UPDATE_BACKGROUND_CONVERSATION_SUCCESSFULLY,
                 conversation: conversationId,
                 status: 'active',
                 messageType: 'notification',
@@ -505,7 +505,7 @@ module.exports = {
             const conversationUpdate = await Conversation.findByIdAndUpdate(
                 { _id: conversationId },
                 {
-                    $push: { blockUsers: [userBlockId] },
+                    $push: { blockedUsers: [userBlockId] },
                 },
                 {
                     new: true,
@@ -564,7 +564,7 @@ module.exports = {
             const conversationUpdate = await Conversation.findByIdAndUpdate(
                 { _id: conversationId },
                 {
-                    $pull: { blockUsers: [userBlockId] },
+                    $pull: { blockedUsers: [userBlockId] },
                 },
                 {
                     new: true,

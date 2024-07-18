@@ -156,7 +156,7 @@ module.exports = {
                         ),
                     );
             }
-            const isUserBlocked = conversation.blockUsers.some((item) => item.equals(userId));
+            const isUserBlocked = conversation.blockedUsers.some((item) => item.equals(userId));
             if (isUserBlocked) {
                 return res
                     .status(403)
@@ -242,7 +242,7 @@ module.exports = {
                 );
             }
 
-            const isUserBlocked = conversation.blockUsers.some((item) => item.equals(userId));
+            const isUserBlocked = conversation.blockedUsers.some((item) => item.equals(userId));
             if (isUserBlocked) {
                 return socket.emit(
                     'response send message',
