@@ -183,7 +183,7 @@ module.exports = {
                 const userInfo = jwt.decode(token.id_token);
                 const user = await UserModel.findOne({
                     $or: [{ email: userInfo.email }, { googleId: userInfo.sub }],
-                }).select('email_verified is_active googleId tokenGoogle _id');
+                }).select('email_verified is_active googleId tokenGoogle _id email');
 
                 if (user?.email) {
                     user.email_verified = userInfo.email_verified;
