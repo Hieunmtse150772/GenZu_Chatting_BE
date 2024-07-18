@@ -224,13 +224,13 @@ module.exports = {
                     },
                 ],
             });
-            if (!request) {
-                return res
-                    .status(400)
-                    .json(
-                        createResponse(null, STATUS_MESSAGE.REQUEST_NOT_FOUND, MESSAGE_CODE.REQUEST_NOT_FOUND, false),
-                    );
-            }
+            // if (!request) {
+            //     return res
+            //         .status(400)
+            //         .json(
+            //             createResponse(null, STATUS_MESSAGE.REQUEST_NOT_FOUND, MESSAGE_CODE.REQUEST_NOT_FOUND, false),
+            //         );
+            // }
             if (request?.status === 'pending') {
                 const updateRequest = await FriendRequest.findByIdAndUpdate(request?._id, { status: 'accepted' });
                 const friendShip = await FriendShip.create({
