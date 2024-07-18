@@ -33,6 +33,7 @@ const UserSchema = new mongoose.Schema(
         picture: { type: String, require: true, default: null },
         language: { type: String, default: 'vi', enum: languageCodes },
         languageTranslate: { type: String, default: 'vi', enum: languageTranslationCodes },
+        blockedUsers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
         offline_at: { type: Date, default: null },
         is_active: { type: Boolean, default: false },
         is_online: { type: Boolean, default: false },

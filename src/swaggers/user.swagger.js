@@ -135,6 +135,81 @@ const userSwagger = {
             },
         },
     },
+    '/users/blockUsers': {
+        get: {
+            tags: ['User'],
+            description: 'Block user',
+            security: [
+                {
+                    accessToken: [],
+                },
+            ],
+            responses: {
+                200: {
+                    description: 'Get blocked user list successfully',
+                    content: {
+                        'application/json': {},
+                    },
+                },
+            },
+        },
+        patch: {
+            tags: ['User'],
+            description: 'Block user',
+            security: [
+                {
+                    accessToken: [],
+                },
+            ],
+            parameters: [
+                {
+                    name: 'blockUserId',
+                    in: 'query',
+                    description: 'Id of user',
+                    schema: {
+                        type: 'string',
+                    },
+                },
+            ],
+            responses: {
+                200: {
+                    description: 'Block user successfully',
+                    content: {
+                        'application/json': {},
+                    },
+                },
+            },
+        },
+    },
+    '/users/unBlockUsers': {
+        patch: {
+            tags: ['User'],
+            description: 'Un block user',
+            security: [
+                {
+                    accessToken: [],
+                },
+            ],
+            parameters: [
+                {
+                    name: 'blockUserId',
+                    in: 'query',
+                    description: 'Id of user',
+                    schema: {
+                        type: 'string',
+                    },
+                },
+            ],
+            responses: {
+                200: {
+                    description: 'Un block user successfully',
+                    content: {
+                        'application/json': {},
+                    },
+                },
+            },
+        },
+    },
 };
 
 module.exports = userSwagger;

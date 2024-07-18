@@ -302,7 +302,9 @@ io.on('connection', async (socket) => {
     //Change background conversation
     socket.on('change background', async (background) => {
         try {
-            socket.to(background.conversation).emit('changed background', background);
+            const conversation = background._id;
+            console.log('background: ', conversation);
+            socket.to(conversation).emit('changed background', background);
         } catch (error) {
             console.log('error socket: ', error);
         }
