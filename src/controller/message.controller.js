@@ -659,9 +659,41 @@ module.exports = {
     },
     getListImageMessage: async (req, res, next) => {
         const userId = req.user._id;
-        const conversationId = req.query.id;
+        const conversationId = req.params.id;
         try {
-            const message = await Message.find({ $and: [{ conversation: conversationId, messageType: 'image' }] });
+            const conversation = await Conversation.findOne({ _id: conversationId });
+            if (!conversation?.users?.includes(userId)) {
+                return res
+                    .status(400)
+                    .json(
+                        createResponse(
+                            null,
+                            STATUS_MESSAGE.NO_PERMISSION_ACCESS_CONVERSATION,
+                            MESSAGE_CODE.NO_PERMISSION_ACCESS_CONVERSATION,
+                            STATUS_CODE.BAD_REQUEST,
+                            false,
+                        ),
+                    );
+            }
+
+            const message = await Message.find({
+                conversation: conversationId,
+                messageType: 'image',
+                status: { $in: ['active'] },
+                deleteBy: { $nin: userId },
+            })
+                .populate('sender', '_id fullName picture')
+                .populate('affected_user_id', '_id fullName picture')
+                .populate('conversation')
+                .populate({
+                    path: 'emojiBy',
+                    populate: {
+                        path: 'sender',
+                        select: 'fullName _id',
+                    },
+                })
+                .populate('replyMessage', '_id sender message messageType')
+                .sort({ createdAt: -1 });
             if (!message) {
                 return res
                     .status(STATUS_CODE.BAD_REQUEST)
@@ -670,21 +702,6 @@ module.exports = {
                             null,
                             STATUS_MESSAGE.MESSAGE_NOT_FOUND,
                             MESSAGE_CODE.MESSAGE_NOT_FOUND,
-                            STATUS_CODE.BAD_REQUEST,
-                            false,
-                        ),
-                    );
-            }
-            const users = await Conversation.findOne({ _id: conversationId }).select('users');
-
-            if (!users?.includes(userId)) {
-                return res
-                    .status(400)
-                    .json(
-                        createResponse(
-                            null,
-                            STATUS_MESSAGE.NO_PERMISSION_ACCESS_CONVERSATION,
-                            MESSAGE_CODE.NO_PERMISSION_ACCESS_CONVERSATION,
                             STATUS_CODE.BAD_REQUEST,
                             false,
                         ),
@@ -708,9 +725,28 @@ module.exports = {
     },
     getListVideoMessage: async (req, res, next) => {
         const userId = req.user._id;
-        const conversationId = req.query.id;
+        const conversationId = req.params.id;
         try {
-            const message = await Message.find({ $and: [{ conversation: conversationId, messageType: 'video' }] });
+            const conversation = await Conversation.findOne({ _id: conversationId });
+            if (!conversation?.users?.includes(userId)) {
+                return res
+                    .status(400)
+                    .json(
+                        createResponse(
+                            null,
+                            STATUS_MESSAGE.NO_PERMISSION_ACCESS_CONVERSATION,
+                            MESSAGE_CODE.NO_PERMISSION_ACCESS_CONVERSATION,
+                            STATUS_CODE.BAD_REQUEST,
+                            false,
+                        ),
+                    );
+            }
+            const message = await Message.find({
+                conversation: conversationId,
+                messageType: 'video',
+                status: { $in: ['active'] },
+                deleteBy: { $nin: userId },
+            }).sort({ createdAt: -1 });
             if (!message) {
                 return res
                     .status(STATUS_CODE.BAD_REQUEST)
@@ -719,21 +755,6 @@ module.exports = {
                             null,
                             STATUS_MESSAGE.MESSAGE_NOT_FOUND,
                             MESSAGE_CODE.MESSAGE_NOT_FOUND,
-                            STATUS_CODE.BAD_REQUEST,
-                            false,
-                        ),
-                    );
-            }
-            const users = await Conversation.findOne({ _id: conversationId }).select('users');
-
-            if (!users?.includes(userId)) {
-                return res
-                    .status(400)
-                    .json(
-                        createResponse(
-                            null,
-                            STATUS_MESSAGE.NO_PERMISSION_ACCESS_CONVERSATION,
-                            MESSAGE_CODE.NO_PERMISSION_ACCESS_CONVERSATION,
                             STATUS_CODE.BAD_REQUEST,
                             false,
                         ),
