@@ -183,15 +183,7 @@ io.on('connection', async (socket) => {
 
     //Set up room with conversation id for user who was join to chat
     socket.on('join chat', (room) => {
-        try {
-            if (room.conversation) {
-                socket.join(room.conversation);
-            } else {
-                console.log('room not found');
-            }
-        } catch (error) {
-            console.log('error socket: ', error);
-        }
+        socket.join(room.conversation);
     });
 
     //Out room chat with conversation id when user leave chat or not focus on chat room
@@ -310,7 +302,9 @@ io.on('connection', async (socket) => {
     //Change background conversation
     socket.on('change background', async (background) => {
         try {
-            socket.to(background.conversation).emit('changed background', background);
+            const conversation = background._id;
+            console.log('background: ', conversation);
+            socket.to(conversation).emit('changed background', background);
         } catch (error) {
             console.log('error socket: ', error);
         }

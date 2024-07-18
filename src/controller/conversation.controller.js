@@ -22,6 +22,12 @@ module.exports = {
                 messageCode: 'invalid_userId',
             });
         }
+        const user = await User.findOne({ _id: userId });
+        if (!user) {
+            return res
+                .status(400)
+                .json(createResponse(null, STATUS_MESSAGE.USER_NOT_FOUND, MESSAGE_CODE.USER_NOT_FOUND, false));
+        }
         const isFriend = await FriendShip.findOne({ users: { $all: [userId, req.user._id] }, status: 'active' });
         if (!isFriend) {
             return res.status(200).json({
@@ -45,8 +51,8 @@ module.exports = {
             res.status(200).json(
                 createResponse(
                     isChat[0],
-                    STATUS_MESSAGE.CONVERSATION_ACCESS_SUCCESS,
-                    MESSAGE_CODE.CONVERSATION_ACCESS_SUCCESS,
+                    STATUS_MESSAGE.CONVERSATION_ACCESS_SUCCESSFULLY,
+                    MESSAGE_CODE.CONVERSATION_ACCESS_SUCCESSFULLY,
                     STATUS_CODE.OK,
                     true,
                 ),
@@ -65,8 +71,8 @@ module.exports = {
                 res.status(201).json(
                     createResponse(
                         FullChat,
-                        STATUS_MESSAGE.CONVERSATION_CREATE_SUCCESS,
-                        MESSAGE_CODE.CONVERSATION_CREATE_SUCCESS,
+                        STATUS_MESSAGE.CONVERSATION_CREATE_SUCCESSFULLY,
+                        MESSAGE_CODE.CONVERSATION_CREATE_SUCCESSFULLY,
                         STATUS_CODE.OK,
                         true,
                     ),
@@ -95,13 +101,13 @@ module.exports = {
             if (!conversations) {
                 return res.status(200).json({
                     message: 'Get conversations was successfully.',
-                    messageCode: 'get_conversations_successfully',
+                    messageCode: 'get_conversations_SUCCESSFULLYfully',
                     data: [],
                 });
             }
             return res.status(200).json({
                 message: 'Get conversations was successfully',
-                messageCode: 'get_conversations_successfully',
+                messageCode: 'get_conversations_SUCCESSFULLYfully',
                 data: conversations,
             });
         } catch (error) {
@@ -116,21 +122,29 @@ module.exports = {
                 .populate('latestMessage')
                 .sort({ updatedAt: -1 })
                 .then(async (results) => {
+                    if (!results) {
+                        return res
+                            .status(400)
+                            .json(
+                                createResponse(
+                                    null,
+                                    STATUS_MESSAGE.CONVERSATION_NOT_FOUND,
+                                    MESSAGE_CODE.CONVERSATION_NOT_FOUND,
+                                    false,
+                                ),
+                            );
+                    }
                     results = await User.populate(results, {
                         path: 'latestMessage.sender',
                         select: 'fullName picture email',
                     });
-                    // res.status(200).json({
-                    //   message: 'Get conversations was successfully',
-                    //   messageCode: 'get_conversations_successfully',
-                    //   data: results,
-                    // });
                     results = results.map((conversation) => {
                         if (conversation.latestMessage && conversation.latestMessage.status === 'recalled') {
                             conversation.latestMessage.message = 'This message has been recalled';
                         }
                         return conversation;
                     });
+
                     res.status(200).send(results);
                 });
         } catch (error) {
@@ -146,6 +160,18 @@ module.exports = {
                 .populate('latestMessage')
                 .sort({ updatedAt: -1 })
                 .then(async (result) => {
+                    if (!result) {
+                        return res
+                            .status(400)
+                            .json(
+                                createResponse(
+                                    null,
+                                    STATUS_MESSAGE.CONVERSATION_NOT_FOUND,
+                                    MESSAGE_CODE.CONVERSATION_NOT_FOUND,
+                                    false,
+                                ),
+                            );
+                    }
                     result = await User.populate(result, {
                         path: 'latestMessage.sender',
                         select: 'fullName picture email',
@@ -154,6 +180,7 @@ module.exports = {
                     if (result.latestMessage && result.latestMessage.status === 'recalled') {
                         result.latestMessage.message = 'This message has been recalled';
                     }
+
                     res.status(200).send(result);
                 });
         } catch (error) {
@@ -189,7 +216,7 @@ module.exports = {
             return res.status(201).json({
                 data: fullGroupChatInfo,
                 message: 'Create group chat successful',
-                messageCode: 'create_group_chat_successful',
+                messageCode: 'create_group_chat_SUCCESSFULLYful',
             });
         } catch (error) {
             return next(error);
@@ -209,9 +236,22 @@ module.exports = {
                 { conversationId },
                 { $push: { deleteBy: userId } },
             );
+            if (!conversation) {
+                return res
+                    .status(400)
+                    .json(
+                        createResponse(
+                            null,
+                            STATUS_MESSAGE.CONVERSATION_NOT_FOUND,
+                            MESSAGE_CODE.CONVERSATION_NOT_FOUND,
+                            false,
+                        ),
+                    );
+            }
+
             return res.status(200).json({
                 data: conversation,
-                message: STATUS_MESSAGE.REMOVE_CONVERSATION_SUCCESS,
+                message: STATUS_MESSAGE.REMOVE_CONVERSATION_SUCCESSFULLY,
             });
         } catch (error) {
             return next(error);
@@ -221,6 +261,31 @@ module.exports = {
         const conversationId = req.query.id;
         const userId = req.user._id;
         try {
+            const conversation = await Conversation.findById({ _id: conversationId });
+            if (!conversation) {
+                return res
+                    .status(400)
+                    .json(
+                        createResponse(
+                            null,
+                            STATUS_MESSAGE.CONVERSATION_NOT_FOUND,
+                            MESSAGE_CODE.CONVERSATION_NOT_FOUND,
+                            false,
+                        ),
+                    );
+            }
+            if (!conversation.users.includes(userId)) {
+                return res
+                    .status(400)
+                    .json(
+                        createResponse(
+                            null,
+                            STATUS_MESSAGE.NO_PERMISSION_REMOVE_HISTORY_CONVERSATION,
+                            MESSAGE_CODE.NO_PERMISSION_REMOVE_HISTORY_CONVERSATION,
+                            false,
+                        ),
+                    );
+            }
             const messageUpdate = await Message.updateMany(
                 { conversation: conversationId },
                 { $push: { deleteBy: userId } },
@@ -230,8 +295,8 @@ module.exports = {
                 .json(
                     createResponse(
                         messageUpdate,
-                        STATUS_MESSAGE.DELETE_CONVERSATION_HISTORY_SUCCESS,
-                        MESSAGE_CODE.DELETE_CONVERSATION_HISTORY_SUCCESS,
+                        STATUS_MESSAGE.DELETE_CONVERSATION_HISTORY_SUCCESSFULLY,
+                        MESSAGE_CODE.DELETE_CONVERSATION_HISTORY_SUCCESSFULLY,
                         STATUS_CODE.OK,
                         true,
                     ),
@@ -253,8 +318,8 @@ module.exports = {
                 .json(
                     createResponse(
                         messageUpdate,
-                        STATUS_MESSAGE.REDO_CONVERSATION_HISTORY_SUCCESS,
-                        MESSAGE_CODE.REDO_CONVERSATION_HISTORY_SUCCESS,
+                        STATUS_MESSAGE.REDO_CONVERSATION_HISTORY_SUCCESSFULLY,
+                        MESSAGE_CODE.REDO_CONVERSATION_HISTORY_SUCCESSFULLY,
                         STATUS_CODE.OK,
                         true,
                     ),
@@ -270,6 +335,19 @@ module.exports = {
         const userId = req.user._id;
         try {
             const users = await Conversation.findOne({ _id: conversationId }).select('users');
+            const user = await User.findOne({ _id: userId }).select('fullName');
+            if (!users) {
+                return res
+                    .status(400)
+                    .json(
+                        createResponse(
+                            null,
+                            STATUS_MESSAGE.CONVERSATION_NOT_FOUND,
+                            MESSAGE_CODE.CONVERSATION_NOT_FOUND,
+                            false,
+                        ),
+                    );
+            }
 
             if (!users?.users?.includes(userId)) {
                 return res
@@ -285,7 +363,7 @@ module.exports = {
             }
             const messageCreate = {
                 sender: userId,
-                message: MESSAGE_CODE.UPDATE_BACKGROUND_CONVERSATION_SUCCESS,
+                message: `${user.fullName} just changed the wallpaper`,
                 conversation: conversationId,
                 status: 'active',
                 messageType: 'notification',
@@ -311,8 +389,8 @@ module.exports = {
                 .json(
                     createResponse(
                         result,
-                        STATUS_MESSAGE.UPDATE_BACKGROUND_CONVERSATION_SUCCESS,
-                        MESSAGE_CODE.UPDATE_BACKGROUND_CONVERSATION_SUCCESS,
+                        STATUS_MESSAGE.UPDATE_BACKGROUND_CONVERSATION_SUCCESSFULLY,
+                        MESSAGE_CODE.UPDATE_BACKGROUND_CONVERSATION_SUCCESSFULLY,
                         STATUS_CODE.CREATED,
                         true,
                     ),
@@ -327,6 +405,19 @@ module.exports = {
         const userId = req.user._id;
         try {
             const users = await Conversation.findOne({ _id: conversationId }).select('users');
+            if (!users) {
+                return res
+                    .status(400)
+                    .json(
+                        createResponse(
+                            null,
+                            STATUS_MESSAGE.CONVERSATION_NOT_FOUND,
+                            MESSAGE_CODE.CONVERSATION_NOT_FOUND,
+                            false,
+                        ),
+                    );
+            }
+
             if (!users?.users?.includes(userId)) {
                 return res
                     .status(400)
@@ -349,8 +440,8 @@ module.exports = {
                 .json(
                     createResponse(
                         conversationUpdate,
-                        STATUS_MESSAGE.UPDATE_AVATAR_CONVERSATION_SUCCESS,
-                        MESSAGE_CODE.UPDATE_AVATAR_CONVERSATION_SUCCESS,
+                        STATUS_MESSAGE.UPDATE_AVATAR_CONVERSATION_SUCCESSFULLY,
+                        MESSAGE_CODE.UPDATE_AVATAR_CONVERSATION_SUCCESSFULLY,
                         STATUS_CODE.CREATED,
                         true,
                     ),
@@ -365,6 +456,25 @@ module.exports = {
         const userBlockId = req.query.blockUserId;
         try {
             const users = await Conversation.findById({ _id: conversationId }).select('users');
+            const user = await User.findById({ _id: userBlockId });
+            if (!users) {
+                return res
+                    .status(400)
+                    .json(
+                        createResponse(
+                            null,
+                            STATUS_MESSAGE.CONVERSATION_NOT_FOUND,
+                            MESSAGE_CODE.CONVERSATION_NOT_FOUND,
+                            false,
+                        ),
+                    );
+            }
+
+            if (!user) {
+                return res
+                    .status(400)
+                    .json(createResponse(null, STATUS_MESSAGE.USER_NOT_FOUND, MESSAGE_CODE.USER_NOT_FOUND, false));
+            }
 
             if (users.blockUser.includes(userBlockId)) {
                 return res
@@ -406,8 +516,8 @@ module.exports = {
                 .json(
                     createResponse(
                         conversationUpdate,
-                        STATUS_MESSAGE.BLOCK_USER_SUCCESS,
-                        MESSAGE_CODE.BLOCK_USER_SUCCESS,
+                        STATUS_MESSAGE.BLOCK_USER_SUCCESSFULLY,
+                        MESSAGE_CODE.BLOCK_USER_SUCCESSFULLY,
                         true,
                     ),
                 );
@@ -419,7 +529,25 @@ module.exports = {
         const userBlockId = req.query.blockUserId;
         try {
             const users = await Conversation.findById({ _id: conversationId }).select('users');
+            const user = await User.findById({ _id: userBlockId });
+            if (!users) {
+                return res
+                    .status(400)
+                    .json(
+                        createResponse(
+                            null,
+                            STATUS_MESSAGE.CONVERSATION_NOT_FOUND,
+                            MESSAGE_CODE.CONVERSATION_NOT_FOUND,
+                            false,
+                        ),
+                    );
+            }
 
+            if (!user) {
+                return res
+                    .status(400)
+                    .json(createResponse(null, STATUS_MESSAGE.USER_NOT_FOUND, MESSAGE_CODE.USER_NOT_FOUND, false));
+            }
             if (!users?.users?.includes(userId)) {
                 return res
                     .status(400)
@@ -447,8 +575,8 @@ module.exports = {
                 .json(
                     createResponse(
                         conversationUpdate,
-                        STATUS_MESSAGE.UN_BLOCK_USER_SUCCESS,
-                        MESSAGE_CODE.UN_BLOCK_USER_SUCCESS,
+                        STATUS_MESSAGE.UN_BLOCK_USER_SUCCESSFULLY,
+                        MESSAGE_CODE.UN_BLOCK_USER_SUCCESSFULLY,
                         true,
                     ),
                 );

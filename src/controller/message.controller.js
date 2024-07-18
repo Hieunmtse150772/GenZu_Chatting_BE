@@ -191,8 +191,8 @@ module.exports = {
                 .json(
                     createResponse(
                         newMessage,
-                        STATUS_MESSAGE.SEND_MESSAGE_SUCCESS,
-                        MESSAGE_CODE.SEND_MESSAGE_SUCCESS,
+                        STATUS_MESSAGE.SEND_MESSAGE_SUCCESSFULLY,
+                        MESSAGE_CODE.SEND_MESSAGE_SUCCESSFULLY,
                         STATUS_CODE.CREATED,
                         true,
                     ),
@@ -275,8 +275,8 @@ module.exports = {
                 'response send message',
                 createResponse(
                     newMessage,
-                    STATUS_MESSAGE.SEND_MESSAGE_SUCCESS,
-                    MESSAGE_CODE.SEND_MESSAGE_SUCCESS,
+                    STATUS_MESSAGE.SEND_MESSAGE_SUCCESSFULLY,
+                    MESSAGE_CODE.SEND_MESSAGE_SUCCESSFULLY,
                     STATUS_CODE.CREATED,
                     true,
                 ),
@@ -303,13 +303,20 @@ module.exports = {
                 { $push: { deleteBy: userId } },
                 { new: true, useFindAndModify: false },
             );
+            if (!messageUpdate) {
+                return res
+                    .status(400)
+                    .json(
+                        createResponse(null, STATUS_MESSAGE.MESSAGE_NOT_FOUND, MESSAGE_CODE.MESSAGE_NOT_FOUND, false),
+                    );
+            }
             return res
                 .status(200)
                 .json(
                     createResponse(
                         messageUpdate,
-                        STATUS_MESSAGE.DELETE_MESSAGE_SUCCESS,
-                        MESSAGE_CODE.DELETE_MESSAGE_SUCCESS,
+                        STATUS_MESSAGE.DELETE_MESSAGE_SUCCESSFULLY,
+                        MESSAGE_CODE.DELETE_MESSAGE_SUCCESSFULLY,
                         STATUS_CODE.OK,
                         true,
                     ),
@@ -355,13 +362,20 @@ module.exports = {
                     );
             }
             const messageUpdated = Message.findByIdAndUpdate(messageId, { message: content });
+            if (!messageUpdated) {
+                return res
+                    .status(400)
+                    .json(
+                        createResponse(null, STATUS_MESSAGE.MESSAGE_NOT_FOUND, MESSAGE_CODE.MESSAGE_NOT_FOUND, false),
+                    );
+            }
             return res
                 .status(200)
                 .json(
                     createResponse(
                         messageUpdated,
-                        STATUS_MESSAGE.EDIT_MESSAGE_SUCCESS,
-                        MESSAGE_CODE.EDIT_MESSAGE_SUCCESS,
+                        STATUS_MESSAGE.EDIT_MESSAGE_SUCCESSFULLY,
+                        MESSAGE_CODE.EDIT_MESSAGE_SUCCESSFULLY,
                         STATUS_CODE.OK,
                         true,
                     ),
@@ -375,6 +389,13 @@ module.exports = {
         const userId = req.user._id;
         try {
             const message = await Message.findOne({ _id: messageId });
+            if (!message) {
+                return res
+                    .status(400)
+                    .json(
+                        createResponse(null, STATUS_MESSAGE.MESSAGE_NOT_FOUND, MESSAGE_CODE.MESSAGE_NOT_FOUND, false),
+                    );
+            }
             if (String(message.sender) !== String(userId)) {
                 return res
                     .status(400)
@@ -401,8 +422,8 @@ module.exports = {
                 .json(
                     createResponse(
                         messageUpdate,
-                        STATUS_MESSAGE.RECALL_MESSAGE_SUCCESS,
-                        MESSAGE_CODE.RECALL_MESSAGE_SUCCESS,
+                        STATUS_MESSAGE.RECALL_MESSAGE_SUCCESSFULLY,
+                        MESSAGE_CODE.RECALL_MESSAGE_SUCCESSFULLY,
                         STATUS_CODE.OK,
                         true,
                     ),
@@ -441,7 +462,7 @@ module.exports = {
                 },
             });
             return res.status(201).json({
-                message: STATUS_MESSAGE.ADD_EMOJI_MESSAGE_SUCCESS,
+                message: STATUS_MESSAGE.ADD_EMOJI_MESSAGE_SUCCESSFULLY,
                 data: addEmojiMessage,
                 conversation: addEmojiMessage.conversation,
                 action: 'add',
@@ -484,7 +505,7 @@ module.exports = {
                 { new: true, useFindAndModify: false },
             );
             return res.status(200).json({
-                message: STATUS_MESSAGE.UPDATE_EMOJI_MESSAGE_SUCCESS,
+                message: STATUS_MESSAGE.UPDATE_EMOJI_MESSAGE_SUCCESSFULLY,
                 data: updateEmoji,
                 action: 'edit',
                 success: true,
@@ -527,7 +548,7 @@ module.exports = {
             );
             const updateEmoji = await Emoji.findOneAndDelete({ _id: emojiId });
             return res.status(200).json({
-                message: STATUS_MESSAGE.REMOVE_EMOJI_MESSAGE_SUCCESS,
+                message: STATUS_MESSAGE.REMOVE_EMOJI_MESSAGE_SUCCESSFULLY,
                 data: updateEmoji,
                 conversation: updateMessage.conversation,
                 action: 'delete',
@@ -610,17 +631,147 @@ module.exports = {
                 { $push: { readBy: userId } },
                 { new: true },
             );
-
+            if (!messageUpdate) {
+                return socket.emit(
+                    'validation',
+                    createResponse(
+                        null,
+                        STATUS_MESSAGE.MESSAGE_NOT_FOUND,
+                        MESSAGE_CODE.MESSAGE_NOT_FOUND,
+                        STATUS_CODE.BAD_REQUEST,
+                        false,
+                    ),
+                );
+            }
             return socket.emit(
                 'watched message',
                 createResponse(
                     messageUpdate,
-                    STATUS_MESSAGE.WATCH_MESSAGE_SUCCESS,
-                    MESSAGE_CODE.WATCH_MESSAGE_SUCCESS,
+                    STATUS_MESSAGE.WATCH_MESSAGE_SUCCESSFULLY,
+                    MESSAGE_CODE.WATCH_MESSAGE_SUCCESSFULLY,
                     STATUS_CODE.OK,
                     false,
                 ),
             );
+        } catch (error) {
+            return next(error);
+        }
+    },
+    getListImageMessage: async (req, res, next) => {
+        const userId = req.user._id;
+        const conversationId = req.params.id;
+        try {
+            const conversation = await Conversation.findOne({ _id: conversationId });
+            if (!conversation?.users?.includes(userId)) {
+                return res
+                    .status(400)
+                    .json(
+                        createResponse(
+                            null,
+                            STATUS_MESSAGE.NO_PERMISSION_ACCESS_CONVERSATION,
+                            MESSAGE_CODE.NO_PERMISSION_ACCESS_CONVERSATION,
+                            STATUS_CODE.BAD_REQUEST,
+                            false,
+                        ),
+                    );
+            }
+
+            const message = await Message.find({
+                conversation: conversationId,
+                messageType: 'image',
+                status: { $in: ['active'] },
+                deleteBy: { $nin: userId },
+            })
+                .populate('sender', '_id fullName picture')
+                .populate('affected_user_id', '_id fullName picture')
+                .populate('conversation')
+                .populate({
+                    path: 'emojiBy',
+                    populate: {
+                        path: 'sender',
+                        select: 'fullName _id',
+                    },
+                })
+                .populate('replyMessage', '_id sender message messageType')
+                .sort({ createdAt: -1 });
+            if (!message) {
+                return res
+                    .status(STATUS_CODE.BAD_REQUEST)
+                    .json(
+                        createResponse(
+                            null,
+                            STATUS_MESSAGE.MESSAGE_NOT_FOUND,
+                            MESSAGE_CODE.MESSAGE_NOT_FOUND,
+                            STATUS_CODE.BAD_REQUEST,
+                            false,
+                        ),
+                    );
+            }
+
+            return res
+                .status(200)
+                .json(
+                    createResponse(
+                        message,
+                        STATUS_MESSAGE.GET_MESSAGE_SUCCESSFULLY,
+                        MESSAGE_CODE.GET_MESSAGE_SUCCESSFULLY,
+                        STATUS_CODE.OK,
+                        true,
+                    ),
+                );
+        } catch (error) {
+            return next(error);
+        }
+    },
+    getListVideoMessage: async (req, res, next) => {
+        const userId = req.user._id;
+        const conversationId = req.params.id;
+        try {
+            const conversation = await Conversation.findOne({ _id: conversationId });
+            if (!conversation?.users?.includes(userId)) {
+                return res
+                    .status(400)
+                    .json(
+                        createResponse(
+                            null,
+                            STATUS_MESSAGE.NO_PERMISSION_ACCESS_CONVERSATION,
+                            MESSAGE_CODE.NO_PERMISSION_ACCESS_CONVERSATION,
+                            STATUS_CODE.BAD_REQUEST,
+                            false,
+                        ),
+                    );
+            }
+            const message = await Message.find({
+                conversation: conversationId,
+                messageType: 'video',
+                status: { $in: ['active'] },
+                deleteBy: { $nin: userId },
+            }).sort({ createdAt: -1 });
+            if (!message) {
+                return res
+                    .status(STATUS_CODE.BAD_REQUEST)
+                    .json(
+                        createResponse(
+                            null,
+                            STATUS_MESSAGE.MESSAGE_NOT_FOUND,
+                            MESSAGE_CODE.MESSAGE_NOT_FOUND,
+                            STATUS_CODE.BAD_REQUEST,
+                            false,
+                        ),
+                    );
+            }
+
+            return res
+                .status(200)
+                .json(
+                    createResponse(
+                        message,
+                        STATUS_MESSAGE.GET_MESSAGE_SUCCESSFULLY,
+                        MESSAGE_CODE.GET_MESSAGE_SUCCESSFULLY,
+                        STATUS_CODE.OK,
+                        true,
+                    ),
+                );
         } catch (error) {
             return next(error);
         }

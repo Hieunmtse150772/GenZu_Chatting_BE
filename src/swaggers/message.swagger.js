@@ -491,6 +491,66 @@ const messageSwagger = {
             },
         },
     },
+    '/messages/images/{id}': {
+        get: {
+            tags: ['Message'],
+            description: 'Get all image of conversation',
+            security: [
+                {
+                    accessToken: [],
+                },
+            ],
+            parameters: [
+                {
+                    name: 'id',
+                    in: 'path',
+                    description: 'Id of conversation',
+                    schema: {
+                        type: 'string',
+                        example: '6679c40ab0528a3618e7e646',
+                    },
+                },
+            ],
+            responses: {
+                200: {
+                    description: 'Get all images of conversation successfully',
+                    content: {
+                        'application/json': {},
+                    },
+                },
+            },
+        },
+    },
+    '/messages/videos/{id}': {
+        get: {
+            tags: ['Message'],
+            description: 'Get all video of conversation',
+            security: [
+                {
+                    accessToken: [],
+                },
+            ],
+            parameters: [
+                {
+                    name: 'id',
+                    in: 'path',
+                    description: 'Id of conversation',
+                    schema: {
+                        type: 'string',
+                        example: '6679c40ab0528a3618e7e646',
+                    },
+                },
+            ],
+            responses: {
+                200: {
+                    description: 'Get all video of conversation successfully',
+                    content: {
+                        'application/json': {},
+                    },
+                },
+            },
+        },
+    },
 };
 
 module.exports = messageSwagger;

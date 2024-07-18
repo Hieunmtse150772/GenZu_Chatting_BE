@@ -119,7 +119,7 @@ module.exports = {
                     .in(group._id.toString())
                     .emit(
                         'message received',
-                        responseNotificationSocket(latestMessage, MESSAGE_CODE.SEND_MESSAGE_SUCCESS, true),
+                        responseNotificationSocket(latestMessage, MESSAGE_CODE.SEND_MESSAGE_SUCCESSFULLY, true),
                     );
             });
 
@@ -144,7 +144,7 @@ module.exports = {
                 'response group',
                 createResponse(
                     newGroup,
-                    STATUS_MESSAGE.ADD_MEMBER_TO_GROUP_SUCCESS,
+                    STATUS_MESSAGE.ADD_MEMBER_TO_GROUP_SUCCESSFULLY,
                     MESSAGE_CODE.ADD_MEMBER_TO_GROUP_SUCCESSFULLY,
                     STATUS_CODE.OK,
                     true,
@@ -253,14 +253,14 @@ module.exports = {
                         .in(group._id.toString())
                         .emit(
                             'message received',
-                            responseNotificationSocket(latestMessage, MESSAGE_CODE.SEND_MESSAGE_SUCCESS, true),
+                            responseNotificationSocket(latestMessage, MESSAGE_CODE.SEND_MESSAGE_SUCCESSFULLY, true),
                         );
 
                     return socket.emit(
                         'response group',
                         createResponse(
                             newGroup,
-                            STATUS_MESSAGE.DELETE_MEMBER_SUCCESS,
+                            STATUS_MESSAGE.DELETE_MEMBER_SUCCESSFULLY,
                             MESSAGE_CODE.DELETE_MEMBER_SUCCESSFULLY,
                             STATUS_CODE.OK,
                             true,
@@ -291,14 +291,14 @@ module.exports = {
                         .in(group._id.toString())
                         .emit(
                             'message received',
-                            responseNotificationSocket(latestMessage, MESSAGE_CODE.SEND_MESSAGE_SUCCESS, true),
+                            responseNotificationSocket(latestMessage, MESSAGE_CODE.SEND_MESSAGE_SUCCESSFULLY, true),
                         );
 
                     return socket.emit(
                         'response group',
                         createResponse(
                             newGroup,
-                            STATUS_MESSAGE.DELETE_MEMBER_SUCCESS,
+                            STATUS_MESSAGE.DELETE_MEMBER_SUCCESSFULLY,
                             MESSAGE_CODE.DELETE_MEMBER_SUCCESSFULLY,
                             STATUS_CODE.OK,
                             true,
@@ -351,7 +351,11 @@ module.exports = {
                             .in(group._id.toString())
                             .emit(
                                 'message received',
-                                responseNotificationSocket(transferLeaderMs, MESSAGE_CODE.SEND_MESSAGE_SUCCESS, true),
+                                responseNotificationSocket(
+                                    transferLeaderMs,
+                                    MESSAGE_CODE.SEND_MESSAGE_SUCCESSFULLY,
+                                    true,
+                                ),
                             );
 
                         // delete self from the group
@@ -372,7 +376,7 @@ module.exports = {
                             .in(group._id.toString())
                             .emit(
                                 'message received',
-                                responseNotificationSocket(latestMessage, MESSAGE_CODE.SEND_MESSAGE_SUCCESS, true),
+                                responseNotificationSocket(latestMessage, MESSAGE_CODE.SEND_MESSAGE_SUCCESSFULLY, true),
                             );
 
                         return socket.emit(
@@ -394,7 +398,7 @@ module.exports = {
                             'response group',
                             createResponse(
                                 null,
-                                STATUS_MESSAGE.DELETE_GROUP_SUCCESS,
+                                STATUS_MESSAGE.DELETE_GROUP_SUCCESSFULLY,
                                 MESSAGE_CODE.DELETE_GROUP_SUCCESSFULLY,
                                 STATUS_CODE.OK,
                                 true,
@@ -438,7 +442,7 @@ module.exports = {
                     .in(group._id.toString())
                     .emit(
                         'message received',
-                        responseNotificationSocket(latestMessage, MESSAGE_CODE.SEND_MESSAGE_SUCCESS, true),
+                        responseNotificationSocket(latestMessage, MESSAGE_CODE.SEND_MESSAGE_SUCCESSFULLY, true),
                     );
             }
 
@@ -455,7 +459,7 @@ module.exports = {
                     .in(group._id.toString())
                     .emit(
                         'message received',
-                        responseNotificationSocket(latestMessage, MESSAGE_CODE.SEND_MESSAGE_SUCCESS, true),
+                        responseNotificationSocket(latestMessage, MESSAGE_CODE.SEND_MESSAGE_SUCCESSFULLY, true),
                     );
             }
 
@@ -472,7 +476,7 @@ module.exports = {
                     .in(group._id.toString())
                     .emit(
                         'message received',
-                        responseNotificationSocket(latestMessage, MESSAGE_CODE.SEND_MESSAGE_SUCCESS, true),
+                        responseNotificationSocket(latestMessage, MESSAGE_CODE.SEND_MESSAGE_SUCCESSFULLY, true),
                     );
             }
 
@@ -554,7 +558,7 @@ module.exports = {
                 'response group',
                 createResponse(
                     group._id,
-                    STATUS_MESSAGE.DELETE_GROUP_SUCCESS,
+                    STATUS_MESSAGE.DELETE_GROUP_SUCCESSFULLY,
                     MESSAGE_CODE.DELETE_GROUP_SUCCESSFULLY,
                     STATUS_CODE.OK,
                     true,
