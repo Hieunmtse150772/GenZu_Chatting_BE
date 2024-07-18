@@ -491,7 +491,7 @@ const messageSwagger = {
             },
         },
     },
-    '/messages/images': {
+    '/messages/images/{id}': {
         get: {
             tags: ['Message'],
             description: 'Get all image of conversation',
@@ -521,7 +521,7 @@ const messageSwagger = {
             },
         },
     },
-    '/messages/videos': {
+    '/messages/videos/{id}': {
         get: {
             tags: ['Message'],
             description: 'Get all video of conversation',

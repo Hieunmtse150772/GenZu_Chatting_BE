@@ -54,8 +54,8 @@ router.delete('/emoji', verifyToken, MessageController.removeEmojiMessage);
 
 router.post('/translate', verifyToken, validateBody(messageTranslate), MessageController.translateMessage);
 
-router.get('/images', verifyToken, validateQuery(validateIdMongodb), MessageController.getListImageMessage);
+router.get('/images/:id', verifyToken, validateParams(validateIdMongodb), MessageController.getListImageMessage);
 
-router.get('/videos', verifyToken, validateQuery(validateIdMongodb), MessageController.getListVideoMessage);
+router.get('/videos/:id', verifyToken, validateParams(validateIdMongodb), MessageController.getListVideoMessage);
 
 module.exports = router;
