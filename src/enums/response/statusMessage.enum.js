@@ -48,6 +48,9 @@ const STATUS_MESSAGE = {
     DELETE_MEMBER_SUCCESS: 'Delete member from conversation successfully',
     EXCHANGE_ADMIN_ID_REQUIRED: 'Exchange admin id required',
     USER_NOT_IN_GROUP: 'User not in the conversation',
+    USER_ALREADY_ENABLE_TRANSLATE: 'User already enable translate',
+    ENABLE_TRANSLATE_SUCCESSFULLY: 'Enable translate successfully',
+    USER_HAS_NOT_ENABLED_TRANSLATE: 'User has not enabled translate',
 
     //User
     CREATE_USER_SUCCESS: 'Create user successfully',

@@ -1,4 +1,5 @@
 const router = require('express').Router();
+const upload = require('multer')();
 
 const ConversationController = require('../controller/conversation.controller');
 const GroupChatController = require('@/controller/group_chat.controller');
@@ -13,6 +14,7 @@ const {
     updateBackgroundConversation,
     updateAvatarConversation,
     blockUserConversation,
+    autoTranslateConversation,
 } = require('@/validations');
 
 router.get('/:id', verifyToken, validateParams(validateIdMongodb), ConversationController.getConversationById);
@@ -71,6 +73,14 @@ router.patch(
     verifyToken,
     validateQuery(blockUserConversation),
     ConversationController.unBlockUserConversation,
+);
+router.patch(
+    '/autoTranslate/:id',
+    verifyToken,
+    upload.single(),
+    validateBody(autoTranslateConversation),
+    validateParams(validateIdMongodb),
+    ConversationController.autoTranslate,
 );
 
 module.exports = router;
