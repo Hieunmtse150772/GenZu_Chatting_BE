@@ -311,6 +311,53 @@ const conversationSwagger = {
             },
         },
     },
+    '/conversations/autoTranslate/{id}': {
+        patch: {
+            tags: ['Conversation'],
+            description: 'Api used to enable auto translation',
+            security: [
+                {
+                    accessToken: [],
+                },
+            ],
+            parameters: [
+                {
+                    name: 'id',
+                    in: 'path',
+                    description: 'Id of conversation',
+                    schema: {
+                        type: 'string',
+                        example: '6679c40ab0528a3618e7e646',
+                    },
+                },
+            ],
+            requestBody: {
+                content: {
+                    'multipart/form-data': {
+                        schema: {
+                            type: 'object',
+                            properties: {
+                                isAutoTranslate: {
+                                    description: 'Status of auto translation',
+                                    type: 'boolean',
+                                    enum: [true, false],
+                                    default: 'false',
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+            responses: {
+                200: {
+                    description: 'Auto translate successfully',
+                    content: {
+                        'application/json': {},
+                    },
+                },
+            },
+        },
+    },
 };
 
 module.exports = conversationSwagger;

@@ -17,6 +17,7 @@ const ConversationSchema = mongoose.Schema(
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Message',
         },
+        autoTranslateList: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User', default: [] }],
         groupAdmin: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
         deleteBy: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
         blockUsers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User', default: [] }],

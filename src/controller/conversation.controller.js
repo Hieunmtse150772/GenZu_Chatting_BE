@@ -582,48 +582,92 @@ module.exports = {
                 );
         } catch (error) {}
     },
-    // sendMessage: async (req, res, next) => {
-    //   try {
-    //     const receiverId = req.params.id;
+    autoTranslate: async (req, res, next) => {
+        try {
+            const userId = req.user._id;
+            const conversationId = req.params.id;
+            const isAutoTranslate = req.body.isAutoTranslate;
 
-    //     if (!mongodb.ObjectId.isValid(receiverId)) {
-    //       return res.status(400).json({
-    //         message: 'The receiverId is invalid',
-    //         messageCode: 'invalid_receiverId',
-    //       });
-    //     }
-    //     const senderId = req.user._id ;
-    //     const { message } = req.body;
+            const conversation = await Conversation.findById(conversationId).select('autoTranslateList');
 
-    //     let conversation = await Conversation.findOne({
-    //       paticipants: { $all: [senderId, receiverId] },
-    //     });
+            if (!conversation) {
+                return res
+                    .status(STATUS_CODE.NOT_FOUND)
+                    .json(
+                        createResponse(
+                            null,
+                            STATUS_MESSAGE.GROUP_NOT_FOUND,
+                            MESSAGE_CODE.GROUP_NOT_FOUND,
+                            STATUS_CODE.NOT_FOUND,
+                            false,
+                        ),
+                    );
+            }
 
-    //     if (!conversation) {
-    //       conversation = new Conversation({
-    //         paticipants: [senderId, receiverId],
-    //       });
-    //     }
+            const isAutoTranslateUserList = conversation.autoTranslateList.find((item) => item.equals(userId));
 
-    //     const newMessage = await Message.create({
-    //       senderId,
-    //       receiverId,
-    //       message,
-    //     });
+            if (isAutoTranslateUserList) {
+                if (isAutoTranslate) {
+                    return res
+                        .status(STATUS_CODE.BAD_REQUEST)
+                        .json(
+                            createResponse(
+                                null,
+                                STATUS_MESSAGE.USER_ALREADY_ENABLE_TRANSLATE,
+                                MESSAGE_CODE.USER_ALREADY_ENABLE_TRANSLATE,
+                                STATUS_CODE.BAD_REQUEST,
+                                false,
+                            ),
+                        );
+                } else {
+                    conversation.autoTranslateList = conversation.autoTranslateList.filter(
+                        (item) => !item.equals(userId),
+                    );
+                    const newConversation = await conversation.save();
+                    return res
+                        .status(STATUS_CODE.OK)
+                        .json(
+                            createResponse(
+                                newConversation,
+                                STATUS_MESSAGE.ENABLE_TRANSLATE_SUCCESSFULLY,
+                                MESSAGE_CODE.ENABLE_TRANSLATE_SUCCESSFULLY,
+                                STATUS_CODE.OK,
+                                true,
+                            ),
+                        );
+                }
+            } else {
+                if (isAutoTranslate) {
+                    conversation.autoTranslateList.push(userId);
+                    const newConversation = await conversation.save();
 
-    //     if (newMessage) {
-    //       conversation.messages.push(newMessage._id);
-    //     }
-
-    //     await conversation.save();
-
-    //     return res.status(201).json({
-    //       message: 'Message sent successfully',
-    //       messageCode: 'sent_SUCCESSFULLYfully',
-    //       data: message,
-    //     });
-    //   } catch (error) {
-    //     next(error);
-    //   }
-    // },
+                    return res
+                        .status(STATUS_CODE.OK)
+                        .json(
+                            createResponse(
+                                newConversation,
+                                STATUS_MESSAGE.ENABLE_TRANSLATE_SUCCESSFULLY,
+                                MESSAGE_CODE.ENABLE_TRANSLATE_SUCCESSFULLY,
+                                STATUS_CODE.OK,
+                                true,
+                            ),
+                        );
+                } else {
+                    return res
+                        .status(STATUS_CODE.BAD_REQUEST)
+                        .json(
+                            createResponse(
+                                null,
+                                STATUS_MESSAGE.USER_HAS_NOT_ENABLED_TRANSLATE,
+                                MESSAGE_CODE.USER_HAS_NOT_ENABLED_TRANSLATE,
+                                STATUS_CODE.BAD_REQUEST,
+                                false,
+                            ),
+                        );
+                }
+            }
+        } catch (error) {
+            next(error);
+        }
+    },
 };

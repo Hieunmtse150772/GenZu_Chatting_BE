@@ -26,6 +26,9 @@ const blockUserConversation = Joi.object({
 const updateAvatarConversation = Joi.object({
     avatar: Joi.string().min(1).required(),
 });
+const autoTranslateConversation = Joi.object({
+    isAutoTranslate: Joi.boolean().required(),
+});
 
 module.exports = {
     accessConversation,
@@ -33,4 +36,5 @@ module.exports = {
     updateBackgroundConversation,
     updateAvatarConversation,
     blockUserConversation,
+    autoTranslateConversation,
 };
