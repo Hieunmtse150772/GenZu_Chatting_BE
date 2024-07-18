@@ -1,3 +1,4 @@
+const { objectIdValidator } = require('@/utils/functions');
 const Joi = require('joi');
 
 const updateProfileBody = Joi.object({
@@ -8,7 +9,10 @@ const updateProfileBody = Joi.object({
     phoneNumber: Joi.string(),
     picture: Joi.string(),
 });
-
+const blockUser = Joi.object({
+    blockUserId: Joi.string().required().custom(objectIdValidator, 'ObjectId validation'),
+});
 module.exports = {
     updateProfileBody,
+    blockUser,
 };

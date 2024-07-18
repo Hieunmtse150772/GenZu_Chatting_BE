@@ -335,7 +335,7 @@ module.exports = {
         const userId = req.user._id;
         try {
             const users = await Conversation.findOne({ _id: conversationId }).select('users');
-
+            const user = await User.findOne({ _id: userId }).select('fullName');
             if (!users) {
                 return res
                     .status(400)
@@ -363,7 +363,7 @@ module.exports = {
             }
             const messageCreate = {
                 sender: userId,
-                message: MESSAGE_CODE.UPDATE_BACKGROUND_CONVERSATION_SUCCESSFULLY,
+                message: `${user.fullName} just changed the wallpaper`,
                 conversation: conversationId,
                 status: 'active',
                 messageType: 'notification',

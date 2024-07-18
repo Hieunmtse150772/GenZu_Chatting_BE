@@ -103,4 +103,116 @@ module.exports = {
             next(error);
         }
     },
+    getBlockUser: async (req, res, next) => {
+        const userId = req.user._id;
+        try {
+            const blockListUser = await User.findOne({ _id: userId })
+                .select('blockedUsers')
+                .populate('blockedUsers', 'fullName picture email');
+
+            return res
+                .status(200)
+                .json(
+                    createResponse(
+                        blockListUser,
+                        STATUS_MESSAGE.BLOCK_USER_SUCCESSFULLY,
+                        MESSAGE_CODE.BLOCK_USER_SUCCESSFULLY,
+                        true,
+                    ),
+                );
+        } catch (error) {}
+    },
+    blockUser: async (req, res, next) => {
+        const userId = req.user._id;
+        const userBlockId = req.query.blockUserId;
+        try {
+            const userBlocked = await User.findById({ _id: userBlockId });
+            if (!userBlocked) {
+                return res
+                    .status(400)
+                    .json(createResponse(null, STATUS_MESSAGE.USER_NOT_FOUND, MESSAGE_CODE.USER_NOT_FOUND, false));
+            }
+
+            if (userBlocked?.blockedUsers?.includes(userBlockId)) {
+                return res
+                    .status(403)
+                    .json(
+                        createResponse(
+                            null,
+                            STATUS_MESSAGE.USER_AlREADY_BLOCKED,
+                            MESSAGE_CODE.USER_AlREADY_BLOCKED,
+                            false,
+                        ),
+                    );
+            }
+
+            const userUpdate = await User.findByIdAndUpdate(
+                { _id: userId },
+                {
+                    $push: { blockedUsers: [userBlockId] },
+                },
+                {
+                    new: true,
+                },
+            );
+
+            return res
+                .status(200)
+                .json(
+                    createResponse(
+                        userUpdate,
+                        STATUS_MESSAGE.BLOCK_USER_SUCCESSFULLY,
+                        MESSAGE_CODE.BLOCK_USER_SUCCESSFULLY,
+                        true,
+                    ),
+                );
+        } catch (error) {}
+    },
+    unBlockUser: async (req, res, next) => {
+        const userId = req.user._id;
+        const conversationId = req.query.id;
+        const userBlockId = req.query.blockUserId;
+        try {
+            const userBlocked = await User.findById({ _id: userBlockId });
+            if (!userBlocked) {
+                return res
+                    .status(400)
+                    .json(createResponse(null, STATUS_MESSAGE.USER_NOT_FOUND, MESSAGE_CODE.USER_NOT_FOUND, false));
+            }
+
+            if (userBlocked?.blockedUsers?.includes(userBlockId)) {
+                return res
+                    .status(403)
+                    .json(
+                        createResponse(
+                            null,
+                            STATUS_MESSAGE.USER_AlREADY_BLOCKED,
+                            MESSAGE_CODE.USER_AlREADY_BLOCKED,
+                            false,
+                        ),
+                    );
+            }
+
+            const userUpdate = await User.findByIdAndUpdate(
+                { _id: userId },
+                {
+                    $pull: { blockedUsers: [userBlockId] },
+                },
+                {
+                    new: true,
+                },
+            );
+
+            return res
+                .status(200)
+                .json(
+                    createResponse(
+                        userUpdate,
+                        STATUS_MESSAGE.BLOCK_USER_SUCCESSFULLY,
+                        MESSAGE_CODE.BLOCK_USER_SUCCESSFULLY,
+                        true,
+                    ),
+                );
+        } catch (error) {}
+    },
 };
