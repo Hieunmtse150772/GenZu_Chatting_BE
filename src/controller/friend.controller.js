@@ -26,6 +26,7 @@ module.exports = {
             }).populate('users', 'fullName picture email is_online offline_at');
             var conversations = await Conversation.find({
                 $and: [{ users: { $elemMatch: { $eq: userId } } }],
+                deleteBy: { $nin: userId },
             })
                 .populate('users', '_id fullName email picture')
                 .populate('latestMessage');
