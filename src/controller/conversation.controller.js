@@ -12,6 +12,7 @@ const { STATUS_CODE } = require('@/enums/response');
 module.exports = {
     accessConversation: async (req, res, next) => {
         const { userId } = req.body;
+        const userIdAccess = req.user._id;
         if (!userId) {
             console.log('UserId param not sent with request');
             return res.sendStatus(400);
@@ -48,7 +49,12 @@ module.exports = {
         });
 
         if (isChat) {
-            await Conversation.findByIdAndUpdate({ _id: isChat._id }, { $pull: { deleteBy: userId } });
+            const conversationUpdate = await Conversation.findByIdAndUpdate(
+                { _id: isChat._id },
+                { $pull: { deleteBy: userIdAccess } },
+                { new: true },
+            );
+
             res.status(200).json(
                 createResponse(
                     isChat,
