@@ -36,7 +36,7 @@ module.exports = {
                 status: 1002,
             });
         }
-        var isChat = await Conversation.find({
+        var isChat = await Conversation.findOne({
             isGroupChat: false,
             $and: [{ users: { $elemMatch: { $eq: req.user._id } } }, { users: { $elemMatch: { $eq: userId } } }],
         })
@@ -47,10 +47,11 @@ module.exports = {
             select: 'fullName picture email',
         });
 
-        if (isChat.length > 0) {
+        if (isChat) {
+            await Conversation.findByIdAndUpdate({ _id: isChat._id }, { $pull: { deleteBy: userId } });
             res.status(200).json(
                 createResponse(
-                    isChat[0],
+                    isChat,
                     STATUS_MESSAGE.CONVERSATION_ACCESS_SUCCESSFULLY,
                     MESSAGE_CODE.CONVERSATION_ACCESS_SUCCESSFULLY,
                     STATUS_CODE.OK,
@@ -116,7 +117,8 @@ module.exports = {
     },
     fetchConversation: async (req, res, next) => {
         try {
-            Conversation.find({ users: { $elemMatch: { $eq: req.user._id } } })
+            const userId = req.user._id;
+            Conversation.find({ users: { $elemMatch: { $eq: req.user._id } }, deleteBy: { $nin: userId } })
                 .populate('users', 'email fullName picture is_online offline_at')
                 .populate('groupAdmin', '-password')
                 .populate('latestMessage')
@@ -219,7 +221,7 @@ module.exports = {
                 messageCode: 'create_group_chat_SUCCESSFULLYful',
             });
         } catch (error) {
-            return next(error);
+            next(error);
         }
     },
     removeConversation: async (req, res, next) => {
@@ -236,6 +238,7 @@ module.exports = {
                 { conversationId },
                 { $push: { deleteBy: userId } },
             );
+
             if (!conversation) {
                 return res
                     .status(400)
@@ -248,20 +251,40 @@ module.exports = {
                         ),
                     );
             }
+            if (!conversation.users.includes(userId)) {
+                return res
+                    .status(400)
+                    .json(
+                        createResponse(
+                            null,
+                            STATUS_MESSAGE.NO_PERMISSION_REMOVE_HISTORY_CONVERSATION,
+                            MESSAGE_CODE.NO_PERMISSION_REMOVE_HISTORY_CONVERSATION,
+                            false,
+                        ),
+                    );
+            }
+            const messageUpdate = await Message.updateMany(
+                { conversation: conversationId },
+                { $push: { deleteBy: userId } },
+            );
 
             return res.status(200).json({
                 data: conversation,
                 message: STATUS_MESSAGE.REMOVE_CONVERSATION_SUCCESSFULLY,
             });
         } catch (error) {
-            return next(error);
+            next(error);
         }
     },
     removeHistoryConversation: async (req, res, next) => {
         const conversationId = req.query.id;
         const userId = req.user._id;
         try {
-            const conversation = await Conversation.findById({ _id: conversationId });
+            const conversation = await Conversation.findByIdAndUpdate(
+                { conversationId },
+                { $push: { deleteBy: userId } },
+            );
+
             if (!conversation) {
                 return res
                     .status(400)
@@ -564,7 +587,7 @@ module.exports = {
             const conversationUpdate = await Conversation.findByIdAndUpdate(
                 { _id: conversationId },
                 {
-                    $pull: { blockedUsers: [userBlockId] },
+                    $pull: { blockedUsers: userBlockId },
                 },
                 {
                     new: true,
