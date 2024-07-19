@@ -281,7 +281,7 @@ module.exports = {
         const userId = req.user._id;
         try {
             const conversation = await Conversation.findByIdAndUpdate(
-                { conversationId },
+                { _id: conversationId },
                 { $push: { deleteBy: userId } },
             );
 
@@ -386,7 +386,7 @@ module.exports = {
             }
             const messageCreate = {
                 sender: userId,
-                message: STATUS_CODE.UPDATE_BACKGROUND_CONVERSATION_SUCCESSFULLY,
+                message: MESSAGE_CODE.UPDATE_BACKGROUND_CONVERSATION_SUCCESSFULLY,
                 conversation: conversationId,
                 status: 'active',
                 messageType: 'notification',
