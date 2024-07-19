@@ -131,7 +131,7 @@ module.exports = {
             replyMessage: replyMessage,
         };
         try {
-            const conversation = await Conversation.findOne({ _id: conversationId });
+            const conversation = await Conversation.findOne({ _id: conversationId }).populate('latestMessage');
             if (!conversation) {
                 return res
                     .status(404)
@@ -186,13 +186,6 @@ module.exports = {
                     );
             }
             var newMessage = await Message.create(messageCreated);
-            newMessage = await newMessage.populate('sender', 'fullName picture email');
-            newMessage = await newMessage.populate('conversation');
-            newMessage = await newMessage.populate('replyMessage', '_id sender message messageType');
-            newMessage = await User.populate(newMessage, {
-                path: 'conversation.users',
-                select: 'fullName picture email',
-            });
             await Conversation.findByIdAndUpdate(
                 conversationId,
                 {
@@ -200,6 +193,14 @@ module.exports = {
                 },
                 { new: true },
             );
+            newMessage = await newMessage.populate('sender', 'fullName picture email');
+            newMessage = await newMessage.populate('conversation');
+            newMessage = await newMessage.populate('replyMessage', '_id sender message messageType');
+            newMessage = await Conversation.populate(newMessage, { path: 'conversation.latestMessage' });
+            newMessage = await User.populate(newMessage, {
+                path: 'conversation.users',
+                select: 'fullName picture email',
+            });
 
             return res
                 .status(201)
