@@ -162,7 +162,7 @@ module.exports = {
                     ),
                 );
         } catch (error) {
-            return next(error);
+            next(error);
         }
     },
     callBack: (req, res) => {

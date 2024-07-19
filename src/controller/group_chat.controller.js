@@ -12,6 +12,7 @@ module.exports = {
         let latestMessage;
 
         try {
+            // block
             const groupChat = await Conversation.create({
                 chatName: data.chatName,
                 avatar: data.avatar,
@@ -105,6 +106,8 @@ module.exports = {
                     ),
                 );
             }
+
+            // block
 
             newUsers.forEach(async (item) => {
                 latestMessage = await Message.create({

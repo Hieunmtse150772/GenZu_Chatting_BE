@@ -156,7 +156,9 @@ module.exports = {
                         ),
                     );
             }
+
             const isUserBlocked = conversation.blockedUsers.some((item) => item.equals(userId));
+
             if (isUserBlocked) {
                 return res
                     .status(403)
@@ -165,6 +167,19 @@ module.exports = {
                             null,
                             STATUS_MESSAGE.USER_WAS_BLOCKED,
                             MESSAGE_CODE.USER_WAS_BLOCKED,
+                            STATUS_CODE.FORBIDDEN,
+                            false,
+                        ),
+                    );
+            }
+            if (conversation?.blockedUsers?.length > 0) {
+                return res
+                    .status(403)
+                    .json(
+                        createResponse(
+                            null,
+                            STATUS_MESSAGE.CONVERSATION_WAS_BLOCKED,
+                            MESSAGE_CODE.CONVERSATION_WAS_BLOCKED,
                             STATUS_CODE.FORBIDDEN,
                             false,
                         ),
@@ -469,7 +484,7 @@ module.exports = {
                 success: true,
             });
         } catch (error) {
-            return next(error);
+            next(error);
         }
     },
     updateEmojiMessage: async (req, res, next) => {
@@ -511,7 +526,7 @@ module.exports = {
                 success: true,
             });
         } catch (error) {
-            return next(error);
+            next(error);
         }
     },
     removeEmojiMessage: async (req, res, next) => {
@@ -555,7 +570,7 @@ module.exports = {
                 success: true,
             });
         } catch (error) {
-            return next(error);
+            next(error);
         }
     },
     translateMessage: async (req, res, next) => {
@@ -654,7 +669,7 @@ module.exports = {
                 ),
             );
         } catch (error) {
-            return next(error);
+            next(error);
         }
     },
     getListImageMessage: async (req, res, next) => {
@@ -720,7 +735,7 @@ module.exports = {
                     ),
                 );
         } catch (error) {
-            return next(error);
+            next(error);
         }
     },
     getListVideoMessage: async (req, res, next) => {
@@ -773,7 +788,7 @@ module.exports = {
                     ),
                 );
         } catch (error) {
-            return next(error);
+            next(error);
         }
     },
 };
