@@ -259,6 +259,7 @@ module.exports = {
             var newMessage = await Message.create(messageCreated);
             newMessage = await newMessage.populate('sender', 'fullName picture email');
             newMessage = await newMessage.populate('conversation');
+            newMessage = await newMessage.populate('affected_user_id', 'fullName picture email');
             newMessage = await User.populate(newMessage, {
                 path: 'conversation.users',
                 select: 'fullName picture email',
@@ -287,7 +288,7 @@ module.exports = {
                 createResponse(
                     error,
                     STATUS_MESSAGE.INTERNAL_SERVER_ERROR,
-                    MESSAGE_CODE.INTERNAL_SERVER_ERROR,
+                    null,
                     STATUS_CODE.INTERNAL_SERVER_ERROR,
                     false,
                 ),

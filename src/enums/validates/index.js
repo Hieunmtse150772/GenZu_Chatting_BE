@@ -137,4 +137,5 @@ module.exports = {
         'yo',
         'zu',
     ],
+    backgroundType: ['color', 'image'],
 };

@@ -20,14 +20,6 @@ module.exports = {
                 users: [userId, ...users],
                 groupAdmin: userId,
             });
-            groupChat.users.forEach((item) => {
-                socket
-                    .in(item.toString())
-                    .emit(
-                        'notification',
-                        responseNotificationSocket(groupChat, MESSAGE_CODE.ADD_MEMBER_TO_GROUP_SUCCESSFULLY, true),
-                    );
-            });
             users.forEach(async (item) => {
                 latestMessage = await Message.create({
                     sender: userId,
@@ -46,6 +38,18 @@ module.exports = {
                 .populate('users', 'picture fullName _id email is_online offline_at')
                 .populate('groupAdmin', 'picture fullName _id email is_online offline_at');
 
+            groupChat.users.forEach((item) => {
+                socket
+                    .in(item.toString())
+                    .emit(
+                        'notification',
+                        responseNotificationSocket(
+                            fullGroupChatInfo,
+                            MESSAGE_CODE.ADD_MEMBER_TO_GROUP_SUCCESSFULLY,
+                            true,
+                        ),
+                    );
+            });
             return socket.emit(
                 'response group',
                 createResponse(
@@ -115,6 +119,10 @@ module.exports = {
                     affected_user_id: item,
                     messageType: 'notification',
                 });
+                latestMessage = await latestMessage.populate('sender', 'fullName picture email');
+                latestMessage = await latestMessage.populate('conversation');
+                latestMessage = await latestMessage.populate('affected_user_id', 'fullName picture email');
+
                 socket
                     .in(group._id.toString())
                     .emit(
@@ -146,6 +154,75 @@ module.exports = {
                     newGroup,
                     STATUS_MESSAGE.ADD_MEMBER_TO_GROUP_SUCCESSFULLY,
                     MESSAGE_CODE.ADD_MEMBER_TO_GROUP_SUCCESSFULLY,
+                    STATUS_CODE.OK,
+                    true,
+                ),
+            );
+        } catch (error) {
+            return socket.emit(
+                'response group',
+                createResponse(
+                    error,
+                    STATUS_MESSAGE.INTERNAL_SERVER_ERROR,
+                    null,
+                    STATUS_CODE.INTERNAL_SERVER_ERROR,
+                    false,
+                ),
+            );
+        }
+    },
+    exchangeGroupAdmin: async (data, socket) => {
+        const groupId = data.groupId;
+        const exchangeUserId = data.exchangeUserId;
+        const userId = socket.user._id;
+
+        try {
+            const group = await Conversation.findById(groupId);
+            if (!group) {
+                return socket.emit(
+                    'response group',
+                    createResponse(
+                        null,
+                        STATUS_MESSAGE.GROUP_NOT_FOUND,
+                        MESSAGE_CODE.GROUP_NOT_FOUND,
+                        STATUS_CODE.NOT_FOUND,
+                        false,
+                    ),
+                );
+            }
+
+            const userExist = group.users.find((item) => item.equals(exchangeUserId));
+            if (!userExist) {
+                return socket.emit(
+                    'response group',
+                    createResponse(
+                        null,
+                        STATUS_MESSAGE.MEMBER_NOT_FOUND,
+                        MESSAGE_CODE.MEMBER_NOT_FOUND,
+                        STATUS_CODE.NOT_FOUND,
+                        false,
+                    ),
+                );
+            }
+
+            if (!userId.equals(group.groupAdmin)) {
+                return socket.emit(
+                    'response group',
+                    createResponse(null, STATUS_MESSAGE.FORBIDDEN, null, STATUS_CODE.FORBIDDEN, false),
+                );
+            }
+
+            group.groupAdmin = exchangeAdminId;
+            let newGroup = await group.save();
+            newGroup = await newGroup.populate('users', 'picture fullName _id email is_online offline_at');
+            newGroup = await newGroup.populate('groupAdmin', 'picture fullName _id email is_online offline_at');
+
+            return socket.emit(
+                'response group',
+                createResponse(
+                    newGroup,
+                    STATUS_MESSAGE.EXCHANGE_ADMIN_SUCCESSFULLY,
+                    MESSAGE_CODE.EXCHANGE_ADMIN_SUCCESSFULLY,
                     STATUS_CODE.OK,
                     true,
                 ),
@@ -232,7 +309,7 @@ module.exports = {
                     // not admin and delete self
                 } else {
                     const newMembers = group.users.filter((item) => !item.equals(userId));
-                    const latestMessage = await Message.create({
+                    let latestMessage = await Message.create({
                         sender: userId,
                         message: MESSAGE_CODE.USER_LEAVE_IN_GROUP,
                         conversation: group._id,
@@ -240,6 +317,9 @@ module.exports = {
                         affected_user_id: userId,
                         messageType: 'notification',
                     });
+                    latestMessage = await latestMessage.populate('sender', 'fullName picture email');
+                    latestMessage = await latestMessage.populate('conversation');
+                    latestMessage = await latestMessage.populate('affected_user_id', 'fullName picture email');
 
                     const newGroup = await Conversation.findByIdAndUpdate(
                         { _id: group._id },
@@ -250,7 +330,7 @@ module.exports = {
                         .populate('groupAdmin', 'picture fullName _id email is_online offline_at');
 
                     socket
-                        .in(group._id.toString())
+                        .in(newGroup._id.toString())
                         .emit(
                             'message received',
                             responseNotificationSocket(latestMessage, MESSAGE_CODE.SEND_MESSAGE_SUCCESSFULLY, true),
@@ -279,6 +359,10 @@ module.exports = {
                         affected_user_id: memberId,
                         messageType: 'notification',
                     });
+                    latestMessage = await latestMessage.populate('sender', 'fullName picture email');
+                    latestMessage = await latestMessage.populate('conversation');
+                    latestMessage = await latestMessage.populate('affected_user_id', 'fullName picture email');
+
                     const newGroup = await Conversation.findByIdAndUpdate(
                         { _id: group._id },
                         { users: newMembers, latestMessage },
@@ -288,7 +372,7 @@ module.exports = {
                         .populate('groupAdmin', 'picture fullName _id email is_online offline_at');
 
                     socket
-                        .in(group._id.toString())
+                        .in(newGroup._id.toString())
                         .emit(
                             'message received',
                             responseNotificationSocket(latestMessage, MESSAGE_CODE.SEND_MESSAGE_SUCCESSFULLY, true),
@@ -338,7 +422,7 @@ module.exports = {
                     if (group.users.length > 1) {
                         // update groupAdmin to new user
                         group.groupAdmin = exchangeAdminId;
-                        const transferLeaderMs = await Message.create({
+                        let transferLeaderMs = await Message.create({
                             sender: userId,
                             message: MESSAGE_CODE.TRANSFER_GROUP_LEADER,
                             conversation: group._id,
@@ -346,6 +430,12 @@ module.exports = {
                             affected_user_id: exchangeAdminId,
                             messageType: 'notification',
                         });
+                        transferLeaderMs = await transferLeaderMs.populate('sender', 'fullName picture email');
+                        transferLeaderMs = await transferLeaderMs.populate('conversation');
+                        transferLeaderMs = await transferLeaderMs.populate(
+                            'affected_user_id',
+                            'fullName picture email',
+                        );
 
                         socket
                             .in(group._id.toString())
@@ -360,7 +450,7 @@ module.exports = {
 
                         // delete self from the group
                         group.users.pull(memberId);
-                        const latestMessage = await Message.create({
+                        let latestMessage = await Message.create({
                             sender: userId,
                             message: MESSAGE_CODE.USER_LEAVE_IN_GROUP,
                             conversation: group._id,
@@ -368,6 +458,9 @@ module.exports = {
                             affected_user_id: userId,
                             messageType: 'notification',
                         });
+                        latestMessage = await latestMessage.populate('sender', 'fullName picture email');
+                        latestMessage = await latestMessage.populate('conversation');
+                        latestMessage = await latestMessage.populate('affected_user_id', 'fullName picture email');
 
                         group.latestMessage = latestMessage;
                         await group.save();
@@ -397,7 +490,7 @@ module.exports = {
                         return socket.emit(
                             'response group',
                             createResponse(
-                                null,
+                                group._id,
                                 STATUS_MESSAGE.DELETE_GROUP_SUCCESSFULLY,
                                 MESSAGE_CODE.DELETE_GROUP_SUCCESSFULLY,
                                 STATUS_CODE.OK,
@@ -438,6 +531,9 @@ module.exports = {
                     status: 'active',
                     messageType: 'notification',
                 });
+                latestMessage = await latestMessage.populate('sender', 'fullName picture email');
+                latestMessage = await latestMessage.populate('conversation');
+                latestMessage = await latestMessage.populate('affected_user_id', 'fullName picture email');
                 socket
                     .in(group._id.toString())
                     .emit(
@@ -455,6 +551,9 @@ module.exports = {
                     status: 'active',
                     messageType: 'notification',
                 });
+                latestMessage = await latestMessage.populate('sender', 'fullName picture email');
+                latestMessage = await latestMessage.populate('conversation');
+                latestMessage = await latestMessage.populate('affected_user_id', 'fullName picture email');
                 socket
                     .in(group._id.toString())
                     .emit(
@@ -471,6 +570,9 @@ module.exports = {
                     status: 'active',
                     messageType: 'notification',
                 });
+                latestMessage = await latestMessage.populate('sender', 'fullName picture email');
+                latestMessage = await latestMessage.populate('conversation');
+                latestMessage = await latestMessage.populate('affected_user_id', 'fullName picture email');
                 group.chatName = data.chatName;
                 socket
                     .in(group._id.toString())

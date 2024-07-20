@@ -11,6 +11,7 @@ const {
     deleteMemberGroupChat,
     updateGroupChat,
     deleteGroupChat,
+    exchangeGroupAdmin,
 } = require('@/controller/group_chat.controller');
 const { sendMessage, readMessage } = require('@/controller/message.controller');
 
@@ -76,6 +77,9 @@ io.on('connection', async (socket) => {
     });
     socket.on('delete member', (data) => {
         deleteMemberGroupChat(data, socket);
+    });
+    socket.on('echange admin group', (data) => {
+        exchangeGroupAdmin(data, socket);
     });
     socket.on('update group', (data) => {
         updateGroupChat(data, socket);
