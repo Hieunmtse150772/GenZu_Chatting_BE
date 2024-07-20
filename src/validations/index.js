@@ -22,6 +22,7 @@ module.exports = {
         'create group': groupValidator.createGroupBody,
         'add member': groupValidator.addMemberGroupBody,
         'delete member': groupValidator.deleteMemberGroupBody,
+        'exchange admin group': groupValidator.exchangeAdminGroupBody,
         'update group': groupValidator.updateGroupBody,
         'delete group': validateIdMongodb,
         'send message': messageValidator.sendMessage2,

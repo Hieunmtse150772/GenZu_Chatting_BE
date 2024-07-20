@@ -52,6 +52,7 @@ const STATUS_MESSAGE = {
     USER_ALREADY_ENABLE_TRANSLATE: 'User already enable translate',
     ENABLE_TRANSLATE_SUCCESSFULLY: 'Enable translate successfully',
     USER_HAS_NOT_ENABLED_TRANSLATE: 'User has not enabled translate',
+    EXCHANGE_ADMIN_SUCCESSFULLY: 'Echange admin successfully',
 
     //User
     CREATE_USER_SUCCESSFULLY: 'Create user successfully',
