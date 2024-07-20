@@ -68,6 +68,22 @@ io.on('connection', async (socket) => {
         socket.emit('connected');
     });
 
+    //Send request add friend
+    socket.on('friend request', (newRequest) => {
+        try {
+            const receiverId = newRequest.receiver._id;
+            socket.to(receiverId).emit('received request', newRequest);
+        } catch (error) {
+            console.log('error socket: ', error);
+        }
+    });
+
+    //Accept request friend
+    socket.on('accept request', (newRequest) => {
+        const senderId = newRequest.sender._id;
+        socket.to(senderId).emit('received reply', newRequest);
+    });
+
     //Group chat
     socket.on('create group', (data) => {
         createGroupChat(data, socket);
@@ -92,23 +108,7 @@ io.on('connection', async (socket) => {
         sendMessage(data, socket);
     });
 
-    // Message
-    //Listening the action type of user when they are typing
-    socket.on('typing', (room) => {
-        socket.in(room).emit('typing');
-    });
-    //Listening the action stop type of user when they was stopped typing
-    socket.on('stop_typing', (room) => socket.in(room).emit('stop_typing'));
-    //Listening the action read message of user when they was seen the message
-    socket.on('watch message', (message) => {
-        try {
-            readMessage(message, socket);
-        } catch (error) {
-            console.log('error socket: ', error);
-        }
-    });
-
-    // friend
+    //Check is read friend request
     socket.on('read request', async (newRequest) => {
         try {
             const newRequestId = newRequest._id;
@@ -120,63 +120,6 @@ io.on('connection', async (socket) => {
         }
     });
 
-    //Send request add friend
-    socket.on('friend request', (newRequest) => {
-        try {
-            const receiverId = newRequest.receiver._id;
-            socket.to(receiverId).emit('received request', newRequest);
-        } catch (error) {
-            console.log('error socket: ', error);
-        }
-    });
-
-    socket.on('accept request', (newRequest) => {
-        const senderId = newRequest.sender._id;
-        socket.to(senderId).emit('received reply', newRequest);
-    });
-
-    // Conversation
-    socket.on('access chat', (conversationInfo) => {
-        try {
-            if (conversationInfo?.conversation) {
-                for (i = 0; i < conversationInfo?.conversation?.users.length; i++) {
-                    if (conversationInfo?.conversation?.users[i]._id !== conversationInfo?.userId) {
-                        socket.to(conversationInfo?.conversation?.users[i]._id).emit('accessed chat', conversationInfo);
-                    }
-                }
-            }
-        } catch (error) {
-            console.log('error: ', error);
-        }
-    });
-    //Set up room with conversation id for user who was join to chat
-    socket.on('join chat', (room) => {
-        socket.join(room);
-    });
-    //Out room chat with conversation id when user leave chat or not focus on chat room
-    socket.on('leave chat', (room) => {
-        try {
-            if (room.conversation) {
-                socket.leave(room.conversation);
-            } else {
-                console.log('room not found');
-            }
-        } catch (error) {
-            console.log('error socket: ', error);
-        }
-    });
-    //Change background conversation
-    socket.on('change background', (background) => {
-        try {
-            const conversation = background._id;
-            console.log('background: ', conversation);
-            socket.in(conversation).emit('changed background', background);
-        } catch (error) {
-            console.log('error socket: ', error);
-        }
-    });
-
-    // authentication
     socket.on('login', async (userId) => {
         try {
             if (!mongodb.ObjectId.isValid(userId)) {
@@ -226,6 +169,153 @@ io.on('connection', async (socket) => {
             console.log(error);
         }
     });
+
+    //Create new conversation
+    socket.on('access chat', (conversationInfo) => {
+        try {
+            if (conversationInfo?.conversation) {
+                for (i = 0; i < conversationInfo?.conversation?.users.length; i++) {
+                    if (conversationInfo?.conversation?.users[i]._id !== conversationInfo?.userId) {
+                        socket.to(conversationInfo?.conversation?.users[i]._id).emit('accessed chat', conversationInfo);
+                    }
+                }
+            }
+        } catch (error) {
+            console.log('error: ', error);
+        }
+    });
+
+    //Set up room with conversation id for user who was join to chat
+    socket.on('join chat', (room) => {
+        socket.join(room);
+    });
+
+    //Out room chat with conversation id when user leave chat or not focus on chat room
+    socket.on('leave chat', (room) => {
+        try {
+            console.log('leave chat');
+            console.log('leave: ', room.conversation);
+            if (room.conversation) {
+                socket.leave(room.conversation);
+            } else {
+                console.log('room not found');
+            }
+        } catch (error) {
+            console.log('error socket: ', error);
+        }
+    });
+
+    //Listening the action type of user when they are typing
+    socket.on('typing', (room) => {
+        socket.in(room).emit('typing');
+    });
+
+    //Listening the action stop type of user when they was stopped typing
+    socket.on('stop_typing', (room) => socket.in(room).emit('stop_typing'));
+
+    //Listening the action read message of user when they was seen the message
+    socket.on('watch message', (message) => {
+        try {
+            readMessage(message, socket);
+        } catch (error) {
+            console.log('error socket: ', error);
+        }
+    });
+
+    //Listening the action reacting message with emoji
+    socket.on('add emoji', (emojiAdded) => {
+        try {
+            if (!emojiAdded.conversation) {
+                console.log('Invalid conversation id');
+                return;
+            }
+            const chatRoom = emojiAdded.conversation;
+
+            socket.to(chatRoom).emit('emoji received', emojiAdded);
+        } catch (error) {
+            console.log('error socket: ', error);
+        }
+    });
+
+    //Listening the action edit emoji
+    socket.on('edit emoji', (emojiAdded) => {
+        try {
+            if (!emojiAdded.conversation) {
+                console.log('Invalid conversation id');
+                return;
+            }
+            const chatRoom = emojiAdded.conversation;
+
+            socket.to(chatRoom).emit('emoji received', emojiAdded);
+        } catch (error) {
+            console.log('error socket: ', error);
+        }
+    });
+
+    //Listening the action delete emoji
+    socket.on('delete emoji', (emojiAdded) => {
+        try {
+            if (!emojiAdded.conversation) {
+                console.log('Invalid conversation id');
+                return;
+            }
+            const chatRoom = emojiAdded.conversation;
+
+            socket.to(chatRoom).emit('emoji received', emojiAdded);
+        } catch (error) {
+            console.log('error socket: ', error);
+        }
+    });
+
+    // Gửi thông báo tin nhắn đã bị thu hồi đến tất cả socket trong phòng, ngoại trừ socket của người gửi
+    socket.on('recall', (messageRecalled) => {
+        try {
+            if (!messageRecalled || !messageRecalled.data.data.conversation) {
+                console.error('Invalid newMessageReceived data');
+                return;
+            }
+            const chatRoom = messageRecalled.data.data.conversation;
+            socket.to(chatRoom).emit('recall received', messageRecalled);
+        } catch (error) {
+            console.log('error socket: ', error);
+        }
+    });
+
+    // Gửi tin nhắn đến tất cả socket trong phòng, ngoại trừ socket của người gửi
+    socket.on('new message', async (newMessageReceived) => {
+        try {
+            if (!newMessageReceived || !newMessageReceived.conversation || !newMessageReceived.conversation._id) {
+                console.error('Invalid newMessageReceived data');
+                return;
+            }
+
+            const chatRoom = newMessageReceived.conversation._id;
+
+            socket.to(chatRoom).emit('message received', newMessageReceived);
+
+            const users = await Conversation.findOne({ _id: chatRoom });
+
+            if (users) {
+                for (i = 0; i < users.users.length; i++) {
+                    socket.to(String(users.users[i])).emit('new message received', newMessageReceived);
+                }
+            }
+        } catch (error) {
+            console.log('error socket: ', error);
+        }
+    });
+
+    //Change background conversation
+    socket.on('change background', (background) => {
+        try {
+            const conversation = background._id;
+            console.log('background: ', conversation);
+            socket.in(conversation).emit('changed background', background);
+        } catch (error) {
+            console.log('error socket: ', error);
+        }
+    });
+
     socket.on('disconnect', async () => {
         try {
             const user = await User.findOne({ socketId: socket.id }).select('socketId _id');

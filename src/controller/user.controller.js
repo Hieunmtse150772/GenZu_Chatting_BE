@@ -51,6 +51,7 @@ module.exports = {
     },
     getUserByKeyWord: async (req, res, next) => {
         try {
+            const userId = req.user._id;
             const keyword = req.query.search
                 ? {
                       $or: [
@@ -59,10 +60,14 @@ module.exports = {
                       ],
                   }
                 : {};
-            console.log('keyword: ', keyword);
-            const user = await User.find(keyword)
-                .find({ _id: { $ne: req.user._id } })
-                .select('fullName picture email gender');
+            const userInfo = await User.findOne({ _id: userId });
+            const userList = await User.find(keyword)
+                .find({ _id: { $ne: userId } })
+                .select('fullName picture email gender blockedUsers');
+
+            const user = userList.filter(
+                (user) => !user.blockedUsers?.includes(userId) && !userInfo.blockedUsers?.includes(user._id),
+            );
             res.status(200).json({
                 message: 'Search user successfully',
                 messageCode: 'search_user_successfully',
@@ -82,8 +87,32 @@ module.exports = {
                     messageCode: 'invalid_userId',
                 });
             }
-            const user = await User.findOne({ _id: id }, 'fullName email picture');
+            const user = await User.findOne({ _id: userId }, 'fullName email picture blockedUsers');
 
+            const userBlock = await User.findOne({ _id: id }, 'fullName email picture blockedUsers');
+            if (!userBlock || !user) {
+                return res
+                    .status(400)
+                    .json(createResponse(null, STATUS_MESSAGE.USER_NOT_FOUND, MESSAGE_CODE.USER_NOT_FOUND, true));
+            }
+            if (user?.blockedUsers?.includes(id)) {
+                return res
+                    .status(400)
+                    .json(
+                        createResponse(
+                            null,
+                            STATUS_MESSAGE.CONVERSATION_WAS_BLOCKED,
+                            MESSAGE_CODE.CONVERSATION_WAS_BLOCKED,
+                            true,
+                        ),
+                    );
+            }
+            //Check block user
+            if (userBlock?.blockedUsers?.includes(userId)) {
+                return res
+                    .status(400)
+                    .json(createResponse(null, STATUS_MESSAGE.USER_WAS_BLOCKED, MESSAGE_CODE.USER_WAS_BLOCKED, true));
+            }
             const relationShip = await FriendShip.findOne({
                 users: { $all: [id, req.user._id] },
                 status: 'active',
@@ -152,7 +181,7 @@ module.exports = {
                     ),
                 );
         } catch (error) {
-            return next(error);
+            next(error);
         }
     },
     blockUser: async (req, res, next) => {
@@ -216,7 +245,7 @@ module.exports = {
                     ),
                 );
         } catch (error) {
-            return next(error);
+            next(error);
         }
     },
     unBlockUser: async (req, res, next) => {
@@ -266,7 +295,7 @@ module.exports = {
                     ),
                 );
         } catch (error) {
-            return next(error);
+            next(error);
         }
     },
 };

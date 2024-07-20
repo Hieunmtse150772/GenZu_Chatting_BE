@@ -134,6 +134,6 @@ module.exports = async function (req, res, next) {
         res.paginatedResults = results;
         next();
     } catch (error) {
-        return next(error);
+        next(error);
     }
 };

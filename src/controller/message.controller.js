@@ -131,7 +131,7 @@ module.exports = {
             replyMessage: replyMessage,
         };
         try {
-            const conversation = await Conversation.findOne({ _id: conversationId });
+            const conversation = await Conversation.findOne({ _id: conversationId }).populate('latestMessage');
             if (!conversation) {
                 return res
                     .status(404)
@@ -156,7 +156,9 @@ module.exports = {
                         ),
                     );
             }
+
             const isUserBlocked = conversation.blockedUsers.some((item) => item.equals(userId));
+
             if (isUserBlocked) {
                 return res
                     .status(403)
@@ -170,14 +172,20 @@ module.exports = {
                         ),
                     );
             }
+            if (conversation?.blockedUsers?.length > 0) {
+                return res
+                    .status(403)
+                    .json(
+                        createResponse(
+                            null,
+                            STATUS_MESSAGE.CONVERSATION_WAS_BLOCKED,
+                            MESSAGE_CODE.CONVERSATION_WAS_BLOCKED,
+                            STATUS_CODE.FORBIDDEN,
+                            false,
+                        ),
+                    );
+            }
             var newMessage = await Message.create(messageCreated);
-            newMessage = await newMessage.populate('sender', 'fullName picture email');
-            newMessage = await newMessage.populate('conversation');
-            newMessage = await newMessage.populate('replyMessage', '_id sender message messageType');
-            newMessage = await User.populate(newMessage, {
-                path: 'conversation.users',
-                select: 'fullName picture email',
-            });
             await Conversation.findByIdAndUpdate(
                 conversationId,
                 {
@@ -185,6 +193,14 @@ module.exports = {
                 },
                 { new: true },
             );
+            newMessage = await newMessage.populate('sender', 'fullName picture email');
+            newMessage = await newMessage.populate('conversation');
+            newMessage = await newMessage.populate('replyMessage', '_id sender message messageType');
+            newMessage = await Conversation.populate(newMessage, { path: 'conversation.latestMessage' });
+            newMessage = await User.populate(newMessage, {
+                path: 'conversation.users',
+                select: 'fullName picture email',
+            });
 
             return res
                 .status(201)
@@ -470,7 +486,7 @@ module.exports = {
                 success: true,
             });
         } catch (error) {
-            return next(error);
+            next(error);
         }
     },
     updateEmojiMessage: async (req, res, next) => {
@@ -512,7 +528,7 @@ module.exports = {
                 success: true,
             });
         } catch (error) {
-            return next(error);
+            next(error);
         }
     },
     removeEmojiMessage: async (req, res, next) => {
@@ -556,7 +572,7 @@ module.exports = {
                 success: true,
             });
         } catch (error) {
-            return next(error);
+            next(error);
         }
     },
     translateMessage: async (req, res, next) => {
@@ -655,7 +671,7 @@ module.exports = {
                 ),
             );
         } catch (error) {
-            return next(error);
+            next(error);
         }
     },
     getListImageMessage: async (req, res, next) => {
@@ -721,7 +737,7 @@ module.exports = {
                     ),
                 );
         } catch (error) {
-            return next(error);
+            next(error);
         }
     },
     getListVideoMessage: async (req, res, next) => {
@@ -774,7 +790,7 @@ module.exports = {
                     ),
                 );
         } catch (error) {
-            return next(error);
+            next(error);
         }
     },
 };

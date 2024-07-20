@@ -18,6 +18,7 @@ module.exports = {
                     messageCode: 'invalid_userId',
                 });
             }
+            const user = await User.findOne({ _id: userId }).select('blockedUsers');
             // const senderId = req.user._id;
             var friendList = await FriendShip.find({
                 users: userId,
@@ -25,6 +26,7 @@ module.exports = {
             }).populate('users', 'fullName picture email is_online offline_at');
             var conversations = await Conversation.find({
                 $and: [{ users: { $elemMatch: { $eq: userId } } }],
+                deleteBy: { $nin: userId },
             })
                 .populate('users', '_id fullName email picture')
                 .populate('latestMessage');
@@ -41,6 +43,7 @@ module.exports = {
                 return {
                     info: friendInfo,
                     friendRequest: friend.friendRequest,
+                    isBlock: user?.blockedUsers?.includes(String(friendInfo?._id)),
                     friendShip: friend._id,
                     status: friend.status,
                     isChat: Boolean(conversations),
@@ -224,13 +227,6 @@ module.exports = {
                     },
                 ],
             });
-            // if (!request) {
-            //     return res
-            //         .status(400)
-            //         .json(
-            //             createResponse(null, STATUS_MESSAGE.REQUEST_NOT_FOUND, MESSAGE_CODE.REQUEST_NOT_FOUND, false),
-            //         );
-            // }
             if (request?.status === 'pending') {
                 const updateRequest = await FriendRequest.findByIdAndUpdate(request?._id, { status: 'accepted' });
                 const friendShip = await FriendShip.create({
@@ -366,101 +362,109 @@ module.exports = {
     rejectFriendRequest: async (req, res, next) => {
         const { id } = req.query;
         const receiverId = req.user._id;
+        try {
+            if (!mongodb.ObjectId.isValid(receiverId) || !mongodb.ObjectId.isValid(id)) {
+                return res.status(400).json({
+                    message: 'The id is invalid',
+                    messageCode: 'invalid_id',
+                });
+            }
+            const friendRequest = await FriendRequest.findOne({
+                _id: id,
+            });
+            if (!friendRequest) {
+                return res
+                    .status(400)
+                    .json(
+                        createResponse(null, STATUS_MESSAGE.REQUEST_NOT_FOUND, MESSAGE_CODE.REQUEST_NOT_FOUND, false),
+                    );
+            }
+            if (String(friendRequest.receiver) !== String(receiverId)) {
+                return res.status(200).json({
+                    message: MESSAGE.NO_PERMISSION_REJECT_REQUEST,
+                    messageCode: 'no_permission_accept_request',
+                    status: MESSAGE_CODE.NO_PERMISSION_REJECT_REQUEST,
+                });
+            }
+            const isFriend = await FriendShip.findOne({
+                users: { $all: [friendRequest?.sender, friendRequest?.receiver] },
+                status: 'active',
+            });
+            if (isFriend) {
+                await FriendRequest.findByIdAndUpdate(
+                    { _id: id, status: 'pending' },
+                    {
+                        status: 'cancel',
+                    },
+                );
+                return res.status(409).json({
+                    messageCode: 'already_friend',
+                    message: MESSAGE.ALREADY_FRIEND,
+                });
+            }
+            const updateRequest = await FriendRequest.findByIdAndUpdate(id, {
+                status: 'rejected',
+            });
 
-        if (!mongodb.ObjectId.isValid(receiverId) || !mongodb.ObjectId.isValid(id)) {
-            return res.status(400).json({
-                message: 'The id is invalid',
-                messageCode: 'invalid_id',
+            return res.status(201).json({
+                message: MESSAGE.REJECT_FRIEND_SUCCESSFULLY,
+                messageCode: 'reject_friend_SUCCESSFULLYfully',
+                status: MESSAGE_CODE.REJECT_FRIEND_SUCCESSFULLY,
+                data: updateRequest,
             });
+        } catch (error) {
+            next(error);
         }
-        const friendRequest = await FriendRequest.findOne({
-            _id: id,
-        });
-        if (!friendRequest) {
-            return res
-                .status(400)
-                .json(createResponse(null, STATUS_MESSAGE.REQUEST_NOT_FOUND, MESSAGE_CODE.REQUEST_NOT_FOUND, false));
-        }
-        if (String(friendRequest.receiver) !== String(receiverId)) {
-            return res.status(200).json({
-                message: MESSAGE.NO_PERMISSION_REJECT_REQUEST,
-                messageCode: 'no_permission_accept_request',
-                status: MESSAGE_CODE.NO_PERMISSION_REJECT_REQUEST,
-            });
-        }
-        const isFriend = await FriendShip.findOne({
-            users: { $all: [friendRequest?.sender, friendRequest?.receiver] },
-            status: 'active',
-        });
-        if (isFriend) {
-            await FriendRequest.findByIdAndUpdate(
-                { _id: id, status: 'pending' },
-                {
-                    status: 'cancel',
-                },
-            );
-            return res.status(409).json({
-                messageCode: 'already_friend',
-                message: MESSAGE.ALREADY_FRIEND,
-            });
-        }
-        const updateRequest = await FriendRequest.findByIdAndUpdate(id, {
-            status: 'rejected',
-        });
-
-        return res.status(201).json({
-            message: MESSAGE.REJECT_FRIEND_SUCCESSFULLY,
-            messageCode: 'reject_friend_SUCCESSFULLYfully',
-            status: MESSAGE_CODE.REJECT_FRIEND_SUCCESSFULLY,
-            data: updateRequest,
-        });
     },
     removeFriendRequest: async (req, res, next) => {
         const { id } = req.query;
         const senderId = req.user._id;
+        try {
+            if (!mongodb.ObjectId.isValid(senderId) || !mongodb.ObjectId.isValid(id)) {
+                return res.status(400).json({
+                    message: 'The id is invalid',
+                    messageCode: 'invalid_id',
+                });
+            }
+            const friendRequest = await FriendRequest.findOne({
+                _id: id,
+            });
+            if (String(friendRequest.sender) !== senderId) {
+                return res.status(200).json({
+                    message: MESSAGE.NO_PERMISSION_REMOVE_REQUEST,
+                    messageCode: 'no_permission_remove_request',
+                    status: MESSAGE_CODE.NO_PERMISSION_REMOVE_REQUEST,
+                });
+            }
+            const isFriend = await FriendShip.findOne({
+                users: { $all: [friendRequest?.sender, friendRequest?.receiver] },
+                status: 'active',
+            });
+            if (isFriend) {
+                await FriendRequest.findByIdAndUpdate(
+                    { _id: id, status: 'pending' },
+                    {
+                        status: 'cancel',
+                    },
+                );
+                return res.status(409).json({
+                    messageCode: 'already_friend',
+                    message: MESSAGE.ALREADY_FRIEND,
+                });
+            }
+            const updateRequest = await FriendRequest.findByIdAndUpdate(id, {
+                status: 'cancel',
+            });
 
-        if (!mongodb.ObjectId.isValid(senderId) || !mongodb.ObjectId.isValid(id)) {
-            return res.status(400).json({
-                message: 'The id is invalid',
-                messageCode: 'invalid_id',
+            return res.status(201).json({
+                message: MESSAGE.REMOVE_FRIEND_REQUEST_SUCCESSFULLY,
+                messageCode: 'remove_friend_request_SUCCESSFULLYfully',
+                status: MESSAGE_CODE.REMOVE_FRIEND_REQUEST_SUCCESSFULLY,
+                data: updateRequest,
             });
+        } catch (error) {
+            next(error);
         }
-        const friendRequest = await FriendRequest.findOne({
-            _id: id,
-        });
-        if (String(friendRequest.sender) !== senderId) {
-            return res.status(200).json({
-                message: MESSAGE.NO_PERMISSION_REMOVE_REQUEST,
-                messageCode: 'no_permission_remove_request',
-                status: MESSAGE_CODE.NO_PERMISSION_REMOVE_REQUEST,
-            });
-        }
-        const isFriend = await FriendShip.findOne({
-            users: { $all: [friendRequest?.sender, friendRequest?.receiver] },
-            status: 'active',
-        });
-        if (isFriend) {
-            await FriendRequest.findByIdAndUpdate(
-                { _id: id, status: 'pending' },
-                {
-                    status: 'cancel',
-                },
-            );
-            return res.status(409).json({
-                messageCode: 'already_friend',
-                message: MESSAGE.ALREADY_FRIEND,
-            });
-        }
-        const updateRequest = await FriendRequest.findByIdAndUpdate(id, {
-            status: 'cancel',
-        });
-
-        return res.status(201).json({
-            message: MESSAGE.REMOVE_FRIEND_REQUEST_SUCCESSFULLY,
-            messageCode: 'remove_friend_request_SUCCESSFULLYfully',
-            status: MESSAGE_CODE.REMOVE_FRIEND_REQUEST_SUCCESSFULLY,
-            data: updateRequest,
-        });
     },
     removeFriend: async (req, res, next) => {
         const userId = req.user._id;
@@ -506,6 +510,8 @@ module.exports = {
                         true,
                     ),
                 );
-        } catch (error) {}
+        } catch (error) {
+            next(error);
+        }
     },
 };
