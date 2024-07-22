@@ -357,7 +357,7 @@ module.exports = {
                 // la admin xoa nguoi khac
                 if (!userId.equals(memberId)) {
                     const newMembers = group.users.filter((item) => !item.equals(memberId));
-                    const latestMessage = await Message.create({
+                    let latestMessage = await Message.create({
                         sender: userId,
                         message: MESSAGE_CODE.DELETE_USER_IN_GROUP,
                         conversation: group._id,
@@ -365,7 +365,6 @@ module.exports = {
                         affected_user_id: memberId,
                         messageType: 'notification',
                     });
-                    console.log(latestMessage);
 
                     latestMessage = await latestMessage.populate('sender', 'fullName picture email');
                     latestMessage = await latestMessage.populate('conversation');

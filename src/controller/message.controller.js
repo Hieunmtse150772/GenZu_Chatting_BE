@@ -602,7 +602,7 @@ module.exports = {
 
             // Kiểm tra xem tin nhắn đã được dịch chưa
             messages.forEach((msg, index) => {
-                if (!msg.translations || (!msg.translations[languageCode] && ms.messageType === 'text')) {
+                if (!msg.translations || (!msg.translations[languageCode] && msg.messageType === 'text')) {
                     characterCount += msg.message.length;
                     textsToTranslate.push(msg.message);
                     indicesToTranslate.push(index);
