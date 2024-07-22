@@ -161,26 +161,26 @@ module.exports = {
 
             if (isUserBlocked) {
                 return res
-                    .status(403)
+                    .status(409)
                     .json(
                         createResponse(
                             null,
                             STATUS_MESSAGE.USER_WAS_BLOCKED,
                             MESSAGE_CODE.USER_WAS_BLOCKED,
-                            STATUS_CODE.FORBIDDEN,
+                            STATUS_CODE.CONFLICT,
                             false,
                         ),
                     );
             }
             if (conversation?.blockedUsers?.length > 0) {
                 return res
-                    .status(403)
+                    .status(409)
                     .json(
                         createResponse(
                             null,
                             STATUS_MESSAGE.CONVERSATION_WAS_BLOCKED,
                             MESSAGE_CODE.CONVERSATION_WAS_BLOCKED,
-                            STATUS_CODE.FORBIDDEN,
+                            STATUS_CODE.CONFLICT,
                             false,
                         ),
                     );
