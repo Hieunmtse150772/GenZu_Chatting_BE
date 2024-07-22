@@ -129,6 +129,7 @@ module.exports = {
             styles: styles,
             emojiBy: emojiBy,
             replyMessage: replyMessage,
+            readBy: [userId],
         };
         try {
             const conversation = await Conversation.findOne({ _id: conversationId }).populate('latestMessage');
@@ -642,12 +643,15 @@ module.exports = {
     readMessage: async (data, socket) => {
         try {
             const userId = socket.user._id;
-
+            const isUserExist = await Message.findOne({ _id: data._id });
+            if (isUserExist.readBy.includes(userId))
+                return socket.emit('validation', createResponse(null, null, null, false));
             const messageUpdate = await Message.findByIdAndUpdate(
                 { _id: data._id },
                 { $push: { readBy: userId } },
                 { new: true },
             );
+            console.log('messageUpdate: ', messageUpdate);
             if (!messageUpdate) {
                 return socket.emit(
                     'validation',
@@ -671,7 +675,16 @@ module.exports = {
                 ),
             );
         } catch (error) {
-            next(error);
+            return socket.emit(
+                'response message',
+                createResponse(
+                    error,
+                    STATUS_MESSAGE.INTERNAL_SERVER_ERROR,
+                    null,
+                    STATUS_CODE.INTERNAL_SERVER_ERROR,
+                    false,
+                ),
+            );
         }
     },
     getListImageMessage: async (req, res, next) => {
