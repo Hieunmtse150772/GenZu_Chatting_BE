@@ -365,11 +365,11 @@ module.exports = {
                         affected_user_id: memberId,
                         messageType: 'notification',
                     });
-                    console.log(latestMessage);
 
                     latestMessage = await latestMessage.populate('sender', 'fullName picture email');
                     latestMessage = await latestMessage.populate('conversation');
                     latestMessage = await latestMessage.populate('affected_user_id', 'fullName picture email');
+                    console.log(latestMessage);
 
                     const newGroup = await Conversation.findByIdAndUpdate(
                         { _id: group._id },
