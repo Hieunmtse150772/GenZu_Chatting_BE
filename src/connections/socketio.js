@@ -216,6 +216,7 @@ io.on('connection', async (socket) => {
     //Listening the action read message of user when they was seen the message
     socket.on('watch message', (message) => {
         try {
+            console.log('message: ', message);
             readMessage(message, socket);
         } catch (error) {
             console.log('error socket: ', error);
@@ -306,10 +307,9 @@ io.on('connection', async (socket) => {
     });
 
     //Change background conversation
-    socket.on('change background', (background) => {
+    socket.on('change background', async (background) => {
         try {
             const conversation = background._id;
-            console.log('background: ', conversation);
             socket.in(conversation).emit('changed background', background);
         } catch (error) {
             console.log('error socket: ', error);

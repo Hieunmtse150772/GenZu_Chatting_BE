@@ -363,8 +363,8 @@ module.exports = {
         const { url, backgroundType } = background;
         const userId = req.user._id;
         try {
-            const users = await Conversation.findOne({ _id: conversationId }).select('users');
-            const user = await User.findOne({ _id: userId }).select('fullName');
+            const users = await Conversation.findOne({ _id: conversationId }).select('users blockedUsers');
+            const user = await User.findOne({ _id: userId });
             if (!users) {
                 return res
                     .status(400)
@@ -390,6 +390,33 @@ module.exports = {
                         ),
                     );
             }
+            const isUserBlocked = users.blockedUsers.some((item) => item.equals(userId));
+            if (isUserBlocked) {
+                return res
+                    .status(409)
+                    .json(
+                        createResponse(
+                            null,
+                            STATUS_MESSAGE.USER_WAS_BLOCKED,
+                            MESSAGE_CODE.USER_WAS_BLOCKED,
+                            STATUS_CODE.CONFLICT,
+                            false,
+                        ),
+                    );
+            }
+            if (users?.blockedUsers?.length > 0) {
+                return res
+                    .status(409)
+                    .json(
+                        createResponse(
+                            null,
+                            STATUS_MESSAGE.CONVERSATION_WAS_BLOCKED,
+                            MESSAGE_CODE.CONVERSATION_WAS_BLOCKED,
+                            STATUS_CODE.CONFLICT,
+                            false,
+                        ),
+                    );
+            }
             const messageCreate = {
                 sender: userId,
                 message: MESSAGE_CODE.UPDATE_BACKGROUND_CONVERSATION_SUCCESSFULLY,
@@ -397,11 +424,7 @@ module.exports = {
                 status: 'active',
                 messageType: 'notification',
             };
-            const conversationUpdate = await Conversation.findByIdAndUpdate(
-                { _id: conversationId },
-                { background: { url: url, backgroundType: backgroundType } },
-                { new: true },
-            );
+
             var message = await Message.create(messageCreate);
             message = await message.populate('sender', 'fullName picture email');
             message = await message.populate('conversation');
@@ -409,10 +432,20 @@ module.exports = {
                 path: 'conversation.users',
                 select: 'fullName picture email',
             });
+
+            const conversationUpdate = await Conversation.findByIdAndUpdate(
+                { _id: conversationId },
+                {
+                    background: { url: url, backgroundType: backgroundType },
+                    latestMessage: message._id,
+                },
+                { new: true },
+            );
             const result = {
                 message,
                 conversationUpdate,
             };
+
             return res
                 .status(200)
                 .json(
@@ -464,6 +497,7 @@ module.exports = {
                 { avatar: avatar },
                 { new: true },
             );
+
             return res
                 .status(200)
                 .json(
