@@ -7,6 +7,7 @@ const userSwagger = require('@/swaggers/user.swagger');
 const friendSwagger = require('@/swaggers/friend.swagger');
 const conversationSwagger = require('@/swaggers/conversation.swagger');
 const groupSwagger = require('@/swaggers/group_chat.swagger');
+const paymentSwagger = require('@/swaggers/payment.swagger');
 
 const options = {
     definition: {
@@ -22,7 +23,7 @@ const options = {
                 description: process.env.ENVIRONMENT,
             },
         ],
-        tags: ['Auth', 'Message', 'User', 'Single', 'Group', 'Friend', 'Conversation'],
+        tags: ['Auth', 'Message', 'User', 'Single', 'Group', 'Friend', 'Conversation', 'Payment'],
         paths: {
             ...authSwagger,
             ...messageSwagger,
@@ -30,6 +31,7 @@ const options = {
             ...conversationSwagger,
             ...friendSwagger,
             ...groupSwagger,
+            ...paymentSwagger,
         },
         components: {
             /* ... */

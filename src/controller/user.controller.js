@@ -148,7 +148,6 @@ module.exports = {
             const blockedUsers = blockListUser.blockedUsers;
 
             if (blockedUsers.length === 0) {
-                console.log('blockListUser: ', blockedUsers);
                 return res
                     .status(200)
                     .json(

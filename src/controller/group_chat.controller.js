@@ -37,7 +37,8 @@ module.exports = {
                 { new: true },
             )
                 .populate('users', 'picture fullName _id email is_online offline_at')
-                .populate('groupAdmin', 'picture fullName _id email is_online offline_at');
+                .populate('groupAdmin', 'picture fullName _id email is_online offline_at')
+                .populate('latestMessage');
 
             groupChat.users.forEach((item) => {
                 socket
@@ -140,7 +141,8 @@ module.exports = {
                 { new: true },
             )
                 .populate('users', 'picture fullName _id email is_online offline_at')
-                .populate('groupAdmin', 'picture fullName _id email is_online offline_at');
+                .populate('groupAdmin', 'picture fullName _id email is_online offline_at')
+                .populate('latestMessage');
 
             newUsers.forEach((item) => {
                 socket
@@ -219,7 +221,7 @@ module.exports = {
             let newGroup = await group.save();
             newGroup = await newGroup.populate('users', 'picture fullName _id email is_online offline_at');
             newGroup = await newGroup.populate('groupAdmin', 'picture fullName _id email is_online offline_at');
-
+            newGroup = await newGroup.populate('latestMessage');
             return socket.emit(
                 'response group',
                 createResponse(
@@ -330,7 +332,8 @@ module.exports = {
                         { new: true },
                     )
                         .populate('users', 'picture fullName _id email is_online offline_at')
-                        .populate('groupAdmin', 'picture fullName _id email is_online offline_at');
+                        .populate('groupAdmin', 'picture fullName _id email is_online offline_at')
+                        .populate('latestMessage');
 
                     socket
                         .in(newGroup._id.toString())
@@ -362,6 +365,8 @@ module.exports = {
                         affected_user_id: memberId,
                         messageType: 'notification',
                     });
+                    console.log(latestMessage);
+
                     latestMessage = await latestMessage.populate('sender', 'fullName picture email');
                     latestMessage = await latestMessage.populate('conversation');
                     latestMessage = await latestMessage.populate('affected_user_id', 'fullName picture email');
@@ -372,7 +377,8 @@ module.exports = {
                         { new: true },
                     )
                         .populate('users', 'picture fullName _id email is_online offline_at')
-                        .populate('groupAdmin', 'picture fullName _id email is_online offline_at');
+                        .populate('groupAdmin', 'picture fullName _id email is_online offline_at')
+                        .populate('latestMessage');
 
                     socket
                         .in(newGroup._id.toString())
@@ -591,7 +597,8 @@ module.exports = {
 
             const resGroup = await Conversation.findById(newGroup._id)
                 .populate('users', 'picture fullName _id email is_online offline_at')
-                .populate('groupAdmin', 'picture fullName _id email is_online offline_at');
+                .populate('groupAdmin', 'picture fullName _id email is_online offline_at')
+                .populate('latestMessage');
             return socket.emit(
                 'response group',
                 createResponse(

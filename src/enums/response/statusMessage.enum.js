@@ -110,12 +110,16 @@ const STATUS_MESSAGE = {
     REMOVE_FRIEND_REQUEST_SUCCESSFULLY: 'Remove friend request success',
     REMOVE_FRIEND_SUCCESSFULLY: 'Remove friend success',
     REQUEST_NOT_FOUND: 'Request not found',
+    LIMIT_TRANSLATE: 'The number of translated characters has reached the limit',
 
     //Emoji
     ADD_EMOJI_MESSAGE_SUCCESSFULLY: 'Add emoji success',
     UPDATE_EMOJI_MESSAGE_SUCCESSFULLY: 'Update emoji success',
     REMOVE_EMOJI_MESSAGE_SUCCESSFULLY: 'Remove emoji success',
     NOT_YOUR_EMOJI: 'Not your emoji',
+
+    // Payment
+    CREATE_PAYMENT_MOMO_LINK_SUCCESSFULLY: 'Create momo payment link successfully',
 };
 
 module.exports = STATUS_MESSAGE;
