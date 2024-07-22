@@ -5,7 +5,10 @@ const cors = require('cors');
 const cookieParser = require('cookie-parser');
 
 const routes = require('@/routes');
+
 require('@/connections/mongodb');
+require('@/utils/resetRequestTranslate');
+
 const { app, server } = require('@/connections/socketio');
 const User = require('@/model/user.model');
 

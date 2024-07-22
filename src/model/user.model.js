@@ -3,7 +3,7 @@ const bcrypt = require('bcrypt');
 
 const connection = require('../connections/mongodb');
 const { hashText } = require('../utils/functions');
-const { languageCodes, languageTranslationCodes, gender } = require('@/enums/validates');
+const { languageCodes, languageTranslationCodes, gender, userType } = require('@/enums/validates');
 
 const UserSchema = new mongoose.Schema(
     {
@@ -34,6 +34,8 @@ const UserSchema = new mongoose.Schema(
         language: { type: String, default: 'vi', enum: languageCodes },
         languageTranslate: { type: String, default: 'vi', enum: languageTranslationCodes },
         blockedUsers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+        numberCharaterTranslate: { type: Number, default: 3000 },
+        userType: { type: String, enum: userType },
         offline_at: { type: Date, default: null },
         is_active: { type: Boolean, default: false },
         is_online: { type: Boolean, default: false },

@@ -576,9 +576,10 @@ module.exports = {
         }
     },
     translateMessage: async (req, res, next) => {
-        try {
-            const { messageIds, languageCode } = req.body;
+        const userId = req.user._id;
+        const { messageIds, languageCode } = req.body;
 
+        try {
             const messages = await Message.find({ _id: { $in: messageIds } });
 
             if (!messages.length) {
@@ -597,16 +598,34 @@ module.exports = {
 
             const textsToTranslate = [];
             const indicesToTranslate = [];
+            let characterCount = 0;
 
             // Kiểm tra xem tin nhắn đã được dịch chưa
             messages.forEach((msg, index) => {
-                if (!msg.translations || !msg.translations[languageCode]) {
+                if (!msg.translations || (!msg.translations[languageCode] && ms.messageType === 'text')) {
+                    characterCount += msg.message.length;
                     textsToTranslate.push(msg.message);
                     indicesToTranslate.push(index);
                 }
             });
 
             if (textsToTranslate.length > 0) {
+                const remainCharaterTranslate = await User.findById(userId).select('numberCharaterTranslate');
+
+                if (characterCount > remainCharaterTranslate) {
+                    return res
+                        .status(STATUS_CODE.BAD_REQUEST)
+                        .json(
+                            createResponse(
+                                null,
+                                STATUS_MESSAGE.LIMIT_TRANSLATE,
+                                MESSAGE_CODE.LIMIT_TRANSLATE,
+                                STATUS_CODE.BAD_REQUEST,
+                                false,
+                            ),
+                        );
+                }
+
                 const [translations] = await translate.translate(textsToTranslate, languageCode);
 
                 // Cập nhật bản dịch vào MongoDB

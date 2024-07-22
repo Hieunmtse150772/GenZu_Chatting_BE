@@ -138,4 +138,6 @@ module.exports = {
         'zu',
     ],
     backgroundType: ['color', 'image'],
+    statusTransaction: ['pending', 'processing', 'success', 'failed'],
+    userType: ['normal', 'vip'],
 };
