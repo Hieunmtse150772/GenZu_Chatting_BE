@@ -193,8 +193,6 @@ io.on('connection', async (socket) => {
     //Out room chat with conversation id when user leave chat or not focus on chat room
     socket.on('leave chat', (room) => {
         try {
-            console.log('leave chat');
-            console.log('leave: ', room.conversation);
             if (room.conversation) {
                 socket.leave(room.conversation);
             } else {
@@ -216,7 +214,6 @@ io.on('connection', async (socket) => {
     //Listening the action read message of user when they was seen the message
     socket.on('watch message', (message) => {
         try {
-            console.log('message: ', message);
             readMessage(message, socket);
         } catch (error) {
             console.log('error socket: ', error);
