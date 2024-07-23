@@ -354,7 +354,7 @@ module.exports = {
             } else {
                 // la admin xoa nguoi khac
                 if (!userId.equals(memberId)) {
-                    if (group.users.length > 1) {
+                    if (group.users.length > 2) {
                         const newMembers = group.users.filter((item) => !item.equals(memberId));
                         let latestMessage = await Message.create({
                             sender: userId,
@@ -439,7 +439,7 @@ module.exports = {
                     }
 
                     // if users have more than 2 members
-                    if (group.users.length > 1) {
+                    if (group.users.length > 2) {
                         // update groupAdmin to new user
                         group.groupAdmin = exchangeAdminId;
                         let transferLeaderMs = await Message.create({
