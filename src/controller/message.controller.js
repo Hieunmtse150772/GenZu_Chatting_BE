@@ -220,7 +220,7 @@ module.exports = {
     },
     sendMessage: async (data, socket) => {
         const userId = socket.user._id;
-        const { message, messageType, isSpoiled, styles, emojiBy, conversationId } = data;
+        const { message, messageType, isSpoiled, styles, emojiBy, conversationId, replyMessage } = data;
         var messageCreated = {
             sender: userId,
             message: message,
@@ -230,6 +230,7 @@ module.exports = {
             messageType: messageType,
             styles: styles,
             emojiBy: emojiBy,
+            replyMessage: replyMessage,
         };
         try {
             const conversation = await Conversation.findOne({ _id: conversationId });
