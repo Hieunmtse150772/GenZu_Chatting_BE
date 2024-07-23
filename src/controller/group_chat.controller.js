@@ -143,8 +143,8 @@ module.exports = {
                 .populate('latestMessage');
 
             newUsers.forEach((item) => {
-                socket
-                    .in(item.toString())
+                socket.nsp
+                    .to(item)
                     .emit(
                         'notification',
                         responseNotificationSocket(newGroup, MESSAGE_CODE.ADD_MEMBER_TO_GROUP_SUCCESSFULLY, true),
@@ -224,6 +224,15 @@ module.exports = {
                 .populate('users', 'picture fullName _id email is_online offline_at')
                 .populate('groupAdmin', 'picture fullName _id email is_online offline_at')
                 .populate('latestMessage');
+
+            newGroup.users.forEach((item) => {
+                socket
+                    .in(item.toString())
+                    .emit(
+                        'notification',
+                        responseNotificationSocket(newGroup, MESSAGE_CODE.EXCHANGE_ADMIN_SUCCESSFULLY, true),
+                    );
+            });
             return socket.emit(
                 'response group',
                 createResponse(
@@ -401,6 +410,14 @@ module.exports = {
                         );
                     } else {
                         await Conversation.deleteOne({ _id: group._id });
+                        group.users.forEach((item) => {
+                            socket
+                                .in(item.toString())
+                                .emit(
+                                    'notification',
+                                    responseNotificationSocket(group._id, MESSAGE_CODE.DELETE_GROUP_SUCCESSFULLY, true),
+                                );
+                        });
                         return socket.emit(
                             'response group',
                             createResponse(
@@ -511,6 +528,14 @@ module.exports = {
                     } else {
                         // delete group
                         await Conversation.deleteOne({ _id: group._id });
+                        group.users.forEach((item) => {
+                            socket
+                                .in(item.toString())
+                                .emit(
+                                    'notification',
+                                    responseNotificationSocket(group._id, MESSAGE_CODE.DELETE_GROUP_SUCCESSFULLY, true),
+                                );
+                        });
                         return socket.emit(
                             'response group',
                             createResponse(
