@@ -176,11 +176,12 @@ module.exports = {
     },
     exchangeGroupAdmin: async (data, socket) => {
         const groupId = data.groupId;
-        const exchangeUserId = data.exchangeUserId;
+        const exchangeUserId = data.exchangeAdmin;
         const userId = socket.user._id;
 
         try {
             const group = await Conversation.findById(groupId);
+
             if (!group) {
                 return socket.emit(
                     'response group',
@@ -193,7 +194,9 @@ module.exports = {
                     ),
                 );
             }
-            const userExist = group.users.find((item) => item.equals(new ObjectId(exchangeUserId)));
+            const userExist = group.users.find((item) => {
+                return item.equals(new ObjectId(exchangeUserId));
+            });
             if (!userExist) {
                 return socket.emit(
                     'response group',
@@ -213,12 +216,14 @@ module.exports = {
                     createResponse(null, STATUS_MESSAGE.FORBIDDEN, null, STATUS_CODE.FORBIDDEN, false),
                 );
             }
-
-            group.groupAdmin = exchangeAdminId;
-            let newGroup = await group.save();
-            newGroup = await newGroup.populate('users', 'picture fullName _id email is_online offline_at');
-            newGroup = await newGroup.populate('groupAdmin', 'picture fullName _id email is_online offline_at');
-            newGroup = await newGroup.populate('latestMessage');
+            const newGroup = await Conversation.findByIdAndUpdate(
+                { _id: group._id },
+                { groupAdmin: exchangeUserId },
+                { new: true },
+            )
+                .populate('users', 'picture fullName _id email is_online offline_at')
+                .populate('groupAdmin', 'picture fullName _id email is_online offline_at')
+                .populate('latestMessage');
             return socket.emit(
                 'response group',
                 createResponse(
