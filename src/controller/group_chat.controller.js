@@ -333,8 +333,8 @@ module.exports = {
                         .populate('groupAdmin', 'picture fullName _id email is_online offline_at')
                         .populate('latestMessage');
 
-                    socket
-                        .in(newGroup._id.toString())
+                    socket.nsp
+                        .to(newGroup._id.toString())
                         .emit(
                             'message received',
                             responseNotificationSocket(latestMessage, MESSAGE_CODE.SEND_MESSAGE_SUCCESSFULLY, true),
@@ -378,8 +378,8 @@ module.exports = {
                             .populate('groupAdmin', 'picture fullName _id email is_online offline_at')
                             .populate('latestMessage');
 
-                        socket
-                            .in(newGroup._id.toString())
+                        socket.nsp
+                            .to(newGroup._id.toString())
                             .emit(
                                 'message received',
                                 responseNotificationSocket(latestMessage, MESSAGE_CODE.SEND_MESSAGE_SUCCESSFULLY, true),
@@ -457,8 +457,8 @@ module.exports = {
                             'fullName picture email',
                         );
 
-                        socket
-                            .in(group._id.toString())
+                        socket.nsp
+                            .to(group._id.toString())
                             .emit(
                                 'message received',
                                 responseNotificationSocket(
@@ -485,8 +485,8 @@ module.exports = {
                         group.latestMessage = latestMessage;
                         await group.save();
 
-                        socket
-                            .in(group._id.toString())
+                        socket.nsp
+                            .to(group._id.toString())
                             .emit(
                                 'message received',
                                 responseNotificationSocket(latestMessage, MESSAGE_CODE.SEND_MESSAGE_SUCCESSFULLY, true),
@@ -554,8 +554,8 @@ module.exports = {
                 latestMessage = await latestMessage.populate('sender', 'fullName picture email');
                 latestMessage = await latestMessage.populate('conversation');
                 latestMessage = await latestMessage.populate('affected_user_id', 'fullName picture email');
-                socket
-                    .in(group._id.toString())
+                socket.nsp
+                    .to(group._id.toString())
                     .emit(
                         'message received',
                         responseNotificationSocket(latestMessage, MESSAGE_CODE.SEND_MESSAGE_SUCCESSFULLY, true),
@@ -574,8 +574,8 @@ module.exports = {
                 latestMessage = await latestMessage.populate('sender', 'fullName picture email');
                 latestMessage = await latestMessage.populate('conversation');
                 latestMessage = await latestMessage.populate('affected_user_id', 'fullName picture email');
-                socket
-                    .in(group._id.toString())
+                socket.nsp
+                    .to(group._id.toString())
                     .emit(
                         'message received',
                         responseNotificationSocket(latestMessage, MESSAGE_CODE.SEND_MESSAGE_SUCCESSFULLY, true),
@@ -594,8 +594,8 @@ module.exports = {
                 latestMessage = await latestMessage.populate('conversation');
                 latestMessage = await latestMessage.populate('affected_user_id', 'fullName picture email');
                 group.chatName = data.chatName;
-                socket
-                    .in(group._id.toString())
+                socket.nsp
+                    .to(group._id.toString())
                     .emit(
                         'message received',
                         responseNotificationSocket(latestMessage, MESSAGE_CODE.SEND_MESSAGE_SUCCESSFULLY, true),
