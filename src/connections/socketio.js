@@ -24,7 +24,6 @@ const { MESSAGE_CODE, STATUS_CODE } = require('@/enums/response');
 const app = express();
 const server = http.createServer(app);
 const io = require('socket.io')(server, {
-    pingTimeout: 60000,
     cors: {
         origin: [
             process.env.URL_CLIENT,
@@ -64,7 +63,10 @@ io.on('connection', async (socket) => {
 
     //Set up id user to sent message
     socket.on('setup', (userData) => {
-        socket.join(userData._id);
+        if (socket?.user?._id) {
+            socket.join(socket?.user?._id);
+        } else socket.join(userData?._id);
+        // socket.join(userData?._id);
         socket.emit('connected');
     });
 
@@ -171,12 +173,25 @@ io.on('connection', async (socket) => {
     });
 
     //Create new conversation
-    socket.on('access chat', (conversationInfo) => {
+    socket.on('access chat', async (conversationInfo) => {
         try {
             if (conversationInfo?.conversation) {
                 for (i = 0; i < conversationInfo?.conversation?.users.length; i++) {
-                    if (conversationInfo?.conversation?.users[i]._id !== conversationInfo?.userId) {
-                        socket.to(conversationInfo?.conversation?.users[i]._id).emit('accessed chat', conversationInfo);
+                    const userId = conversationInfo?.conversation?.users[i]._id;
+                    if (userId !== conversationInfo?.userId) {
+                        if (
+                            conversationInfo?.conversation?.deleteBy.includes(userId) &&
+                            !conversationInfo?.conversation?.blockedUsers?.includes(userId)
+                        ) {
+                            const conversationUpdate = await Conversation.findByIdAndUpdate(
+                                { _id: conversationInfo?.conversation?._id },
+                                { $pull: { deleteBy: conversationInfo?.conversation?.users[i]._id } },
+                                { new: true },
+                            );
+                            socket
+                                .to(conversationInfo?.conversation?.users[i]._id)
+                                .emit('accessed chat', conversationInfo);
+                        }
                     }
                 }
             }
