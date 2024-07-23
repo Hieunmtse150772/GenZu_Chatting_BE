@@ -46,6 +46,7 @@ const sendMessage2 = Joi.object({
         underline: Joi.boolean(),
     }),
     emojiBy: Joi.array(),
+    replyMessage: Joi.string().allow('', null).custom(objectIdValidator, 'ObjectId validation'),
 });
 
 const sendEmoji = Joi.object({
