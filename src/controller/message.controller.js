@@ -276,11 +276,13 @@ module.exports = {
             var newMessage = await Message.create(messageCreated);
             newMessage = await newMessage.populate('sender', 'fullName picture email');
             newMessage = await newMessage.populate('conversation');
-            newMessage = await newMessage.populate('affected_user_id', 'fullName picture email');
+            newMessage = await newMessage.populate('replyMessage', '_id sender message messageType');
+            newMessage = await Conversation.populate(newMessage, { path: 'conversation.latestMessage' });
             newMessage = await User.populate(newMessage, {
                 path: 'conversation.users',
                 select: 'fullName picture email',
             });
+
             await Conversation.findByIdAndUpdate(
                 conversationId,
                 {
