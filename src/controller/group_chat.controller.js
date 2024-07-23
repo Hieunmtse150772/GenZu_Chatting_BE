@@ -112,8 +112,6 @@ module.exports = {
                 );
             }
 
-            // block
-
             newUsers.forEach(async (item) => {
                 latestMessage = await Message.create({
                     sender: userId,
@@ -127,8 +125,8 @@ module.exports = {
                 latestMessage = await latestMessage.populate('conversation');
                 latestMessage = await latestMessage.populate('affected_user_id', 'fullName picture email');
 
-                socket
-                    .in(group._id.toString())
+                socket.nsp
+                    .to(String(group._id))
                     .emit(
                         'message received',
                         responseNotificationSocket(latestMessage, MESSAGE_CODE.SEND_MESSAGE_SUCCESSFULLY, true),
@@ -356,46 +354,60 @@ module.exports = {
             } else {
                 // la admin xoa nguoi khac
                 if (!userId.equals(memberId)) {
-                    const newMembers = group.users.filter((item) => !item.equals(memberId));
-                    let latestMessage = await Message.create({
-                        sender: userId,
-                        message: MESSAGE_CODE.DELETE_USER_IN_GROUP,
-                        conversation: group._id,
-                        status: 'active',
-                        affected_user_id: memberId,
-                        messageType: 'notification',
-                    });
+                    if (group.users.length > 1) {
+                        const newMembers = group.users.filter((item) => !item.equals(memberId));
+                        let latestMessage = await Message.create({
+                            sender: userId,
+                            message: MESSAGE_CODE.DELETE_USER_IN_GROUP,
+                            conversation: group._id,
+                            status: 'active',
+                            affected_user_id: memberId,
+                            messageType: 'notification',
+                        });
 
-                    latestMessage = await latestMessage.populate('sender', 'fullName picture email');
-                    latestMessage = await latestMessage.populate('conversation');
-                    latestMessage = await latestMessage.populate('affected_user_id', 'fullName picture email');
+                        latestMessage = await latestMessage.populate('sender', 'fullName picture email');
+                        latestMessage = await latestMessage.populate('conversation');
+                        latestMessage = await latestMessage.populate('affected_user_id', 'fullName picture email');
 
-                    const newGroup = await Conversation.findByIdAndUpdate(
-                        { _id: group._id },
-                        { users: newMembers, latestMessage },
-                        { new: true },
-                    )
-                        .populate('users', 'picture fullName _id email is_online offline_at')
-                        .populate('groupAdmin', 'picture fullName _id email is_online offline_at')
-                        .populate('latestMessage');
+                        const newGroup = await Conversation.findByIdAndUpdate(
+                            { _id: group._id },
+                            { users: newMembers, latestMessage },
+                            { new: true },
+                        )
+                            .populate('users', 'picture fullName _id email is_online offline_at')
+                            .populate('groupAdmin', 'picture fullName _id email is_online offline_at')
+                            .populate('latestMessage');
 
-                    socket
-                        .in(newGroup._id.toString())
-                        .emit(
-                            'message received',
-                            responseNotificationSocket(latestMessage, MESSAGE_CODE.SEND_MESSAGE_SUCCESSFULLY, true),
+                        socket
+                            .in(newGroup._id.toString())
+                            .emit(
+                                'message received',
+                                responseNotificationSocket(latestMessage, MESSAGE_CODE.SEND_MESSAGE_SUCCESSFULLY, true),
+                            );
+
+                        return socket.emit(
+                            'response group',
+                            createResponse(
+                                newGroup,
+                                STATUS_MESSAGE.DELETE_MEMBER_SUCCESSFULLY,
+                                MESSAGE_CODE.DELETE_MEMBER_SUCCESSFULLY,
+                                STATUS_CODE.OK,
+                                true,
+                            ),
                         );
-
-                    return socket.emit(
-                        'response group',
-                        createResponse(
-                            newGroup,
-                            STATUS_MESSAGE.DELETE_MEMBER_SUCCESSFULLY,
-                            MESSAGE_CODE.DELETE_MEMBER_SUCCESSFULLY,
-                            STATUS_CODE.OK,
-                            true,
-                        ),
-                    );
+                    } else {
+                        await Conversation.deleteOne({ _id: group._id });
+                        return socket.emit(
+                            'response group',
+                            createResponse(
+                                group._id,
+                                STATUS_MESSAGE.DELETE_GROUP_SUCCESSFULLY,
+                                MESSAGE_CODE.DELETE_GROUP_SUCCESSFULLY,
+                                STATUS_CODE.OK,
+                                true,
+                            ),
+                        );
+                    }
                 } else {
                     // la admin xoa chinh minh
                     if (!data.exchangeAdmin) {
