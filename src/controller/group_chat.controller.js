@@ -193,8 +193,7 @@ module.exports = {
                     ),
                 );
             }
-
-            const userExist = group.users.find((item) => item.equals(exchangeUserId));
+            const userExist = group.users.find((item) => item.equals(new ObjectId(exchangeUserId)));
             if (!userExist) {
                 return socket.emit(
                     'response group',
