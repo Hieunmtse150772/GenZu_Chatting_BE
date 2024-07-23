@@ -96,7 +96,7 @@ io.on('connection', async (socket) => {
     socket.on('delete member', (data) => {
         deleteMemberGroupChat(data, socket);
     });
-    socket.on('echange admin group', (data) => {
+    socket.on('exchange admin group', (data) => {
         exchangeGroupAdmin(data, socket);
     });
     socket.on('update group', (data) => {
