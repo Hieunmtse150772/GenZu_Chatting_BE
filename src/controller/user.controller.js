@@ -219,19 +219,22 @@ module.exports = {
             )
                 .select('fullName email picture blockedUsers')
                 .populate('blockedUsers', 'fullName email picture ');
-
             var conversation = await Conversation.findOne({
                 isGroupChat: false,
-                $and: [{ users: { $elemMatch: { $eq: req.user._id } } }, { users: { $elemMatch: { $eq: userId } } }],
+                $and: [
+                    { users: { $elemMatch: { $eq: req.user._id } } },
+                    { users: { $elemMatch: { $eq: userBlockId } } },
+                ],
             })
                 .populate('users', '-password')
                 .populate('latestMessage');
             if (conversation) {
-                await Conversation.findByIdAndUpdate(
+                const blockConversation = await Conversation.findByIdAndUpdate(
                     { _id: conversation._id },
                     {
                         $push: { blockedUsers: [userBlockId] },
                     },
+                    { new: true },
                 );
             }
             return res
@@ -272,7 +275,10 @@ module.exports = {
                 .populate('blockedUsers', 'fullName email picture ');
             var conversation = await Conversation.findOne({
                 isGroupChat: false,
-                $and: [{ users: { $elemMatch: { $eq: req.user._id } } }, { users: { $elemMatch: { $eq: userId } } }],
+                $and: [
+                    { users: { $elemMatch: { $eq: req.user._id } } },
+                    { users: { $elemMatch: { $eq: userBlockId } } },
+                ],
             })
                 .populate('users', '-password')
                 .populate('latestMessage');
