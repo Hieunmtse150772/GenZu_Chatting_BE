@@ -74,6 +74,9 @@ io.on('connection', async (socket) => {
     socket.on('friend request', (newRequest) => {
         try {
             const receiverId = newRequest.receiver._id;
+            console.log('vo request ');
+
+            console.log('receiverId: ', receiverId);
             socket.to(receiverId).emit('received request', newRequest);
         } catch (error) {
             console.log('error socket: ', error);
@@ -202,14 +205,17 @@ io.on('connection', async (socket) => {
 
     //Set up room with conversation id for user who was join to chat
     socket.on('join chat', (room) => {
+        console.log('join chat: ', room);
+
         socket.join(room);
     });
 
     //Out room chat with conversation id when user leave chat or not focus on chat room
     socket.on('leave chat', (room) => {
         try {
-            if (room.conversation) {
-                socket.leave(room.conversation);
+            if (room) {
+                console.log('leave room: ', room);
+                socket.leave(room);
             } else {
                 console.log('room not found');
             }
