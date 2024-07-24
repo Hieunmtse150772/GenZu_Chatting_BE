@@ -357,8 +357,8 @@ module.exports = {
                         'response group',
                         createResponse(
                             newGroup,
-                            STATUS_MESSAGE.DELETE_MEMBER_SUCCESSFULLY,
-                            MESSAGE_CODE.DELETE_MEMBER_SUCCESSFULLY,
+                            STATUS_MESSAGE.USER_LEAVE_IN_GROUP,
+                            MESSAGE_CODE.USER_LEAVE_IN_GROUP,
                             STATUS_CODE.OK,
                             true,
                         ),
