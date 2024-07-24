@@ -357,8 +357,8 @@ module.exports = {
                         'response group',
                         createResponse(
                             newGroup,
-                            STATUS_MESSAGE.DELETE_MEMBER_SUCCESSFULLY,
-                            MESSAGE_CODE.DELETE_MEMBER_SUCCESSFULLY,
+                            STATUS_MESSAGE.USER_LEAVE_IN_GROUP,
+                            MESSAGE_CODE.USER_LEAVE_IN_GROUP,
                             STATUS_CODE.OK,
                             true,
                         ),
@@ -397,7 +397,12 @@ module.exports = {
                                 'message received',
                                 responseNotificationSocket(latestMessage, MESSAGE_CODE.SEND_MESSAGE_SUCCESSFULLY, true),
                             );
-
+                        socket
+                            .in(memberId)
+                            .emit(
+                                'notification',
+                                responseNotificationSocket(newGroup._id, MESSAGE_CODE.DELETE_MEMBER_SUCCESSFULLY, true),
+                            );
                         return socket.emit(
                             'response group',
                             createResponse(
@@ -589,6 +594,12 @@ module.exports = {
                         'message received',
                         responseNotificationSocket(latestMessage, MESSAGE_CODE.SEND_MESSAGE_SUCCESSFULLY, true),
                     );
+
+                group.users.forEach((item) => {
+                    socket.nsp
+                        .to(item.toString())
+                        .emit('notification', responseNotificationSocket(group, MESSAGE_CODE.CHANGE_AVATAR, true));
+                });
             }
 
             if (data.background) {
@@ -609,6 +620,12 @@ module.exports = {
                         'message received',
                         responseNotificationSocket(latestMessage, MESSAGE_CODE.SEND_MESSAGE_SUCCESSFULLY, true),
                     );
+
+                group.users.forEach((item) => {
+                    socket.nsp
+                        .to(item.toString())
+                        .emit('notification', responseNotificationSocket(group, MESSAGE_CODE.CHANGE_BACKGROUND, true));
+                });
             }
 
             if (data.chatName) {
@@ -627,8 +644,14 @@ module.exports = {
                     .to(group._id.toString())
                     .emit(
                         'message received',
-                        responseNotificationSocket(latestMessage, MESSAGE_CODE.SEND_MESSAGE_SUCCESSFULLY, true),
+                        responseNotificationSocket(latestMessage, MESSAGE_CODE.CHANGE_NAME, true),
                     );
+
+                group.users.forEach((item) => {
+                    socket.nsp
+                        .to(item.toString())
+                        .emit('notification', responseNotificationSocket(group, MESSAGE_CODE.CHANGE_AVATAR, true));
+                });
             }
 
             group.latestMessage = latestMessage;

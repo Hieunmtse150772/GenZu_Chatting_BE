@@ -53,6 +53,7 @@ const STATUS_MESSAGE = {
     ENABLE_TRANSLATE_SUCCESSFULLY: 'Enable translate successfully',
     USER_HAS_NOT_ENABLED_TRANSLATE: 'User has not enabled translate',
     EXCHANGE_ADMIN_SUCCESSFULLY: 'Echange admin successfully',
+    USER_LEAVE_IN_GROUP: 'User leave in group',
 
     //User
     CREATE_USER_SUCCESSFULLY: 'Create user successfully',
