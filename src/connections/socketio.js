@@ -67,7 +67,7 @@ io.on('connection', async (socket) => {
         console.log('socket?.user?._id: ', socket?.user?._id);
 
         if (socket?.user?._id) {
-            socket.join(socket?.user?._id);
+            socket.join(String(socket?.user?._id));
         } else socket.join(userData?._id);
         // socket.join(userData?._id);
         socket.emit('connected');
@@ -330,6 +330,7 @@ io.on('connection', async (socket) => {
     //Change background conversation
     socket.on('change background', async (background) => {
         try {
+            console.log('background: ', background);
             const conversation = background._id;
             socket.in(conversation).emit('changed background', background);
         } catch (error) {
