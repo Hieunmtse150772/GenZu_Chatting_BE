@@ -63,9 +63,6 @@ io.on('connection', async (socket) => {
 
     //Set up id user to sent message
     socket.on('setup', (userData) => {
-        console.log('userData: ', userData);
-        console.log('socket?.user?._id: ', socket?.user?._id);
-
         if (socket?.user?._id) {
             socket.join(String(socket?.user?._id));
         } else socket.join(userData?._id);
