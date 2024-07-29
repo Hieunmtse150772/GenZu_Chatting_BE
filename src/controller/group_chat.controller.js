@@ -12,7 +12,6 @@ module.exports = {
         let latestMessage;
 
         try {
-            // block
             const groupChat = await Conversation.create({
                 chatName: data.chatName,
                 avatar: data.avatar,
@@ -66,7 +65,7 @@ module.exports = {
             return socket.emit(
                 'response group',
                 createResponse(
-                    error,
+                    error.toString(),
                     STATUS_MESSAGE.INTERNAL_SERVER_ERROR,
                     null,
                     STATUS_CODE.INTERNAL_SERVER_ERROR,
@@ -142,9 +141,9 @@ module.exports = {
                 .populate('groupAdmin', 'picture fullName _id email is_online offline_at')
                 .populate('latestMessage');
 
-            newUsers.forEach((item) => {
-                socket.nsp
-                    .to(item)
+            newGroup.users.forEach((item) => {
+                socket
+                    .in(item._id.toString())
                     .emit(
                         'notification',
                         responseNotificationSocket(newGroup, MESSAGE_CODE.ADD_MEMBER_TO_GROUP_SUCCESSFULLY, true),
@@ -165,7 +164,7 @@ module.exports = {
             return socket.emit(
                 'response group',
                 createResponse(
-                    error,
+                    error.toString(),
                     STATUS_MESSAGE.INTERNAL_SERVER_ERROR,
                     null,
                     STATUS_CODE.INTERNAL_SERVER_ERROR,
@@ -227,7 +226,7 @@ module.exports = {
 
             newGroup.users.forEach((item) => {
                 socket
-                    .in(item.toString())
+                    .in(item._id.toString())
                     .emit(
                         'notification',
                         responseNotificationSocket(newGroup, MESSAGE_CODE.EXCHANGE_ADMIN_SUCCESSFULLY, true),
@@ -247,7 +246,7 @@ module.exports = {
             return socket.emit(
                 'response group',
                 createResponse(
-                    error,
+                    error.toString(),
                     STATUS_MESSAGE.INTERNAL_SERVER_ERROR,
                     null,
                     STATUS_CODE.INTERNAL_SERVER_ERROR,
@@ -353,10 +352,19 @@ module.exports = {
                             responseNotificationSocket(latestMessage, MESSAGE_CODE.SEND_MESSAGE_SUCCESSFULLY, true),
                         );
 
+                    newGroup.users.forEach((item) => {
+                        socket
+                            .in(item._id.toString())
+                            .emit(
+                                'notification',
+                                responseNotificationSocket(newGroup, MESSAGE_CODE.USER_LEAVE_IN_GROUP, true),
+                            );
+                    });
+
                     return socket.emit(
                         'response group',
                         createResponse(
-                            newGroup,
+                            newGroup._id,
                             STATUS_MESSAGE.USER_LEAVE_IN_GROUP,
                             MESSAGE_CODE.USER_LEAVE_IN_GROUP,
                             STATUS_CODE.OK,
@@ -371,7 +379,7 @@ module.exports = {
                         const newMembers = group.users.filter((item) => !item.equals(memberId));
                         let latestMessage = await Message.create({
                             sender: userId,
-                            message: MESSAGE_CODE.DELETE_USER_IN_GROUP,
+                            message: MESSAGE_CODE.DELETE_MEMBER_SUCCESSFULLY,
                             conversation: group._id,
                             status: 'active',
                             affected_user_id: memberId,
@@ -401,8 +409,21 @@ module.exports = {
                             .in(memberId)
                             .emit(
                                 'notification',
-                                responseNotificationSocket(newGroup._id, MESSAGE_CODE.DELETE_MEMBER_SUCCESSFULLY, true),
+                                responseNotificationSocket(
+                                    newGroup._id,
+                                    MESSAGE_CODE.MEMBER_WAS_DELETED_BY_ADMIN,
+                                    true,
+                                ),
                             );
+
+                        newGroup.users.forEach((item) => {
+                            socket
+                                .in(item._id.toString())
+                                .emit(
+                                    'notification',
+                                    responseNotificationSocket(newGroup, MESSAGE_CODE.DELETE_MEMBER_SUCCESSFULLY, true),
+                                );
+                        });
                         return socket.emit(
                             'response group',
                             createResponse(
@@ -558,7 +579,7 @@ module.exports = {
             return socket.emit(
                 'response group',
                 createResponse(
-                    error,
+                    error.toString().toString(),
                     STATUS_MESSAGE.INTERNAL_SERVER_ERROR,
                     null,
                     STATUS_CODE.INTERNAL_SERVER_ERROR,
@@ -676,7 +697,7 @@ module.exports = {
             return socket.emit(
                 'response group',
                 createResponse(
-                    error,
+                    error.toString(),
                     STATUS_MESSAGE.INTERNAL_SERVER_ERROR,
                     null,
                     STATUS_CODE.INTERNAL_SERVER_ERROR,
@@ -743,7 +764,7 @@ module.exports = {
             return socket.emit(
                 'response group',
                 createResponse(
-                    error,
+                    error.toString(),
                     STATUS_MESSAGE.INTERNAL_SERVER_ERROR,
                     null,
                     STATUS_CODE.INTERNAL_SERVER_ERROR,
